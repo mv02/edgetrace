@@ -1,0 +1,38 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+    depends_on:
+      - backend
+    env_file: .env
+    networks:
+      - api
+
+  backend:
+    build:
+      context: ./backend
+      target: prod
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    env_file: .env
+    networks:
+      - api
+      - data
+
+  neo4j:
+    image: neo4j:5.26.1
+    env_file: .env
+    healthcheck:
+      test: wget --spider http://localhost:7474 || exit 1
+      start_period: 30s
+      start_interval: 2s
+    networks:
+      - data
+    volumes:
+      - ./neo4j:/data
+
+networks:
+  api:
+  data:

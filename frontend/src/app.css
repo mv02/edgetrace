@@ -1,0 +1,27 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+body {
+  @apply flex h-screen flex-col dark:bg-gray-900;
+}
+
+main {
+  @apply min-h-0 flex-grow;
+}
+
+h1 {
+  @apply mb-6 text-3xl dark:text-white;
+}
+
+h2 {
+  @apply text-2xl dark:text-white;
+}
+
+h3 {
+  @apply text-xl dark:text-white;
+}
+
+input[type="file"]::file-selector-button {
+  font-size: initial;
+}
