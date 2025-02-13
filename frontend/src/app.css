@@ -3,7 +3,7 @@
 @import "tailwindcss/utilities";
 
 body {
-  @apply flex h-screen flex-col dark:bg-gray-900;
+  @apply flex h-screen flex-col dark:bg-gray-900 dark:text-white;
 }
 
 main {
@@ -11,15 +11,15 @@ main {
 }
 
 h1 {
-  @apply mb-6 text-3xl dark:text-white;
+  @apply mb-6 text-3xl;
 }
 
 h2 {
-  @apply text-2xl dark:text-white;
+  @apply text-2xl;
 }
 
 h3 {
-  @apply text-xl dark:text-white;
+  @apply text-xl;
 }
 
 input[type="file"]::file-selector-button {
