@@ -2,6 +2,9 @@ import cytoscape from "cytoscape";
 
 export const cy = $state(
   cytoscape({
+    minZoom: 0.1,
+    maxZoom: 10,
+    wheelSensitivity: 0.25,
     style: [
       { selector: "node", style: { label: "data(label)", color: "gray" } },
       { selector: "edge", style: { "curve-style": "bezier", "target-arrow-shape": "triangle" } },
