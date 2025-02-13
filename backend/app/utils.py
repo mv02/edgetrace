@@ -7,9 +7,10 @@ type Tree = dict[str, Tree | int]
 
 def method_to_cy(method: Method, color: str | None = None) -> CytoscapeElement:
     """Convert a method to Cytoscape.js node."""
+    label = ".".join(method["Display"].split(".")[-2:])
     return {
         "group": "nodes",
-        "data": {"id": method["Id"], **method},
+        "data": {"id": method["Id"], "label": label, **method},
         **({"style": {"background-color": color}} if color else {}),
     }
 

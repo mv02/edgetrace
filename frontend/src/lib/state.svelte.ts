@@ -3,7 +3,7 @@ import cytoscape from "cytoscape";
 export const cy = $state(
   cytoscape({
     style: [
-      { selector: "node", style: { label: "data(Display)", color: "gray" } },
+      { selector: "node", style: { label: "data(label)", color: "gray" } },
       { selector: "edge", style: { "curve-style": "bezier", "target-arrow-shape": "triangle" } },
     ],
   }),
