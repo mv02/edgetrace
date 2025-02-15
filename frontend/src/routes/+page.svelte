@@ -11,7 +11,6 @@
   const { tree }: { tree: Promise<Object> } = data;
 
   let container: HTMLElement;
-  let loading = $state(false);
   let selectedNode: cytoscape.NodeSingular | undefined = $state();
 
   onMount(() => {
@@ -21,14 +20,6 @@
     });
   });
 
-  const test = async () => {
-    loading = true;
-    const response = await fetch(`${PUBLIC_API_URL}/test`);
-    const data = await response.json();
-    loading = false;
-    cy.removeAll();
-    cy.addEl(data);
-  };
 
   const clear = async () => {
     cy.removeAll();
@@ -40,12 +31,6 @@
   <aside
     class="flex flex-col gap-4 overflow-y-auto border-r-2 border-r-gray-200 p-4 lg:w-80 dark:border-r-gray-800"
   >
-    <Button onclick={test} disabled={loading}>
-      {#if loading}
-        <Spinner class="me-3" size="4" color="white" />
-      {/if}
-      Test
-    </Button>
     <Button onclick={clear}>Clear</Button>
 
     <h3>Method Tree</h3>
