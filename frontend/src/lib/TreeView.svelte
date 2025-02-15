@@ -1,17 +1,24 @@
 <script lang="ts">
-  import { cy } from "$lib/state.svelte";
+  import { addContext } from "$lib/state.svelte";
   import { PUBLIC_API_URL } from "$env/static/public";
+  import Context from "$lib/context.svelte";
   import TreeView from "$lib/TreeView.svelte";
   import { Accordion, AccordionItem } from "flowbite-svelte";
   import { ChevronDownOutline, ChevronUpOutline } from "flowbite-svelte-icons";
 
-  const { tree, level = 0 }: { tree: Object; level?: number } = $props();
+  interface Props {
+    tree: Object;
+    level?: number;
+    ctxIndex?: number;
+  }
+
+  let { tree, level = 0, ctxIndex = $bindable() }: Props = $props();
 
   const findMethod = async (id: number) => {
     const response = await fetch(`${PUBLIC_API_URL}/method/${id}`);
     const data = await response.json();
-    cy.removeAll();
-    cy.addEl(data);
+    addContext(new Context(data, data[0].data.Name));
+    ctxIndex = 0;
   };
 </script>
 
@@ -40,7 +47,7 @@
           <ChevronUpOutline class="w-6" />
         </span>
 
-        <TreeView tree={content} level={level + 1} />
+        <TreeView tree={content} level={level + 1} bind:ctxIndex />
       </AccordionItem>
     {/if}
   {/each}

@@ -1,29 +1,32 @@
 <script lang="ts">
-  import { cy } from "$lib/state.svelte";
-  import { onMount } from "svelte";
+  import { contexts } from "$lib/state.svelte";
   import { PUBLIC_API_URL } from "$env/static/public";
   import type { PageProps } from "./$types";
   import DataField from "$lib/DataField.svelte";
   import TreeView from "$lib/TreeView.svelte";
-  import { Button, Spinner } from "flowbite-svelte";
+  import { Button, RadioButton, Spinner } from "flowbite-svelte";
 
   let { data }: PageProps = $props();
   const { tree }: { tree: Promise<Object> } = data;
 
   let container: HTMLElement;
-  let selectedNode: cytoscape.NodeSingular | undefined = $state();
 
-  onMount(() => {
-    cy.mount(container);
-    cy.on("tap", "node", (e: cytoscape.EventObject) => {
-      selectedNode = e.target;
-    });
+  let ctxIndex = $state(0);
+  let ctx = $derived(contexts[ctxIndex]);
+
+  $effect(() => {
+    for (const context of contexts) {
+      context.detach();
+    }
+    ctx?.attach(container);
   });
 
-
   const clear = async () => {
-    cy.removeAll();
-    selectedNode = undefined;
+    ctx?.destroy();
+    contexts.splice(ctxIndex, 1);
+    if (ctxIndex >= contexts.length) {
+      ctxIndex = Math.max(contexts.length - 1, 0);
+    }
   };
 </script>
 
@@ -37,19 +40,26 @@
     {#await tree}
       <Spinner class="mx-auto" color="blue" />
     {:then result}
-      <TreeView tree={result} />
+      <TreeView tree={result} bind:ctxIndex />
     {/await}
   </aside>
 
-  <section class="flex-grow overflow-hidden" bind:this={container}></section>
+  <div class="flex-grow">
+    <section class="h-full w-full overflow-hidden" bind:this={container}></section>
+    <footer class="absolute bottom-0 flex gap-2 p-2">
+      {#each contexts as context, i}
+        <RadioButton value={i} bind:group={ctxIndex} size="sm">{context.title}</RadioButton>
+      {/each}
+    </footer>
+  </div>
 
   <aside
     class="flex flex-col gap-4 border-l-2 border-l-gray-200 p-4 lg:w-80 dark:border-l-gray-800"
   >
-    {#if selectedNode}
+    {#if ctx?.selectedNode}
       <h3>Method Properties</h3>
       {#each ["Type", "Name", "Parameters", "Return", "Id"] as key}
-        <DataField label={key}>{selectedNode.data(key).replaceAll(" ", ", ")}</DataField>
+        <DataField label={key}>{ctx.selectedNode.data(key).replaceAll(" ", ", ")}</DataField>
       {/each}
     {/if}
   </aside>

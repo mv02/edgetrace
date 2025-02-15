@@ -1,30 +1,12 @@
-import cytoscape from "cytoscape";
+import Context from "$lib/context.svelte";
 
-export const cy = $state(
-  cytoscape({
-    minZoom: 0.1,
-    maxZoom: 10,
-    wheelSensitivity: 0.25,
-    style: [
-      { selector: "node", style: { label: "data(label)", color: "gray" } },
-      { selector: "edge", style: { "curve-style": "bezier", "target-arrow-shape": "triangle" } },
-    ],
-  }),
-);
+const MAX_CONTEXTS = 5;
 
-cy.removeAll = () => {
-  cy.elements().remove();
-};
+export let contexts: Context[] = $state([]);
 
-cy.addEl = (elements: cytoscape.ElementDefinition[]) => {
-  cy.add(elements);
-  cy.reset();
-  cy.layout({ name: "breadthfirst", directed: true }).run();
-};
-
-declare module "cytoscape" {
-  interface Core {
-    removeAll(): void;
-    addEl(elements: cytoscape.ElementDefinition[]): void;
+export const addContext = (context: Context) => {
+  if (contexts.length === MAX_CONTEXTS) {
+    contexts.pop();
   }
-}
+  contexts.unshift(context);
+};
