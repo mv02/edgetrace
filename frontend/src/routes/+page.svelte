@@ -7,7 +7,6 @@
   import { Button, RadioButton, Spinner } from "flowbite-svelte";
 
   let { data }: PageProps = $props();
-  const { tree }: { tree: Promise<Object> } = data;
 
   let container: HTMLElement;
 
@@ -37,7 +36,7 @@
     <Button onclick={clear}>Clear</Button>
 
     <h3>Method Tree</h3>
-    {#await tree}
+    {#await data.tree}
       <Spinner class="mx-auto" color="blue" />
     {:then result}
       <TreeView tree={result} bind:ctxIndex />
