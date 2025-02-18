@@ -1,9 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from .routers import database
 
 app = FastAPI()
+
+
+@app.exception_handler(HTTPException)
+def http_exception_handler(_: Request, e: HTTPException):
+    return JSONResponse({"message": e.detail}, e.status_code)
+
 
 app.add_middleware(
     CORSMiddleware,

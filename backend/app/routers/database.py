@@ -2,7 +2,7 @@ import csv
 import io
 import logging
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, HTTPException, UploadFile
 
 from ..driver import driver
 from ..utils import CytoscapeElement, invoke_to_cy, method_to_cy, methods_to_tree
@@ -54,8 +54,23 @@ def get_method_by_id(id: str):
 
 
 @router.post("/import")
-def import_csv(files: list[UploadFile]):
-    csv_files = {file.filename: file for file in files}
+def import_csv(files: list[UploadFile], timestamps: list[int]):
+    keys = ["methods", "invokes", "targets"]
+
+    # Most recent files
+    newest: dict[str, tuple[UploadFile, int]] = {}
+
+    for f, t in zip(files, timestamps):
+        for key in keys:
+            if key not in str(f.filename) or ".csv" not in str(f.filename):
+                continue
+            if key not in newest or t > newest[key][1]:
+                newest[key] = (f, t)
+
+    if any(key not in newest for key in keys):
+        raise HTTPException(400, f"Could not find a {key} file")
+
+    logger.info(f"Found files: {[f[0].filename for f in newest.values()]}")
 
     # Delete all nodes and edges, create uniqueness constraints
     logger.info("Purging database")
@@ -72,7 +87,7 @@ def import_csv(files: list[UploadFile]):
 
     # Create method nodes
     logger.info("Creating method nodes")
-    methods_csv = io.TextIOWrapper(csv_files["call_tree_methods.csv"].file)
+    methods_csv = io.TextIOWrapper(newest["methods"][0].file)
     reader = csv.DictReader(methods_csv)
     (node_count,) = driver.execute_query(
         "UNWIND $data as row CREATE (m:Method) SET m += row RETURN count(*) AS node_count",
@@ -81,7 +96,7 @@ def import_csv(files: list[UploadFile]):
 
     # Create temporary invoke nodes
     logger.info("Creating temporary invoke nodes")
-    invokes_csv = io.TextIOWrapper(csv_files["call_tree_invokes.csv"].file)
+    invokes_csv = io.TextIOWrapper(newest["invokes"][0].file)
     reader = csv.DictReader(invokes_csv)
     driver.execute_query(
         "UNWIND $data as row CREATE (i:Invoke) SET i += row",
@@ -90,7 +105,7 @@ def import_csv(files: list[UploadFile]):
 
     # Create edges between method nodes
     logger.info("Creating edges between method nodes")
-    targets_csv = io.TextIOWrapper(csv_files["call_tree_targets.csv"].file)
+    targets_csv = io.TextIOWrapper(newest["targets"][0].file)
     reader = csv.DictReader(targets_csv)
     (edge_count,) = driver.execute_query(
         "UNWIND $data AS row "
