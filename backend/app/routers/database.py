@@ -53,21 +53,6 @@ def get_method_by_id(id: str):
     return result
 
 
-@router.get("/test")
-def test_query():
-    records = driver.execute_query(
-        "MATCH (m:Method)-->(n:Method) "
-        "WITH m, n, rand() AS number "
-        "RETURN m, n ORDER BY number LIMIT 10"
-    ).records
-
-    result: list[dict] = []
-    for record in records:
-        m, n = record
-        result += [method_to_cy(m), method_to_cy(n), invoke_to_cy(m, n)]
-    return result
-
-
 @router.post("/import")
 def import_csv(files: list[UploadFile]):
     csv_files = {file.filename: file for file in files}
