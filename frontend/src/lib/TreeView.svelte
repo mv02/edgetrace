@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { addContext } from "$lib/state.svelte";
   import { PUBLIC_API_URL } from "$env/static/public";
-  import Context from "$lib/context.svelte";
-  import TreeView from "$lib/TreeView.svelte";
   import { Accordion, AccordionItem } from "flowbite-svelte";
   import { ChevronDownOutline, ChevronUpOutline } from "flowbite-svelte-icons";
+  import { addContext } from "$lib/state.svelte";
+  import Context from "$lib/context.svelte";
+  import TreeView from "$lib/TreeView.svelte";
 
   interface Props {
     tree: Object;

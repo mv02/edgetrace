@@ -1,13 +1,11 @@
 <script lang="ts">
-  import { contexts } from "$lib/state.svelte";
   import { page } from "$app/state";
-  import { PUBLIC_API_URL } from "$env/static/public";
-  import type { PageProps } from "./$types";
+  import { Button, RadioButton, Spinner } from "flowbite-svelte";
+  import { contexts } from "$lib/state.svelte";
   import DataField from "$lib/DataField.svelte";
   import TreeView from "$lib/TreeView.svelte";
-  import { Button, RadioButton, Spinner } from "flowbite-svelte";
 
-  let { data }: PageProps = $props();
+  let { data } = $props();
 
   let container: HTMLElement;
 

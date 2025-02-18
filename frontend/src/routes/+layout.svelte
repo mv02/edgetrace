@@ -2,6 +2,7 @@
   import "../app.css";
   import { page } from "$app/state";
   import { Navbar, NavBrand, NavLi, NavUl } from "flowbite-svelte";
+
   let { data, children } = $props();
 </script>
 

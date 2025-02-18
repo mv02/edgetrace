@@ -1,5 +1,5 @@
-import type { PageLoad } from "./$types";
 import { PUBLIC_API_URL } from "$env/static/public";
+import type { PageLoad } from "./$types";
 
 type Tree = {
   [key: string]: number | Tree;
