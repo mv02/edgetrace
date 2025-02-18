@@ -1,8 +1,9 @@
 import csv
 import io
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from ..driver import driver
 from ..utils import CytoscapeElement, invoke_to_cy, method_to_cy, methods_to_tree
@@ -54,7 +55,9 @@ def get_method_by_id(id: str):
 
 
 @router.post("/import")
-def import_csv(files: list[UploadFile], timestamps: list[int]):
+def import_csv(
+    files: Annotated[list[UploadFile], File()], timestamps: Annotated[list[int], Form()]
+):
     keys = ["methods", "invokes", "targets"]
 
     # Most recent files
