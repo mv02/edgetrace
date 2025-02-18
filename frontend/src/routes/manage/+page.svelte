@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { invalidate } from "$app/navigation";
   import { PUBLIC_API_URL } from "$env/static/public";
   import { Alert, Button, Fileupload, Helper, Label, Spinner } from "flowbite-svelte";
   import { CheckCircleSolid, ExclamationCircleSolid } from "flowbite-svelte-icons";
@@ -24,6 +25,7 @@
     const data = await resp.json();
     message = data.message;
     loading = false;
+    invalidate(`${PUBLIC_API_URL}/graphs`);
   }
 </script>
 
