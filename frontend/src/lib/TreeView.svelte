@@ -8,14 +8,15 @@
 
   interface Props {
     tree: Object;
+    graphName: string;
     level?: number;
     ctxIndex?: number;
   }
 
-  let { tree, level = 0, ctxIndex = $bindable() }: Props = $props();
+  let { tree, graphName, level = 0, ctxIndex = $bindable() }: Props = $props();
 
   const findMethod = async (id: number) => {
-    const response = await fetch(`${PUBLIC_API_URL}/method/${id}`);
+    const response = await fetch(`${PUBLIC_API_URL}/graphs/${graphName}/method/${id}`);
     const data = await response.json();
     addContext(new Context(data, data[0].data.Name));
     ctxIndex = 0;
@@ -47,7 +48,7 @@
           <ChevronUpOutline class="w-6" />
         </span>
 
-        <TreeView tree={content} level={level + 1} bind:ctxIndex />
+        <TreeView tree={content} {graphName} level={level + 1} bind:ctxIndex />
       </AccordionItem>
     {/if}
   {/each}

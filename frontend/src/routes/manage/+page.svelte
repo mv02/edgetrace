@@ -13,6 +13,8 @@
     e.preventDefault();
     loading = true;
     const formData = new FormData();
+    // TODO: graph name selection
+    formData.append("graph", "Graph 1");
     for (const file of files as FileList) {
       formData.append("files", file, file.name);
       formData.append("timestamps", file.lastModified.toString());

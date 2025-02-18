@@ -1,5 +1,6 @@
 <script lang="ts">
   import { contexts } from "$lib/state.svelte";
+  import { page } from "$app/state";
   import { PUBLIC_API_URL } from "$env/static/public";
   import type { PageProps } from "./$types";
   import DataField from "$lib/DataField.svelte";
@@ -39,7 +40,7 @@
     {#await data.tree}
       <Spinner class="mx-auto" color="blue" />
     {:then result}
-      <TreeView tree={result} bind:ctxIndex />
+      <TreeView tree={result} graphName={page.params.name} bind:ctxIndex />
     {/await}
   </aside>
 

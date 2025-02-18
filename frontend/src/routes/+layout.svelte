@@ -2,7 +2,7 @@
   import "../app.css";
   import { page } from "$app/state";
   import { Navbar, NavBrand, NavLi, NavUl } from "flowbite-svelte";
-  let { children } = $props();
+  let { data, children } = $props();
 </script>
 
 <Navbar color="gray">
@@ -12,7 +12,9 @@
     </span>
   </NavBrand>
   <NavUl activeUrl={page.url.pathname}>
-    <NavLi href="/">Call Graph</NavLi>
+    {#each data.graphs as graph}
+      <NavLi href="/graphs/{graph.name}">{graph.name}</NavLi>
+    {/each}
     <NavLi href="/manage">Manage</NavLi>
   </NavUl>
 </Navbar>

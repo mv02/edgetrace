@@ -14,16 +14,19 @@ logger.propagate = False
 router = APIRouter()
 
 
-@router.get("/databases")
-def get_databases():
-    records = driver.execute_query("SHOW DATABASES WHERE type='standard'").records
+@router.get("/graphs")
+def get_graphs():
+    records = driver.execute_query(
+        "MATCH (m:Method) RETURN m.Graph AS name, count(m) AS nodeCount"
+    ).records
     return [record.data() for record in records]
 
 
-@router.get("/tree")
-def get_method_tree():
+@router.get("/graphs/{graph_name}/tree")
+def get_method_tree(graph_name: str):
     records = driver.execute_query(
-        "MATCH (m:Method) RETURN m.Id AS id, m.Name AS name, m.Type AS type ORDER BY type, name"
+        "MATCH (m:Method {Graph: $graph}) RETURN m.Id AS id, m.Name AS name, m.Type AS type ORDER BY type, name",
+        graph=graph_name,
     ).records
 
     methods: list[dict] = []
@@ -35,14 +38,15 @@ def get_method_tree():
     return methods_to_tree(methods)
 
 
-@router.get("/method/{id}")
-def get_method_by_id(id: str):
+@router.get("/graphs/{graph_name}/method/{id}")
+def get_method_by_id(graph_name: str, id: str):
     record = driver.execute_query(
-        "MATCH (m:Method { Id: $id }) "
-        "OPTIONAL MATCH (caller:Method)-->(m) "
-        "OPTIONAL MATCH (m)-->(callee:Method) "
+        "MATCH (m:Method { Id: $id, Graph: $graph }) "
+        "OPTIONAL MATCH (caller:Method {Graph: $graph})-->(m) "
+        "OPTIONAL MATCH (m)-->(callee:Method {Graph: $graph}) "
         "RETURN m, collect(caller) AS callers, collect(callee) AS callees",
         id=id,
+        graph=graph_name,
     ).records[0]
 
     m, callers, callees = record
@@ -56,7 +60,9 @@ def get_method_by_id(id: str):
 
 @router.post("/import")
 def import_csv(
-    files: Annotated[list[UploadFile], File()], timestamps: Annotated[list[int], Form()]
+    files: Annotated[list[UploadFile], File()],
+    timestamps: Annotated[list[int], Form()],
+    graph: Annotated[str, Form()],
 ):
     keys = ["methods", "invokes", "targets"]
 
@@ -75,26 +81,29 @@ def import_csv(
 
     logger.info(f"Found files: {[f[0].filename for f in newest.values()]}")
 
-    # Delete all nodes and edges, create uniqueness constraints
+    # Delete all nodes and edges, create uniqueness constraints and indexes
     logger.info("Purging database")
-    driver.execute_query("MATCH ()-[r]-() DELETE r")
-    driver.execute_query("MATCH (n) DELETE n")
+    driver.execute_query("MATCH ()-[r {Graph: $graph}]-() DELETE r", graph=graph)
+    driver.execute_query("MATCH (n {Graph: $graph}) DELETE n", graph=graph)
     driver.execute_query(
         "CREATE CONSTRAINT unique_method_id IF NOT EXISTS "
-        "FOR (m:Method) REQUIRE m.Id IS UNIQUE"
+        "FOR (m:Method) REQUIRE (m.Id, m.Graph) IS UNIQUE"
     )
     driver.execute_query(
         "CREATE CONSTRAINT unique_invoke_id IF NOT EXISTS "
-        "FOR (i:Invoke) REQUIRE i.Id IS UNIQUE"
+        "FOR (i:Invoke) REQUIRE (i.Id, i.Graph) IS UNIQUE"
     )
+    driver.execute_query("CREATE INDEX method_id IF NOT EXISTS FOR (m:Method) ON m.Id")
+    driver.execute_query("CREATE INDEX invoke_id IF NOT EXISTS FOR (i:Invoke) ON i.Id")
 
     # Create method nodes
     logger.info("Creating method nodes")
     methods_csv = io.TextIOWrapper(newest["methods"][0].file)
     reader = csv.DictReader(methods_csv)
     (node_count,) = driver.execute_query(
-        "UNWIND $data as row CREATE (m:Method) SET m += row RETURN count(*) AS node_count",
+        "UNWIND $data as row CREATE (m:Method {Graph: $graph}) SET m += row RETURN count(*) AS node_count",
         data=[row for row in reader],
+        graph=graph,
     ).records[0]
 
     # Create temporary invoke nodes
@@ -102,8 +111,9 @@ def import_csv(
     invokes_csv = io.TextIOWrapper(newest["invokes"][0].file)
     reader = csv.DictReader(invokes_csv)
     driver.execute_query(
-        "UNWIND $data as row CREATE (i:Invoke) SET i += row",
+        "UNWIND $data as row CREATE (i:Invoke {Graph: $graph}) SET i += row",
         data=[row for row in reader],
+        graph=graph,
     )
 
     # Create edges between method nodes
@@ -115,9 +125,10 @@ def import_csv(
         "MATCH (t:Method { Id: row.TargetId }) "
         "MATCH (i:Invoke { Id: row.InvokeId }) "
         "MATCH (s:Method { Id: i.MethodId }) "
-        "MERGE (s)-[r:CALLS]->(t) "
+        "MERGE (s)-[r:CALLS {Graph: $graph}]->(t) "
         "RETURN count(DISTINCT r) AS edge_count",
         data=[row for row in reader],
+        graph=graph,
     ).records[0]
 
     # Delete temporary invoke nodes
