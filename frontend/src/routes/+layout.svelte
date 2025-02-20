@@ -6,7 +6,7 @@
   let { data, children } = $props();
 </script>
 
-<Navbar color="gray">
+<Navbar fluid color="gray">
   <NavBrand href="/">
     <span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
       Diff Tool
