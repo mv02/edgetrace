@@ -41,7 +41,7 @@ def get_method_tree(graph_name: str):
 @router.get("/graphs/{graph_name}/method/{id}")
 def get_method_by_id(graph_name: str, id: str):
     record = driver.execute_query(
-        "MATCH (m:Method { Id: $id, Graph: $graph }) "
+        "MATCH (m:Method {Id: $id, Graph: $graph}) "
         "OPTIONAL MATCH (caller:Method {Graph: $graph})-->(m) "
         "OPTIONAL MATCH (m)-->(callee:Method {Graph: $graph}) "
         "RETURN m, collect(caller) AS callers, collect(callee) AS callees",
@@ -122,9 +122,9 @@ def import_csv(
     reader = csv.DictReader(targets_csv)
     (edge_count,) = driver.execute_query(
         "UNWIND $data AS row "
-        "MATCH (t:Method { Id: row.TargetId }) "
-        "MATCH (i:Invoke { Id: row.InvokeId }) "
-        "MATCH (s:Method { Id: i.MethodId }) "
+        "MATCH (t:Method {Id: row.TargetId}) "
+        "MATCH (i:Invoke {Id: row.InvokeId}) "
+        "MATCH (s:Method {Id: i.MethodId}) "
         "MERGE (s)-[r:CALLS {Graph: $graph}]->(t) "
         "RETURN count(DISTINCT r) AS edge_count",
         data=[row for row in reader],
