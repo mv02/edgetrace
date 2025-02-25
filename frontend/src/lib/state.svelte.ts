@@ -1,12 +1,12 @@
-import Context from "$lib/context.svelte";
+import View from "$lib/view.svelte";
 
-const MAX_CONTEXTS = 5;
+const MAX_VIEWS = 5;
 
-export let contexts: Context[] = $state([]);
+export let views: View[] = $state([]);
 
-export const addContext = (context: Context) => {
-  if (contexts.length === MAX_CONTEXTS) {
-    contexts.pop();
+export const addView = (view: View) => {
+  if (views.length === MAX_VIEWS) {
+    views.pop();
   }
-  contexts.unshift(context);
+  views.unshift(view);
 };

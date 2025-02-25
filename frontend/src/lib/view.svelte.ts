@@ -1,7 +1,7 @@
 import cytoscape from "cytoscape";
 import type { ElementDefinition } from "cytoscape";
 
-export default class Context {
+export default class View {
   title: string;
   timestamp: Date;
   cy: cytoscape.Core;
