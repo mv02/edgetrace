@@ -42,19 +42,20 @@ def get_method_tree(graph_name: str):
 def get_method_by_id(graph_name: str, id: str):
     record = driver.execute_query(
         "MATCH (m:Method {Id: $id, Graph: $graph}) "
-        "OPTIONAL MATCH (caller:Method {Graph: $graph})-->(m) "
-        "OPTIONAL MATCH (m)-->(callee:Method {Graph: $graph}) "
-        "RETURN m, collect(caller) AS callers, collect(callee) AS callees",
+        "OPTIONAL MATCH p = ALL SHORTEST (e:Method {IsEntryPoint: 'true', Graph: $graph}) "
+        "-[:CALLS {Graph: $graph}]->+(m) "
+        "RETURN m, nodes(p) AS path LIMIT 1",
         id=id,
         graph=graph_name,
     ).records[0]
 
-    m, callers, callees = record
-    result: list[CytoscapeElement] = [method_to_cy(m, "navy")]
-    for caller in callers:
-        result += [method_to_cy(caller), invoke_to_cy(caller, m)]
-    for callee in callees:
-        result += [method_to_cy(callee), invoke_to_cy(m, callee)]
+    m, path = record
+    if path is None:
+        return [method_to_cy(m, "navy")]
+
+    result: list[CytoscapeElement] = []
+    for m1, m2 in zip(path, path[1:]):
+        result += [method_to_cy(m1), method_to_cy(m2), invoke_to_cy(m1, m2)]
     return result
 
 
