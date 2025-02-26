@@ -1,6 +1,6 @@
 import cytoscape from "cytoscape";
 import type { ElementDefinition } from "cytoscape";
-import type { Graph } from "$lib/types";
+import type { GraphContext } from "$lib/types";
 
 const MAX_VIEWS = 5;
 
@@ -60,7 +60,7 @@ export default class View {
   };
 }
 
-export const addView = (graph: Graph, view: View) => {
+export const addView = (graph: GraphContext, view: View) => {
   if (graph.views.length === MAX_VIEWS) {
     graph.views.pop();
   }
