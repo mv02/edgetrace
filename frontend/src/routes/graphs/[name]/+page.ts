@@ -1,9 +1,6 @@
 import { PUBLIC_API_URL } from "$env/static/public";
 import type { PageLoad } from "./$types";
-
-type Tree = {
-  [key: string]: number | Tree;
-};
+import type { Tree } from "$lib/types";
 
 export const load: PageLoad = async ({ fetch, params }) => {
   const tree: Promise<Tree> = fetch(`${PUBLIC_API_URL}/graphs/${params.name}/tree`).then((res) =>

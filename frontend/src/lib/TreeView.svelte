@@ -5,10 +5,10 @@
   import { addView } from "$lib/view.svelte";
   import View from "$lib/view.svelte";
   import TreeView from "$lib/TreeView.svelte";
-  import type { GraphContext } from "$lib/types";
+  import type { GraphContext, Tree } from "$lib/types";
 
   interface Props {
-    tree: Object;
+    tree: Tree;
     graphs: Record<string, GraphContext>;
     graphName: string;
     level?: number;
@@ -26,7 +26,7 @@
 
 <Accordion flush multiple --padding="{level * 8}px" class="flex flex-col">
   {#each Object.entries(tree) as [key, content]}
-    {#if Object.keys(content).length === 0}
+    {#if typeof content === "number"}
       <!-- No children, content is method ID -->
       <button
         onclick={() => findMethod(content)}

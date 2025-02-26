@@ -4,3 +4,7 @@ export type GraphContext = {
   views: View[];
   viewIndex: number;
 };
+
+export type Tree = {
+  [key: string]: number | Tree;
+};
