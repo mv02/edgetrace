@@ -1,5 +1,8 @@
 import cytoscape from "cytoscape";
 import type { ElementDefinition } from "cytoscape";
+import type { Graph } from "$lib/types";
+
+const MAX_VIEWS = 5;
 
 export default class View {
   title: string;
@@ -56,3 +59,10 @@ export default class View {
     this.cy.destroy();
   };
 }
+
+export const addView = (graph: Graph, view: View) => {
+  if (graph.views.length === MAX_VIEWS) {
+    graph.views.pop();
+  }
+  graph.views.unshift(view);
+};

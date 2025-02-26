@@ -1,16 +1,32 @@
 <script lang="ts">
+  import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
   import { Button, RadioButton, Spinner } from "flowbite-svelte";
-  import { views } from "$lib/state.svelte";
   import DataField from "$lib/DataField.svelte";
   import TreeView from "$lib/TreeView.svelte";
+  import type { GraphContext } from "$lib/types";
 
   let { data } = $props();
 
   let container: HTMLElement;
 
-  let viewIndex = $state(0);
+  /** All graphs identified by their name. */
+  let graphs: Record<string, GraphContext> = $state({});
+  /** The current graph. */
+  let graph = $derived(graphs[page.params.name] ?? {});
+  /** Views of the current graph. */
+  let views = $derived(graph?.views ?? []);
+  /** Index of the currently selected view. */
+  let viewIndex = $derived(graph?.viewIndex ?? 0);
+  /** The currently selected view. */
   let view = $derived(views[viewIndex]);
+
+  $effect(() => {
+    // Create new graph entry if it doesn't exist
+    if (!graphs[page.params.name]) {
+      graphs[page.params.name] = { views: [], viewIndex: 0 };
+    }
+  });
 
   $effect(() => {
     for (const view of views) {
@@ -19,11 +35,13 @@
     view?.attach(container);
   });
 
+  beforeNavigate(() => view?.detach());
+
   const clear = async () => {
     view?.destroy();
-    views.splice(viewIndex, 1);
+    graphs[page.params.name].views.splice(viewIndex, 1);
     if (viewIndex >= views.length) {
-      viewIndex = Math.max(views.length - 1, 0);
+      graphs[page.params.name].viewIndex = Math.max(views.length - 1, 0);
     }
   };
 </script>
@@ -38,7 +56,7 @@
     {#await data.tree}
       <Spinner class="mx-auto" color="blue" />
     {:then result}
-      <TreeView tree={result} graphName={page.params.name} bind:viewIndex />
+      <TreeView tree={result} graphName={page.params.name} bind:graphs />
     {/await}
   </aside>
 
@@ -46,7 +64,9 @@
     <section class="h-full w-full overflow-hidden" bind:this={container}></section>
     <footer class="absolute bottom-0 flex gap-2 p-2">
       {#each views as view, i}
-        <RadioButton value={i} bind:group={viewIndex} size="sm">{view.title}</RadioButton>
+        <RadioButton value={i} bind:group={graphs[page.params.name].viewIndex} size="sm">
+          {view.title}
+        </RadioButton>
       {/each}
     </footer>
   </div>

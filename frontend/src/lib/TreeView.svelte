@@ -2,24 +2,25 @@
   import { PUBLIC_API_URL } from "$env/static/public";
   import { Accordion, AccordionItem } from "flowbite-svelte";
   import { ChevronDownOutline, ChevronUpOutline } from "flowbite-svelte-icons";
-  import { addView } from "$lib/state.svelte";
+  import { addView } from "$lib/view.svelte";
   import View from "$lib/view.svelte";
   import TreeView from "$lib/TreeView.svelte";
+  import type { GraphContext } from "$lib/types";
 
   interface Props {
     tree: Object;
+    graphs: Record<string, GraphContext>;
     graphName: string;
     level?: number;
-    viewIndex?: number;
   }
 
-  let { tree, graphName, level = 0, viewIndex = $bindable() }: Props = $props();
+  let { tree, graphs = $bindable(), graphName, level = 0 }: Props = $props();
 
   const findMethod = async (id: number) => {
     const response = await fetch(`${PUBLIC_API_URL}/graphs/${graphName}/method/${id}`);
     const data = await response.json();
-    addView(new View(data, data[0].data.Name));
-    viewIndex = 0;
+    addView(graphs[graphName], new View(data, data[0].data.Name));
+    graphs[graphName].viewIndex = 0;
   };
 </script>
 
@@ -48,7 +49,7 @@
           <ChevronUpOutline class="w-6" />
         </span>
 
-        <TreeView tree={content} {graphName} level={level + 1} bind:viewIndex />
+        <TreeView tree={content} bind:graphs {graphName} level={level + 1} />
       </AccordionItem>
     {/if}
   {/each}
