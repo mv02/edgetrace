@@ -2,7 +2,7 @@ import cytoscape from "cytoscape";
 import type { ElementDefinition } from "cytoscape";
 import type { GraphContext } from "$lib/types";
 
-const MAX_VIEWS = 5;
+const MAX_VIEWS = 10;
 
 export default class View {
   title: string;
