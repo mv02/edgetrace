@@ -42,8 +42,12 @@ export default class View {
     this.cy.unmount();
   };
 
-  add = (elements: ElementDefinition[]) => {
+  add = (elements: ElementDefinition[], layout: boolean = false) => {
     this.cy.add(elements);
+    if (layout) {
+      this.cy.reset();
+      this.cy.layout({ name: "breadthfirst", directed: true }).run();
+    }
   };
 
   removeAll = () => {

@@ -17,6 +17,7 @@
 
   let { tree, graphs = $bindable(), graphName, level = 0, searchQuery = "" }: Props = $props();
 
+  let graph = $derived(graphs[graphName]);
   let filtered = $derived.by(() => filterTree(tree));
 
   const filterTree = (node: Tree): Tree => {
@@ -41,11 +42,17 @@
     return matchingMethod ? result : {};
   };
 
-  const findMethod = async (id: number, name: string) => {
+  const findMethod = async (id: number, name: string, newView: boolean = true) => {
     const response = await fetch(`${PUBLIC_API_URL}/graphs/${graphName}/method/${id}`);
     const data = await response.json();
-    addView(graphs[graphName], new View(data, name));
-    graphs[graphName].viewIndex = 0;
+    if (newView || graphs[graphName].views.length === 0) {
+      // Create new view
+      addView(graph, new View(data, name));
+      graph.viewIndex = 0;
+    } else {
+      // Add to current view
+      graph.views[graph.viewIndex].add(data, true);
+    }
   };
 </script>
 
@@ -54,7 +61,7 @@
     {#if typeof content === "number"}
       <!-- No children, content is method ID -->
       <button
-        onclick={() => findMethod(content, key)}
+        onclick={(e) => findMethod(content, key, !(e.altKey || e.ctrlKey || e.shiftKey))}
         class="overflow-hidden text-left text-sm text-gray-500 hover:overflow-visible hover:bg-gray-100 dark:text-gray-400 hover:dark:bg-gray-800"
       >
         {key}
