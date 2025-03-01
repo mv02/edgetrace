@@ -68,9 +68,9 @@
     {/if}
   </aside>
 
-  <div class="flex-grow">
-    <section class="h-full w-full overflow-hidden" bind:this={container}></section>
-    <footer class="absolute bottom-0 flex gap-2 p-2">
+  <div class="relative flex-grow">
+    <section class="h-full w-full" bind:this={container}></section>
+    <footer class="absolute bottom-0 flex flex-wrap gap-2 p-2">
       {#each views as view, i}
         <RadioButton value={i} bind:group={graphs[page.params.name].viewIndex} size="sm">
           {view.title}
