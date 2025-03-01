@@ -41,10 +41,10 @@
     return matchingMethod ? result : {};
   };
 
-  const findMethod = async (id: number) => {
+  const findMethod = async (id: number, name: string) => {
     const response = await fetch(`${PUBLIC_API_URL}/graphs/${graphName}/method/${id}`);
     const data = await response.json();
-    addView(graphs[graphName], new View(data, data[0].data.Name));
+    addView(graphs[graphName], new View(data, name));
     graphs[graphName].viewIndex = 0;
   };
 </script>
@@ -54,7 +54,7 @@
     {#if typeof content === "number"}
       <!-- No children, content is method ID -->
       <button
-        onclick={() => findMethod(content)}
+        onclick={() => findMethod(content, key)}
         class="overflow-hidden text-left text-sm text-gray-500 hover:overflow-visible hover:bg-gray-100 dark:text-gray-400 hover:dark:bg-gray-800"
       >
         {key}
