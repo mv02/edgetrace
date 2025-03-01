@@ -1,7 +1,7 @@
 <script lang="ts">
   import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
-  import { Button, RadioButton, Spinner } from "flowbite-svelte";
+  import { Button, RadioButton, Search, Spinner } from "flowbite-svelte";
   import DataField from "$lib/DataField.svelte";
   import TreeView from "$lib/TreeView.svelte";
   import type { GraphContext } from "$lib/types";
@@ -24,7 +24,7 @@
   $effect(() => {
     // Create new graph entry if it doesn't exist
     if (!graphs[page.params.name]) {
-      graphs[page.params.name] = { views: [], viewIndex: 0 };
+      graphs[page.params.name] = { views: [], viewIndex: 0, searchQuery: "" };
     }
   });
 
@@ -54,10 +54,16 @@
 
     {#if graph}
       <h3>Method Tree</h3>
+      <Search clearable bind:value={graphs[page.params.name].searchQuery} />
       {#await data.tree}
         <Spinner class="mx-auto" color="blue" />
       {:then result}
-        <TreeView tree={result} graphName={page.params.name} bind:graphs />
+        <TreeView
+          tree={result}
+          graphName={page.params.name}
+          bind:graphs
+          searchQuery={graphs[page.params.name].searchQuery}
+        />
       {/await}
     {/if}
   </aside>

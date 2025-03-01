@@ -12,9 +12,34 @@
     graphs: Record<string, GraphContext>;
     graphName: string;
     level?: number;
+    searchQuery?: string;
   }
 
-  let { tree, graphs = $bindable(), graphName, level = 0 }: Props = $props();
+  let { tree, graphs = $bindable(), graphName, level = 0, searchQuery = "" }: Props = $props();
+
+  let filtered = $derived.by(() => filterTree(tree));
+
+  const filterTree = (node: Tree): Tree => {
+    let result: Tree = {};
+    let matchingMethod = false;
+    for (const [key, content] of Object.entries(node)) {
+      if (typeof content === "number") {
+        // Method
+        if (key.toLowerCase().includes(searchQuery.toLowerCase())) {
+          result[key] = content;
+          matchingMethod = true;
+        }
+      } else {
+        // Type
+        const filteredChild = filterTree(content);
+        if (Object.keys(filteredChild).length > 0) {
+          result[key] = filteredChild;
+          matchingMethod = true;
+        }
+      }
+    }
+    return matchingMethod ? result : {};
+  };
 
   const findMethod = async (id: number) => {
     const response = await fetch(`${PUBLIC_API_URL}/graphs/${graphName}/method/${id}`);
@@ -25,7 +50,7 @@
 </script>
 
 <Accordion flush multiple --padding="{level * 8}px" class="flex flex-col">
-  {#each Object.entries(tree) as [key, content]}
+  {#each Object.entries(filtered) as [key, content]}
     {#if typeof content === "number"}
       <!-- No children, content is method ID -->
       <button
@@ -49,7 +74,7 @@
           <ChevronUpOutline class="w-6" />
         </span>
 
-        <TreeView tree={content} bind:graphs {graphName} level={level + 1} />
+        <TreeView tree={content} bind:graphs {graphName} level={level + 1} {searchQuery} />
       </AccordionItem>
     {/if}
   {/each}
