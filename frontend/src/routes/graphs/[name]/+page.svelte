@@ -13,11 +13,11 @@
   /** All graphs identified by their name. */
   let graphs: Record<string, GraphContext> = $state({});
   /** The current graph. */
-  let graph = $derived(graphs[page.params.name] ?? {});
+  let graph = $derived(graphs[page.params.name]);
   /** Views of the current graph. */
   let views = $derived(graph?.views ?? []);
   /** Index of the currently selected view. */
-  let viewIndex = $derived(graph?.viewIndex ?? 0);
+  let viewIndex = $derived(graph?.viewIndex);
   /** The currently selected view. */
   let view = $derived(views[viewIndex]);
 
@@ -52,12 +52,14 @@
   >
     <Button onclick={clear}>Clear</Button>
 
-    <h3>Method Tree</h3>
-    {#await data.tree}
-      <Spinner class="mx-auto" color="blue" />
-    {:then result}
-      <TreeView tree={result} graphName={page.params.name} bind:graphs />
-    {/await}
+    {#if graph}
+      <h3>Method Tree</h3>
+      {#await data.tree}
+        <Spinner class="mx-auto" color="blue" />
+      {:then result}
+        <TreeView tree={result} graphName={page.params.name} bind:graphs />
+      {/await}
+    {/if}
   </aside>
 
   <div class="flex-grow">
