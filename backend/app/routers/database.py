@@ -51,7 +51,7 @@ def get_method_by_id(graph_name: str, id: str):
 
     m, path = record
     if path is None:
-        return [method_to_cy(m, "navy")]
+        return [method_to_cy(m)]
 
     result: list[CytoscapeElement] = []
     for m1, m2 in zip(path, path[1:]):
