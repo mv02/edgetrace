@@ -29,12 +29,16 @@ export default class View {
     });
   }
 
+  resetLayout = () => {
+    this.cy.reset();
+    this.cy.layout({ name: "breadthfirst", directed: true }).run();
+  };
+
   attach = (container: HTMLElement) => {
     const prevContainer = this.cy.container();
     this.cy.mount(container);
     if (!prevContainer) {
-      this.cy.reset();
-      this.cy.layout({ name: "breadthfirst", directed: true }).run();
+      this.resetLayout();
     }
   };
 
@@ -45,8 +49,7 @@ export default class View {
   add = (elements: ElementDefinition[], layout: boolean = false) => {
     this.cy.add(elements);
     if (layout) {
-      this.cy.reset();
-      this.cy.layout({ name: "breadthfirst", directed: true }).run();
+      this.resetLayout();
     }
   };
 

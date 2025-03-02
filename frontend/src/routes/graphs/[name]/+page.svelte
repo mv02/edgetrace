@@ -51,6 +51,7 @@
     class="flex flex-col gap-4 overflow-y-auto border-r-2 border-r-gray-200 p-4 lg:w-80 dark:border-r-gray-800"
   >
     <Button onclick={clear}>Clear</Button>
+    <Button onclick={() => view?.resetLayout()}>Reset layout</Button>
 
     {#if graph}
       <h3>Method Tree</h3>
