@@ -47,7 +47,7 @@
     const data = await response.json();
     if (newView || graphs[graphName].views.length === 0) {
       // Create new view
-      addView(graph, new View(data, name));
+      addView(graph, new View(data, graphName, name));
       graph.viewIndex = 0;
     } else {
       // Add to current view

@@ -20,6 +20,7 @@
     "@sveltejs/kit": "^2.16.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@types/cytoscape": "^3.21.9",
+    "@types/cytoscape-context-menus": "^4.1.4",
     "@types/node": "^22.13.1",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.18.0",
@@ -41,6 +42,7 @@
   },
   "packageManager": "pnpm@9.15.5+sha512.845196026aab1cc3f098a0474b64dfbab2afe7a1b4e91dd86895d8e4aa32a7a6d03049e2d0ad770bbe4de023a7122fb68c1a1d6e0d033c7076085f9d5d4800d4",
   "dependencies": {
-    "cytoscape": "^3.31.0"
+    "cytoscape": "^3.31.0",
+    "cytoscape-context-menus": "^4.2.1"
   }
 }

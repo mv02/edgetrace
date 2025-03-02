@@ -59,6 +59,26 @@ def get_method_by_id(graph_name: str, id: str):
     return result
 
 
+@router.get("/graphs/{graph_name}/method/{id}/neighbors")
+def get_method_neighbors(graph_name: str, id: str):
+    record = driver.execute_query(
+        "MATCH (m:Method {Graph: $graph, Id: $id}) "
+        "OPTIONAL MATCH (caller:Method {Graph: $graph})-->(m) "
+        "OPTIONAL MATCH (m)-->(callee:Method {Graph: $graph}) "
+        "RETURN m, collect(caller) AS callers, collect(callee) AS callees",
+        id=id,
+        graph=graph_name,
+    ).records[0]
+
+    m, callers, callees = record
+    result: list[CytoscapeElement] = []
+    for caller in callers:
+        result += [method_to_cy(caller), invoke_to_cy(caller, m)]
+    for callee in callees:
+        result += [method_to_cy(callee), invoke_to_cy(m, callee)]
+    return result
+
+
 @router.post("/import")
 def import_csv(
     files: Annotated[list[UploadFile], File()],

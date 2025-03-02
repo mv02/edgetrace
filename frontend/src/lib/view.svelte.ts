@@ -1,16 +1,29 @@
+import { browser } from "$app/environment";
+import { PUBLIC_API_URL } from "$env/static/public";
 import cytoscape from "cytoscape";
-import type { ElementDefinition } from "cytoscape";
+import type { ElementDefinition, NodeSingular } from "cytoscape";
+import type contextMenus from "cytoscape-context-menus";
 import type { GraphContext } from "$lib/types";
 
 const MAX_VIEWS = 10;
+const MAX_NEIGHBORS = 10;
+
+if (browser) {
+  const contextMenus = (await import("cytoscape-context-menus")).default;
+  cytoscape.use(contextMenus);
+}
 
 export default class View {
+  graphName: string;
   title: string;
   timestamp: Date;
   cy: cytoscape.Core;
+  isAttached: boolean = false;
   selectedNode: cytoscape.NodeSingular | undefined = $state();
+  contextMenu?: contextMenus.ContextMenu;
 
-  constructor(elements: ElementDefinition[], title?: string) {
+  constructor(elements: ElementDefinition[], graphName: string, title?: string) {
+    this.graphName = graphName;
     this.title = title ?? "Query";
     this.timestamp = new Date();
     this.cy = cytoscape({
@@ -36,14 +49,20 @@ export default class View {
 
   attach = (container: HTMLElement) => {
     const prevContainer = this.cy.container();
+    this.destroyContextMenu();
     this.cy.mount(container);
+    this.isAttached = true;
+    this.createContextMenu();
     if (!prevContainer) {
       this.resetLayout();
     }
   };
 
   detach = () => {
+    if (!this.isAttached) return;
+    this.destroyContextMenu();
     this.cy.unmount();
+    this.isAttached = false;
   };
 
   add = (elements: ElementDefinition[], layout: boolean = false) => {
@@ -51,6 +70,18 @@ export default class View {
     if (layout) {
       this.resetLayout();
     }
+  };
+
+  expandNode = async (node: NodeSingular) => {
+    const resp = await fetch(
+      `${PUBLIC_API_URL}/graphs/${this.graphName}/method/${node.data("id")}/neighbors`,
+    );
+    const data: ElementDefinition[] = await resp.json();
+    // TODO: selectable neighbor limit, incremental expansion
+    this.add(data.slice(0, MAX_NEIGHBORS * 2), true);
+    this.unselectAll();
+    node.select();
+    this.selectedNode = node;
   };
 
   removeAll = () => {
@@ -64,6 +95,24 @@ export default class View {
 
   destroy = () => {
     this.cy.destroy();
+  };
+
+  createContextMenu = () => {
+    this.contextMenu = this.cy.contextMenus({
+      menuItems: [
+        {
+          id: "expand",
+          content: "Expand node",
+          selector: "node",
+          onClickFunction: (e) => this.expandNode(e.target),
+        },
+      ],
+    });
+  };
+
+  destroyContextMenu = () => {
+    this.contextMenu?.destroy();
+    this.contextMenu = undefined;
   };
 }
 
