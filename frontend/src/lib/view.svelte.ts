@@ -19,7 +19,7 @@ export default class View {
   timestamp: Date;
   cy: cytoscape.Core;
   isAttached: boolean = false;
-  selectedNode: cytoscape.NodeSingular | undefined = $state();
+  selectedNode?: cytoscape.NodeSingular = $state();
   contextMenu?: contextMenus.ContextMenu;
 
   constructor(elements: ElementDefinition[], graphName: string, title?: string) {
