@@ -2,7 +2,7 @@
   import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
   import { Button, RadioButton, Search, Spinner } from "flowbite-svelte";
-  import DataField from "$lib/DataField.svelte";
+  import MethodProperties from "$lib/MethodProperties.svelte";
   import TreeView from "$lib/TreeView.svelte";
   import type { GraphContext } from "$lib/types";
 
@@ -85,9 +85,7 @@
   >
     {#if view?.selectedNode}
       <h3>Method Properties</h3>
-      {#each ["Type", "Name", "Parameters", "Return", "Id"] as key}
-        <DataField label={key}>{view.selectedNode.data(key).replaceAll(" ", ", ")}</DataField>
-      {/each}
+      <MethodProperties node={view.selectedNode} />
     {/if}
   </aside>
 </main>
