@@ -2,6 +2,7 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 @import "cytoscape-context-menus/cytoscape-context-menus.css";
+@import "https://www.nerdfonts.com/assets/css/webfont.css";
 
 body {
   @apply flex h-screen flex-col dark:bg-gray-900 dark:text-white;

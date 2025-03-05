@@ -64,12 +64,14 @@
         onclick={(e) => findMethod(content, key, !(e.altKey || e.ctrlKey || e.shiftKey))}
         class="overflow-hidden text-left text-sm text-gray-500 hover:overflow-visible hover:bg-gray-100 dark:text-gray-400 hover:dark:bg-gray-800"
       >
+        <i class="nf nf-cod-symbol_method text-indigo-500"></i>
         {key}
       </button>
     {:else}
       <!-- Children present, traverse to next level -->
       <AccordionItem tag="h4" paddingFlush="">
         <span slot="header" class="overflow-hidden text-nowrap text-sm hover:overflow-visible">
+          <i class="nf nf-cod-symbol_class text-orange-500"></i>
           {key}
         </span>
 
