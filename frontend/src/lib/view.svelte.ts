@@ -1,6 +1,7 @@
 import { browser } from "$app/environment";
 import { PUBLIC_API_URL } from "$env/static/public";
 import cytoscape from "cytoscape";
+import expandCollapse from "cytoscape-expand-collapse";
 import type { ElementDefinition, NodeSingular } from "cytoscape";
 import type contextMenus from "cytoscape-context-menus";
 import type { GraphContext } from "$lib/types";
@@ -12,6 +13,7 @@ if (browser) {
   const contextMenus = (await import("cytoscape-context-menus")).default;
   cytoscape.use(contextMenus);
 }
+cytoscape.use(expandCollapse);
 
 export default class View {
   graphName: string;
@@ -53,6 +55,7 @@ export default class View {
     this.cy.mount(container);
     this.isAttached = true;
     this.createContextMenu();
+    this.cy.expandCollapse({ animate: false, undoable: false, zIndex: 0 });
     if (!prevContainer) {
       this.resetLayout();
     }

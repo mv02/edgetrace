@@ -5,14 +5,35 @@ type CytoscapeElement = dict[str, Any]
 type Tree = dict[str, Tree | int]
 
 
-def method_to_cy(method: Method, color: str | None = None) -> CytoscapeElement:
+def method_to_cy(method: Method, color: str | None = None) -> list[CytoscapeElement]:
     """Convert a method to Cytoscape.js node."""
     label = ".".join(method["Display"].split(".")[-2:])
-    return {
-        "group": "nodes",
-        "data": {"id": method["Id"], "label": label, **method},
-        **({"style": {"background-color": color}} if color else {}),
-    }
+    result: list[CytoscapeElement] = [
+        {
+            "group": "nodes",
+            "data": {
+                "id": method["Id"],
+                "parent": method["Type"],
+                "label": label,
+                **method,
+            },
+            **({"style": {"background-color": color}} if color else {}),
+        }
+    ]
+
+    t = method["Type"]
+    while "." in t:
+        parent_t = t[: t.rindex(".")]
+        result.append(
+            {
+                "group": "nodes",
+                "data": {"id": t, "parent": parent_t, "label": t[t.rindex(".") + 1 :]},
+            }
+        )
+        t = parent_t
+    result.append({"group": "nodes", "data": {"id": t, "label": t}})
+
+    return result
 
 
 def invoke_to_cy(
