@@ -8,6 +8,8 @@ import type { GraphContext } from "$lib/types";
 
 const MAX_VIEWS = 10;
 const MAX_NEIGHBORS = 10;
+const COLORS_LIGHT = ["#f3f4f6", "#bfdbfe", "#bbf7d0", "#fef08a", "#fecaca", "#d8b4fe", "#f9a8d4"];
+const COLORS_DARK = ["#374151", "#1e40af", "#047857", "#a16207", "#b91c1c", "#7c3aed", "#be185d"];
 
 if (browser) {
   const contextMenus = (await import("cytoscape-context-menus")).default;
@@ -60,8 +62,13 @@ export default class View {
   };
 
   setColors = (darkMode: boolean = false) => {
+    const colors = darkMode ? COLORS_DARK : COLORS_LIGHT;
     this.cy.style([
       { selector: "node", style: { label: "data(label)", color: darkMode ? "white" : "black" } },
+      {
+        selector: "node:parent, node.cy-expand-collapse-collapsed-node",
+        style: { "background-color": (ele) => colors[ele.data("level") % colors.length] },
+      },
       { selector: "edge", style: { "curve-style": "bezier", "target-arrow-shape": "triangle" } },
     ]);
   };

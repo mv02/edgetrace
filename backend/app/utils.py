@@ -22,16 +22,23 @@ def method_to_cy(method: Method, color: str | None = None) -> list[CytoscapeElem
     ]
 
     t = method["Type"]
+    level = 0
     while "." in t:
         parent_t = t[: t.rindex(".")]
         result.append(
             {
                 "group": "nodes",
-                "data": {"id": t, "parent": parent_t, "label": t[t.rindex(".") + 1 :]},
+                "data": {
+                    "id": t,
+                    "parent": parent_t,
+                    "label": t[t.rindex(".") + 1 :],
+                    "level": level,
+                },
             }
         )
         t = parent_t
-    result.append({"group": "nodes", "data": {"id": t, "label": t}})
+        level += 1
+    result.append({"group": "nodes", "data": {"id": t, "label": t, "level": level}})
 
     return result
 
