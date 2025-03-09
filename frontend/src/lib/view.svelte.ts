@@ -40,7 +40,15 @@ export default class View {
     });
 
     this.cy.on("tap", "node", (e: cytoscape.EventObject) => {
-      this.selectedNode = e.target;
+      const node: NodeSingular = e.target;
+      if (node.isParent() || node.hasClass("cy-expand-collapse-collapsed-node")) {
+        // Compound node (has children or is collapsed)
+        // TODO: compound node properties
+        this.selectedNode = undefined;
+      } else {
+        // Regular node
+        this.selectedNode = e.target;
+      }
     });
   }
 
