@@ -24,7 +24,12 @@ export default class View {
   selectedNode?: cytoscape.NodeSingular = $state();
   contextMenu?: contextMenus.ContextMenu;
 
-  constructor(elements: ElementDefinition[], graphName: string, title?: string) {
+  constructor(
+    elements: ElementDefinition[],
+    graphName: string,
+    title?: string,
+    darkMode: boolean = false,
+  ) {
     this.graphName = graphName;
     this.title = title ?? "Query";
     this.timestamp = new Date();
@@ -33,11 +38,8 @@ export default class View {
       minZoom: 0.1,
       maxZoom: 10,
       wheelSensitivity: 0.25,
-      style: [
-        { selector: "node", style: { label: "data(label)", color: "gray" } },
-        { selector: "edge", style: { "curve-style": "bezier", "target-arrow-shape": "triangle" } },
-      ],
     });
+    this.setColors(darkMode);
 
     this.cy.on("tap", "node", (e: cytoscape.EventObject) => {
       const node: NodeSingular = e.target;
@@ -55,6 +57,13 @@ export default class View {
   resetLayout = () => {
     this.cy.reset();
     this.cy.layout({ name: "breadthfirst", directed: true }).run();
+  };
+
+  setColors = (darkMode: boolean = false) => {
+    this.cy.style([
+      { selector: "node", style: { label: "data(label)", color: darkMode ? "white" : "black" } },
+      { selector: "edge", style: { "curve-style": "bezier", "target-arrow-shape": "triangle" } },
+    ]);
   };
 
   attach = (container: HTMLElement) => {

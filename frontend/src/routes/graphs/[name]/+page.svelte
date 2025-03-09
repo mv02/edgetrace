@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
   import { Button, RadioButton, Search, Spinner } from "flowbite-svelte";
@@ -33,6 +34,15 @@
       view.detach();
     }
     view?.attach(container);
+  });
+
+  onMount(() => {
+    // Automatically set light/dark graph colors
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+      for (const view of views) {
+        view.setColors(e.matches);
+      }
+    });
   });
 
   beforeNavigate(() => view?.detach());

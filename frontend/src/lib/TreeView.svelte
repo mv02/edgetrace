@@ -47,7 +47,10 @@
     const data = await response.json();
     if (newView || graphs[graphName].views.length === 0) {
       // Create new view
-      addView(graph, new View(data, graphName, name));
+      addView(
+        graph,
+        new View(data, graphName, name, window.matchMedia("(prefers-color-scheme: dark)").matches),
+      );
       graph.viewIndex = 0;
     } else {
       // Add to current view
