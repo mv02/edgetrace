@@ -7,39 +7,54 @@
   import TreeView from "$lib/TreeView.svelte";
   import type { GraphContext, Tree } from "$lib/types";
 
+  /** Maximum number of results to expand the tree. */
+  const MAX_EXPAND = 100;
+
   interface Props {
     tree: Tree;
     graphs: Record<string, GraphContext>;
     graphName: string;
     level?: number;
     searchQuery?: string;
+    expand?: boolean;
   }
 
-  let { tree, graphs = $bindable(), graphName, level = 0, searchQuery = "" }: Props = $props();
+  let {
+    tree,
+    graphs = $bindable(),
+    graphName,
+    level = 0,
+    searchQuery = "",
+    expand,
+  }: Props = $props();
 
   let graph = $derived(graphs[graphName]);
   let filtered = $derived.by(() => filterTree(tree));
+  let open = $derived(level === 0 ? filtered.count <= MAX_EXPAND : expand);
 
-  const filterTree = (node: Tree): Tree => {
+  const filterTree = (node: Tree): { tree: Tree; count: number } => {
     let result: Tree = {};
     let matchingMethod = false;
+    let count = 0;
     for (const [key, content] of Object.entries(node)) {
       if (typeof content === "number") {
         // Method
         if (key.toLowerCase().includes(searchQuery.toLowerCase())) {
           result[key] = content;
           matchingMethod = true;
+          count++;
         }
       } else {
         // Type
         const filteredChild = filterTree(content);
-        if (Object.keys(filteredChild).length > 0) {
-          result[key] = filteredChild;
+        if (filteredChild.count > 0) {
+          result[key] = filteredChild.tree;
           matchingMethod = true;
+          count += filteredChild.count;
         }
       }
     }
-    return matchingMethod ? result : {};
+    return matchingMethod ? { tree: result, count } : { tree: {}, count: 0 };
   };
 
   const findMethod = async (id: number, name: string, newView: boolean = true) => {
@@ -60,7 +75,7 @@
 </script>
 
 <Accordion flush multiple --padding="{level * 8}px" class="flex flex-col">
-  {#each Object.entries(filtered) as [key, content]}
+  {#each Object.entries(filtered.tree) as [key, content]}
     {#if typeof content === "number"}
       <!-- No children, content is method ID -->
       <button
@@ -72,7 +87,7 @@
       </button>
     {:else}
       <!-- Children present, traverse to next level -->
-      <AccordionItem tag="h4" paddingFlush="">
+      <AccordionItem tag="h4" paddingFlush="" {open}>
         <span slot="header" class="overflow-hidden text-nowrap text-sm hover:overflow-visible">
           <i class="nf nf-cod-symbol_class text-orange-500"></i>
           {key}
@@ -86,7 +101,14 @@
           <ChevronUpOutline class="w-6" />
         </span>
 
-        <TreeView tree={content} bind:graphs {graphName} level={level + 1} {searchQuery} />
+        <TreeView
+          tree={content}
+          bind:graphs
+          {graphName}
+          level={level + 1}
+          {searchQuery}
+          expand={open}
+        />
       </AccordionItem>
     {/if}
   {/each}
