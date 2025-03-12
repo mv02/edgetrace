@@ -92,11 +92,8 @@ export default class View {
     this.isAttached = false;
   };
 
-  add = (elements: ElementDefinition[], layout: boolean = false) => {
+  add = (elements: ElementDefinition[]) => {
     this.cy.add(elements);
-    if (layout) {
-      this.resetLayout();
-    }
   };
 
   expandNode = async (node: NodeSingular) => {
@@ -105,7 +102,8 @@ export default class View {
     );
     const data: ElementDefinition[] = await resp.json();
     // TODO: selectable neighbor limit, incremental expansion
-    this.add(data.slice(0, MAX_NEIGHBORS * 2), true);
+    this.add(data.slice(0, MAX_NEIGHBORS * 2));
+    this.resetLayout();
     this.unselectAll();
     node.select();
     this.selectedNode = node;
