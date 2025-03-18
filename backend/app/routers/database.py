@@ -143,9 +143,9 @@ def import_csv(
     reader = csv.DictReader(targets_csv)
     (edge_count,) = driver.execute_query(
         "UNWIND $data AS row "
-        "MATCH (t:Method {Id: row.TargetId}) "
-        "MATCH (i:Invoke {Id: row.InvokeId}) "
-        "MATCH (s:Method {Id: i.MethodId}) "
+        "MATCH (t:Method {Graph: $graph, Id: row.TargetId}) "
+        "MATCH (i:Invoke {Graph: $graph, Id: row.InvokeId}) "
+        "MATCH (s:Method {Graph: $graph, Id: i.MethodId}) "
         "MERGE (s)-[r:CALLS {Graph: $graph}]->(t) "
         "RETURN count(DISTINCT r) AS edge_count",
         data=[row for row in reader],
