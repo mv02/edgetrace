@@ -17,7 +17,10 @@ router = APIRouter()
 @router.get("/graphs")
 def get_graphs():
     records = driver.execute_query(
-        "MATCH (m:Method) RETURN m.Graph AS name, count(m) AS nodeCount ORDER BY name"
+        "MATCH (m:Method) "
+        "OPTIONAL MATCH (m)-[r:CALLS]->() "
+        "RETURN m.Graph AS name, count(DISTINCT m) AS nodeCount, count(r) AS edgeCount "
+        "ORDER BY name"
     ).records
     return [record.data() for record in records]
 

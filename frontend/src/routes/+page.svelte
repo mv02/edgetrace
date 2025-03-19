@@ -11,7 +11,7 @@
         <i class="nf nf-md-graph_outline"></i>
         {graph.name}
       </h2>
-      <p>{graph.nodeCount} nodes</p>
+      <p>{graph.nodeCount} nodes, {graph.edgeCount} edges</p>
     </Card>
   {/each}
 </main>

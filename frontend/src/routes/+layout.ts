@@ -4,6 +4,7 @@ import type { LayoutLoad } from "./$types";
 type Graph = {
   name: string;
   nodeCount: number;
+  edgeCount: number;
 };
 
 export const load: LayoutLoad = async ({ fetch }) => {
