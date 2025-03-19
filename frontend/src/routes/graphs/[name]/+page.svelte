@@ -27,6 +27,9 @@
     view?.detach();
     views[index].destroy();
     graphs[page.params.name].views.splice(index, 1);
+    if (viewIndex > index) {
+      graphs[page.params.name].viewIndex--;
+    }
     if (viewIndex >= views.length) {
       graphs[page.params.name].viewIndex = Math.max(views.length - 1, 0);
     }
