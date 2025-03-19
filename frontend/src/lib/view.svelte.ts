@@ -2,7 +2,7 @@ import { browser } from "$app/environment";
 import { PUBLIC_API_URL } from "$env/static/public";
 import cytoscape from "cytoscape";
 import expandCollapse from "cytoscape-expand-collapse";
-import type { ElementDefinition, NodeSingular } from "cytoscape";
+import type { Collection, ElementDefinition, NodeSingular } from "cytoscape";
 import type contextMenus from "cytoscape-context-menus";
 import type { GraphContext } from "$lib/types";
 
@@ -10,6 +10,7 @@ const MAX_VIEWS = 10;
 const MAX_NEIGHBORS = 10;
 const COLORS_LIGHT = ["#f3f4f6", "#bfdbfe", "#bbf7d0", "#fef08a", "#fecaca", "#d8b4fe", "#f9a8d4"];
 const COLORS_DARK = ["#374151", "#1e40af", "#047857", "#a16207", "#b91c1c", "#7c3aed", "#be185d"];
+const LAYOUT_OPTIONS = { name: "breadthfirst", directed: true };
 
 if (browser) {
   const contextMenus = (await import("cytoscape-context-menus")).default;
@@ -58,7 +59,7 @@ export default class View {
 
   resetLayout = () => {
     this.cy.reset();
-    this.cy.layout({ name: "breadthfirst", directed: true }).run();
+    this.cy.layout(LAYOUT_OPTIONS).run();
   };
 
   setColors = (darkMode: boolean = false) => {
@@ -93,20 +94,37 @@ export default class View {
   };
 
   add = (elements: ElementDefinition[]) => {
-    this.cy.add(elements);
+    return this.cy.add(elements);
   };
 
   expandNode = async (node: NodeSingular) => {
-    const resp = await fetch(
-      `${PUBLIC_API_URL}/graphs/${this.graphName}/method/${node.data("id")}/neighbors`,
-    );
-    const data: ElementDefinition[] = await resp.json();
-    // TODO: selectable neighbor limit, incremental expansion
-    this.add(data.slice(0, MAX_NEIGHBORS * 2));
-    this.resetLayout();
+    const collapsed: Collection | undefined = node.data("collapsed");
+    collapsed?.restore();
+
+    const fetched: boolean = node.data("fetched") ?? false;
+
+    if (!fetched) {
+      // Fetch and add new neighbors
+      const resp = await fetch(
+        `${PUBLIC_API_URL}/graphs/${this.graphName}/method/${node.data("id")}/neighbors`,
+      );
+      const data: ElementDefinition[] = await resp.json();
+      // TODO: selectable neighbor limit, incremental expansion
+      const added = this.add(data.slice(0, MAX_NEIGHBORS * 2));
+      if (added.length > 0) {
+        this.cy.layout(LAYOUT_OPTIONS).run();
+      }
+      node.data("fetched", true);
+    }
+
     this.unselectAll();
     node.select();
     this.selectedNode = node;
+  };
+
+  collapseNode = (node: NodeSingular) => {
+    const removed = node.outgoers().remove();
+    node.data("collapsed", removed);
   };
 
   removeAll = () => {
@@ -130,6 +148,12 @@ export default class View {
           content: "Expand node",
           selector: "node",
           onClickFunction: (e) => this.expandNode(e.target),
+        },
+        {
+          id: "collapse",
+          content: "Collapse node",
+          selector: "node",
+          onClickFunction: (e) => this.collapseNode(e.target),
         },
       ],
     });
