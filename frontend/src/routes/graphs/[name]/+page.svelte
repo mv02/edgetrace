@@ -2,7 +2,8 @@
   import { onMount } from "svelte";
   import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
-  import { Button, RadioButton, Search, Spinner } from "flowbite-svelte";
+  import { Button, ButtonGroup, RadioButton, Search, Spinner } from "flowbite-svelte";
+  import { CloseOutline } from "flowbite-svelte-icons";
   import MethodProperties from "$lib/MethodProperties.svelte";
   import TreeView from "$lib/TreeView.svelte";
   import type { GraphContext } from "$lib/types";
@@ -21,6 +22,14 @@
   let viewIndex = $derived(graph?.viewIndex);
   /** The currently selected view. */
   let view = $derived(views[viewIndex]);
+
+  const closeView = (index: number) => {
+    views[index].destroy();
+    graphs[page.params.name].views.splice(index, 1);
+    if (viewIndex >= views.length) {
+      graphs[page.params.name].viewIndex = Math.max(views.length - 1, 0);
+    }
+  };
 
   $effect(() => {
     // Create new graph entry if it doesn't exist
@@ -83,9 +92,19 @@
     <section class="h-full w-full" bind:this={container}></section>
     <footer class="absolute bottom-0 flex flex-wrap gap-2 p-2">
       {#each views as view, i}
-        <RadioButton value={i} bind:group={graphs[page.params.name].viewIndex} size="sm">
-          {view.title}
-        </RadioButton>
+        <ButtonGroup size="sm">
+          <RadioButton
+            value={i}
+            bind:group={graphs[page.params.name].viewIndex}
+            color="primary"
+            class="px-2 py-1"
+          >
+            {view.title}
+          </RadioButton>
+          <Button onclick={() => closeView(i)} color="primary" class="cursor-default px-1 py-0">
+            <CloseOutline class="h-4 w-4" />
+          </Button>
+        </ButtonGroup>
       {/each}
     </footer>
   </div>
