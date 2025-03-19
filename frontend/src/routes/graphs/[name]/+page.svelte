@@ -24,6 +24,7 @@
   let view = $derived(views[viewIndex]);
 
   const closeView = (index: number) => {
+    view?.detach();
     views[index].destroy();
     graphs[page.params.name].views.splice(index, 1);
     if (viewIndex >= views.length) {
