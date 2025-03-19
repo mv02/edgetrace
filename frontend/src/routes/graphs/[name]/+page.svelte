@@ -55,21 +55,12 @@
   });
 
   beforeNavigate(() => view?.detach());
-
-  const clear = async () => {
-    view?.destroy();
-    graphs[page.params.name].views.splice(viewIndex, 1);
-    if (viewIndex >= views.length) {
-      graphs[page.params.name].viewIndex = Math.max(views.length - 1, 0);
-    }
-  };
 </script>
 
 <main class="flex">
   <aside
     class="flex flex-col gap-4 overflow-y-auto border-r-2 border-r-gray-200 p-4 lg:w-80 dark:border-r-gray-800"
   >
-    <Button onclick={clear}>Clear</Button>
     <Button onclick={() => view?.resetLayout()}>Reset layout</Button>
 
     {#if graph}
