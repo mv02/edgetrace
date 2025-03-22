@@ -102,16 +102,16 @@ export default class View {
     return this.cy.add(elements);
   };
 
-  expandNode = async (node: NodeSingular) => {
-    const collapsed: Collection | undefined = node.data("collapsed");
-    collapsed?.restore();
+  showNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
+    const neighbors: Collection | undefined = node.data(type);
+    neighbors?.restore();
 
-    const fetched: boolean = node.data("fetched") ?? false;
+    const fetched: boolean = node.data(`${type}Fetched`) ?? false;
 
     if (!fetched) {
       // Fetch and add new neighbors
       const resp = await fetch(
-        `${PUBLIC_API_URL}/graphs/${this.graphName}/method/${node.data("id")}/neighbors`,
+        `${PUBLIC_API_URL}/graphs/${this.graphName}/method/${node.data("id")}/${type}`,
       );
       const data: ElementDefinition[] = await resp.json();
       // TODO: selectable neighbor limit, incremental expansion
@@ -119,7 +119,8 @@ export default class View {
       if (added.length > 0) {
         this.cy.layout(LAYOUT_OPTIONS).run();
       }
-      node.data("fetched", true);
+      node.data(type, neighbors?.union(added) ?? added);
+      node.data(`${type}Fetched`, true);
     }
 
     this.unselectAll();
@@ -127,9 +128,10 @@ export default class View {
     this.selectedNode = node;
   };
 
-  collapseNode = (node: NodeSingular) => {
-    const removed = node.outgoers().remove();
-    node.data("collapsed", removed);
+  hideNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
+    const neighbors = type === "callers" ? node.incomers() : node.outgoers();
+    const removed = neighbors.remove();
+    node.data(type, removed);
   };
 
   removeAll = () => {
@@ -149,16 +151,28 @@ export default class View {
     this.contextMenu = this.cy.contextMenus({
       menuItems: [
         {
-          id: "expand",
-          content: "Expand node",
-          selector: "node",
-          onClickFunction: (e) => this.expandNode(e.target),
+          id: "show-callers",
+          content: "Show callers",
+          selector: "node[!compound]",
+          onClickFunction: (e) => this.showNeighbors(e.target, "callers"),
         },
         {
-          id: "collapse",
-          content: "Collapse node",
-          selector: "node",
-          onClickFunction: (e) => this.collapseNode(e.target),
+          id: "hide-callers",
+          content: "Hide callers",
+          selector: "node[!compound]",
+          onClickFunction: (e) => this.hideNeighbors(e.target, "callers"),
+        },
+        {
+          id: "show-callees",
+          content: "Show callees",
+          selector: "node[!compound]",
+          onClickFunction: (e) => this.showNeighbors(e.target, "callees"),
+        },
+        {
+          id: "hide-callees",
+          content: "Hide callees",
+          selector: "node[!compound]",
+          onClickFunction: (e) => this.hideNeighbors(e.target, "callees"),
         },
       ],
     });
