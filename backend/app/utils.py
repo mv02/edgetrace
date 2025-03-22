@@ -17,6 +17,7 @@ def method_to_cy(method: Method, color: str | None = None) -> list[CytoscapeElem
                 "label": label,
                 **method,
             },
+            "classes": ["leaf"],
             **({"style": {"background-color": color}} if color else {}),
         }
     ]
