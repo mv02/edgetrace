@@ -68,7 +68,10 @@ export default class View {
       { selector: "node", style: { label: "data(label)", color: darkMode ? "white" : "black" } },
       {
         selector: "node:parent, node.cy-expand-collapse-collapsed-node",
-        style: { "background-color": (ele) => colors[ele.data("level") % colors.length] },
+        style: {
+          shape: "round-hexagon",
+          "background-color": (ele) => colors[ele.data("level") % colors.length],
+        },
       },
       { selector: "edge", style: { "curve-style": "bezier", "target-arrow-shape": "triangle" } },
     ]);
