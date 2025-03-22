@@ -1,8 +1,9 @@
 import { browser } from "$app/environment";
 import { PUBLIC_API_URL } from "$env/static/public";
 import cytoscape from "cytoscape";
+import cola from "cytoscape-cola";
 import expandCollapse from "cytoscape-expand-collapse";
-import type { Collection, ElementDefinition, NodeSingular } from "cytoscape";
+import type { ColaLayoutOptions, Collection, ElementDefinition, NodeSingular } from "cytoscape";
 import type contextMenus from "cytoscape-context-menus";
 import type { GraphContext } from "$lib/types";
 
@@ -10,12 +11,13 @@ const MAX_VIEWS = 10;
 const MAX_NEIGHBORS = 10;
 const COLORS_LIGHT = ["#f3f4f6", "#bfdbfe", "#bbf7d0", "#fef08a", "#fecaca", "#d8b4fe", "#f9a8d4"];
 const COLORS_DARK = ["#374151", "#1e40af", "#047857", "#a16207", "#b91c1c", "#7c3aed", "#be185d"];
-const LAYOUT_OPTIONS = { name: "breadthfirst", directed: true };
+const LAYOUT_OPTIONS: ColaLayoutOptions = { name: "cola", maxSimulationTime: 1000 };
 
 if (browser) {
   const contextMenus = (await import("cytoscape-context-menus")).default;
   cytoscape.use(contextMenus);
 }
+cytoscape.use(cola);
 cytoscape.use(expandCollapse);
 
 export default class View {
