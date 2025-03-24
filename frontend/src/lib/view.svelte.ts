@@ -61,8 +61,8 @@ export default class View {
 
     this.cy.on("tap", "node", (e: cytoscape.EventObject) => {
       const node: NodeSingular = e.target;
-      if (node.isParent() || node.hasClass("cy-expand-collapse-collapsed-node")) {
-        // Compound node (has children or is collapsed)
+      if (node.is(COMPOUND_NODES)) {
+        // Compound node
         // TODO: compound node properties
         this.selectedNode = undefined;
       } else {
@@ -82,7 +82,7 @@ export default class View {
     this.cy.style([
       { selector: "node", style: { label: "data(label)", color: darkMode ? "white" : "black" } },
       {
-        selector: "node:parent, node.cy-expand-collapse-collapsed-node",
+        selector: COMPOUND_NODES,
         style: {
           shape: "round-hexagon",
           "background-color": (ele) => colors[(ele.data("level") - 1) % colors.length],
