@@ -3,7 +3,13 @@ import { PUBLIC_API_URL } from "$env/static/public";
 import cytoscape from "cytoscape";
 import cola from "cytoscape-cola";
 import expandCollapse from "cytoscape-expand-collapse";
-import type { ColaLayoutOptions, Collection, ElementDefinition, NodeSingular } from "cytoscape";
+import type {
+  ColaLayoutOptions,
+  Collection,
+  ElementDefinition,
+  NodeCollection,
+  NodeSingular,
+} from "cytoscape";
 import type contextMenus from "cytoscape-context-menus";
 import type { GraphContext } from "$lib/types";
 
@@ -104,6 +110,27 @@ export default class View {
     return this.cy.add(elements);
   };
 
+  remove = (nodes: NodeCollection) => {
+    let removed = this.cy.collection();
+    for (const node of nodes) {
+      const parentsToRemove = this.parentsToRemove(node);
+      removed = removed.union(node.remove());
+      removed = removed.union(parentsToRemove.remove());
+    }
+    return removed;
+  };
+
+  parentsToRemove = (node: NodeCollection): NodeCollection => {
+    if (node.is(LEAF_NODES)) {
+      return node
+        .parent()
+        .map((ele) => this.parentsToRemove(ele))
+        .reduce((col, cur) => col.union(cur), this.cy.collection());
+    }
+    if (node.children().length !== 1) return this.cy.collection();
+    return node.union(this.parentsToRemove(node.parent()));
+  };
+
   showNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
     const neighbors: Collection | undefined = node.data(type);
     neighbors?.restore();
@@ -132,7 +159,7 @@ export default class View {
 
   hideNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
     const neighbors = type === "callers" ? node.incomers() : node.outgoers();
-    const removed = neighbors.remove();
+    const removed = this.remove(neighbors);
     node.data(type, removed);
   };
 
