@@ -4,6 +4,7 @@ export type GraphContext = {
   views: View[];
   viewIndex: number;
   searchQuery: string;
+  compoundNodesShown: boolean;
 };
 
 export type Tree = {

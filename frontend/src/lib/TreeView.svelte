@@ -64,7 +64,13 @@
       // Create new view
       addView(
         graph,
-        new View(data, graphName, name, window.matchMedia("(prefers-color-scheme: dark)").matches),
+        new View(
+          data,
+          graphName,
+          name,
+          window.matchMedia("(prefers-color-scheme: dark)").matches,
+          graph.compoundNodesShown,
+        ),
       );
       graph.viewIndex = 0;
     } else {

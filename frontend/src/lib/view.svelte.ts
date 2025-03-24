@@ -20,6 +20,7 @@ const COLORS_DARK = ["#374151", "#1e40af", "#047857", "#a16207", "#b91c1c", "#7c
 const LAYOUT_OPTIONS: ColaLayoutOptions = { name: "cola", maxSimulationTime: 1000 };
 
 const LEAF_NODES = "node[!level]";
+const COMPOUND_NODES = "node[level > 0]";
 
 if (browser) {
   const contextMenus = (await import("cytoscape-context-menus")).default;
@@ -35,23 +36,27 @@ export default class View {
   cy: cytoscape.Core;
   isAttached: boolean = false;
   selectedNode?: cytoscape.NodeSingular = $state();
+  compoundNodesShown: boolean;
+  hiddenCompoundNodes?: NodeCollection;
   contextMenu?: contextMenus.ContextMenu;
 
   constructor(
     elements: ElementDefinition[],
     graphName: string,
     title?: string,
+    compoundNodesShown: boolean = true,
     darkMode: boolean = false,
   ) {
     this.graphName = graphName;
     this.title = title ?? "Query";
     this.timestamp = new Date();
     this.cy = cytoscape({
-      elements,
       minZoom: 0.1,
       maxZoom: 10,
       wheelSensitivity: 0.25,
     });
+    this.compoundNodesShown = compoundNodesShown;
+    this.add(elements);
     this.setColors(darkMode);
 
     this.cy.on("tap", "node", (e: cytoscape.EventObject) => {
@@ -107,7 +112,9 @@ export default class View {
   };
 
   add = (elements: ElementDefinition[]) => {
-    return this.cy.add(elements);
+    const added = this.cy.add(elements);
+    if (!this.compoundNodesShown) this.hideCompoundNodes();
+    return added;
   };
 
   remove = (nodes: NodeCollection) => {
@@ -132,6 +139,9 @@ export default class View {
   };
 
   showNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
+    const prevHidden = !this.compoundNodesShown;
+    this.showCompoundNodes();
+
     const neighbors: Collection | undefined = node.data(type);
     neighbors?.restore();
 
@@ -155,12 +165,49 @@ export default class View {
     this.unselectAll();
     node.select();
     this.selectedNode = node;
+
+    if (prevHidden) this.hideCompoundNodes();
   };
 
   hideNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
+    const prevHidden = !this.compoundNodesShown;
+    this.showCompoundNodes();
+
     const neighbors = type === "callers" ? node.incomers() : node.outgoers();
     const removed = this.remove(neighbors);
     node.data(type, removed);
+
+    if (prevHidden) this.hideCompoundNodes();
+  };
+
+  showCompoundNodes = () => {
+    this.compoundNodesShown = true;
+    // Restore hidden compound nodes
+    this.hiddenCompoundNodes?.restore();
+    this.hiddenCompoundNodes = undefined;
+    // Restore original parents
+    for (const node of this.cy.nodes(LEAF_NODES)) {
+      node.move({ parent: node.data("savedParent") });
+      node.data("savedParent", undefined);
+    }
+  };
+
+  hideCompoundNodes = () => {
+    this.compoundNodesShown = false;
+    // Save original parents
+    const leafNodes = this.cy.nodes(LEAF_NODES);
+    for (const node of leafNodes) {
+      node.data("savedParent", node.data("parent"));
+      node.move({ parent: null });
+    }
+    // Remove and save compound nodes
+    const removed = this.cy.nodes(COMPOUND_NODES).remove();
+    this.hiddenCompoundNodes = this.hiddenCompoundNodes?.union(removed) ?? removed;
+  };
+
+  toggleCompoundNodes = () => {
+    if (this.compoundNodesShown) this.hideCompoundNodes();
+    else this.showCompoundNodes();
   };
 
   removeAll = () => {

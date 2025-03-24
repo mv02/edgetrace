@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
-  import { Button, ButtonGroup, RadioButton, Search, Spinner } from "flowbite-svelte";
+  import { Button, ButtonGroup, Checkbox, Hr, RadioButton, Search, Spinner } from "flowbite-svelte";
   import { CloseOutline } from "flowbite-svelte-icons";
   import MethodProperties from "$lib/MethodProperties.svelte";
   import TreeView from "$lib/TreeView.svelte";
@@ -38,7 +38,12 @@
   $effect(() => {
     // Create new graph entry if it doesn't exist
     if (!graphs[page.params.name]) {
-      graphs[page.params.name] = { views: [], viewIndex: 0, searchQuery: "" };
+      graphs[page.params.name] = {
+        views: [],
+        viewIndex: 0,
+        searchQuery: "",
+        compoundNodesShown: true,
+      };
     }
   });
 
@@ -104,12 +109,26 @@
     </footer>
   </div>
 
-  <aside
-    class="flex flex-col gap-4 border-l-2 border-l-gray-200 p-4 lg:w-80 dark:border-l-gray-800"
-  >
+  <aside class="flex flex-col border-l-2 border-l-gray-200 p-4 lg:w-80 dark:border-l-gray-800">
     {#if view?.selectedNode}
-      <h3>Method Properties</h3>
-      <MethodProperties node={view.selectedNode} />
+      <div class="flex flex-col gap-4">
+        <h3>Method Properties</h3>
+        <MethodProperties node={view.selectedNode} />
+      </div>
+
+      <Hr />
+    {/if}
+
+    {#if graph}
+      <div>
+        <h3 class="mb-4">Graph Options</h3>
+        <Checkbox
+          bind:checked={graphs[page.params.name].compoundNodesShown}
+          onchange={() => views.forEach((v) => v.toggleCompoundNodes())}
+        >
+          Compound nodes
+        </Checkbox>
+      </div>
     {/if}
   </aside>
 </main>
