@@ -68,8 +68,8 @@
           data,
           graphName,
           name,
-          window.matchMedia("(prefers-color-scheme: dark)").matches,
           graph.compoundNodesShown,
+          window.matchMedia("(prefers-color-scheme: dark)").matches,
         ),
       );
       graph.viewIndex = 0;
