@@ -17,13 +17,12 @@ def method_to_cy(method: Method, color: str | None = None) -> list[CytoscapeElem
                 "label": label,
                 **method,
             },
-            "classes": ["leaf"],
             **({"style": {"background-color": color}} if color else {}),
         }
     ]
 
     t = method["Type"]
-    level = 0
+    level = 1
     while "." in t:
         parent_t = t[: t.rindex(".")]
         result.append(

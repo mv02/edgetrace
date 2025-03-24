@@ -13,6 +13,8 @@ const COLORS_LIGHT = ["#f3f4f6", "#bfdbfe", "#bbf7d0", "#fef08a", "#fecaca", "#d
 const COLORS_DARK = ["#374151", "#1e40af", "#047857", "#a16207", "#b91c1c", "#7c3aed", "#be185d"];
 const LAYOUT_OPTIONS: ColaLayoutOptions = { name: "cola", maxSimulationTime: 1000 };
 
+const LEAF_NODES = "node[!level]";
+
 if (browser) {
   const contextMenus = (await import("cytoscape-context-menus")).default;
   cytoscape.use(contextMenus);
@@ -72,7 +74,7 @@ export default class View {
         selector: "node:parent, node.cy-expand-collapse-collapsed-node",
         style: {
           shape: "round-hexagon",
-          "background-color": (ele) => colors[ele.data("level") % colors.length],
+          "background-color": (ele) => colors[(ele.data("level") - 1) % colors.length],
         },
       },
       { selector: "edge", style: { "curve-style": "bezier", "target-arrow-shape": "triangle" } },
@@ -153,25 +155,25 @@ export default class View {
         {
           id: "show-callers",
           content: "Show callers",
-          selector: "node.leaf",
+          selector: LEAF_NODES,
           onClickFunction: (e) => this.showNeighbors(e.target, "callers"),
         },
         {
           id: "hide-callers",
           content: "Hide callers",
-          selector: "node.leaf",
+          selector: LEAF_NODES,
           onClickFunction: (e) => this.hideNeighbors(e.target, "callers"),
         },
         {
           id: "show-callees",
           content: "Show callees",
-          selector: "node.leaf",
+          selector: LEAF_NODES,
           onClickFunction: (e) => this.showNeighbors(e.target, "callees"),
         },
         {
           id: "hide-callees",
           content: "Hide callees",
-          selector: "node.leaf",
+          selector: LEAF_NODES,
           onClickFunction: (e) => this.hideNeighbors(e.target, "callees"),
         },
       ],
