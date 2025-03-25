@@ -124,27 +124,53 @@ export default class View {
       const parentsToRemove = this.parentsToRemove(node);
       removed = removed.union(node.remove());
       removed = removed.union(parentsToRemove.remove());
+      removed = removed.union(parentsToRemove); // Include hidden compound nodes (not actually removed)
+      this.hiddenCompoundNodes = this.hiddenCompoundNodes.difference(parentsToRemove);
     }
     return removed;
   };
 
+  restore = (elements: Collection) => {
+    if (this.compoundNodesShown) return elements.restore();
+    const compoundNodes = elements.filter(COMPOUND_NODES);
+    this.hiddenCompoundNodes = this.hiddenCompoundNodes.union(compoundNodes);
+    return elements.difference(compoundNodes).restore();
+  };
+
+  parent = (node: NodeCollection): NodeCollection => {
+    const parent = node.parent();
+    if (parent.nonempty()) return parent;
+
+    const id = node.is(LEAF_NODES) ? node.data("savedParent") : node.data("parent");
+    return this.hiddenCompoundNodes.filter(`[id = "${id}"]`);
+  };
+
+  children = (node: NodeSingular): NodeCollection => {
+    const children = node.children();
+    if (children.nonempty()) return children;
+
+    const compoundChildren = this.hiddenCompoundNodes.filter(`[parent = "${node.id()}"]`);
+    const leafChildren = this.cy.nodes(`[savedParent = "${node.id()}"]`);
+    return compoundChildren.union(leafChildren);
+  };
+
   parentsToRemove = (node: NodeCollection): NodeCollection => {
+    const parent = this.parent(node);
     if (node.is(LEAF_NODES)) {
-      return node
-        .parent()
+      // Leaf node
+      return parent
         .map((ele) => this.parentsToRemove(ele))
         .reduce((col, cur) => col.union(cur), this.cy.collection());
     }
-    if (node.children().length !== 1) return this.cy.collection();
-    return node.union(this.parentsToRemove(node.parent()));
+    // Compound node
+    const children = this.children(node.first());
+    if (children.length !== 1) return this.cy.collection();
+    return node.union(this.parentsToRemove(parent));
   };
 
   showNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
-    const prevHidden = !this.compoundNodesShown;
-    this.showCompoundNodes();
-
     const neighbors: Collection | undefined = node.data(type);
-    neighbors?.restore();
+    if (neighbors) this.restore(neighbors);
 
     const fetched: boolean = node.data(`${type}Fetched`) ?? false;
 
@@ -166,19 +192,12 @@ export default class View {
     this.unselectAll();
     node.select();
     this.selectedNode = node;
-
-    if (prevHidden) this.hideCompoundNodes();
   };
 
   hideNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
-    const prevHidden = !this.compoundNodesShown;
-    this.showCompoundNodes();
-
-    const neighbors = type === "callers" ? node.incomers() : node.outgoers();
+    const neighbors = type === "callers" ? node.incomers("node") : node.outgoers("node");
     const removed = this.remove(neighbors);
-    node.data(type, removed);
-
-    if (prevHidden) this.hideCompoundNodes();
+    node.data(type, neighbors.union(removed));
   };
 
   showCompoundNodes = () => {
