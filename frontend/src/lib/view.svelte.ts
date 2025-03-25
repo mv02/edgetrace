@@ -37,7 +37,7 @@ export default class View {
   isAttached: boolean = false;
   selectedNode?: cytoscape.NodeSingular = $state();
   compoundNodesShown: boolean;
-  hiddenCompoundNodes?: NodeCollection;
+  hiddenCompoundNodes: NodeCollection;
   contextMenu?: contextMenus.ContextMenu;
 
   constructor(
@@ -56,6 +56,7 @@ export default class View {
       wheelSensitivity: 0.25,
     });
     this.compoundNodesShown = compoundNodesShown;
+    this.hiddenCompoundNodes = this.cy.collection();
     this.add(elements);
     this.setColors(darkMode);
 
@@ -183,8 +184,8 @@ export default class View {
   showCompoundNodes = () => {
     this.compoundNodesShown = true;
     // Restore hidden compound nodes
-    this.hiddenCompoundNodes?.restore();
-    this.hiddenCompoundNodes = undefined;
+    this.hiddenCompoundNodes.restore();
+    this.hiddenCompoundNodes = this.cy.collection();
     // Restore original parents
     for (const node of this.cy.nodes(LEAF_NODES)) {
       node.move({ parent: node.data("savedParent") });
@@ -202,7 +203,7 @@ export default class View {
     }
     // Remove and save compound nodes
     const removed = this.cy.nodes(COMPOUND_NODES).remove();
-    this.hiddenCompoundNodes = this.hiddenCompoundNodes?.union(removed) ?? removed;
+    this.hiddenCompoundNodes = this.hiddenCompoundNodes.union(removed) ?? removed;
   };
 
   toggleCompoundNodes = () => {
