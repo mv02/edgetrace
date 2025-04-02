@@ -133,6 +133,12 @@ def import_csv(
     )
     driver.execute_query("CREATE INDEX method_id IF NOT EXISTS FOR (m:Method) ON m.Id")
     driver.execute_query("CREATE INDEX invoke_id IF NOT EXISTS FOR (i:Invoke) ON i.Id")
+    driver.execute_query(
+        "CREATE INDEX method_graph IF NOT EXISTS FOR (m:Method) ON m.Graph"
+    )
+    driver.execute_query(
+        "CREATE INDEX invoke_graph IF NOT EXISTS FOR (i:Invoke) ON i.Graph"
+    )
 
     # Create method nodes
     logger.info("Creating method nodes")
