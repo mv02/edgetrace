@@ -1,12 +1,16 @@
 import csv
 import io
 import logging
+import os
+import shutil
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from ..driver import driver
 from ..utils import CytoscapeElement, invoke_to_cy, method_to_cy, methods_to_tree
+
+CSV_DIR = "csv"
 
 logger = logging.getLogger("uvicorn")
 logger.propagate = False
@@ -118,6 +122,16 @@ def import_csv(
         raise HTTPException(400, f"Could not find a {key} file")
 
     logger.info(f"Found files: {[f[0].filename for f in newest.values()]}")
+
+    # Save CSV files to filesystem
+    location = os.path.join(CSV_DIR, graph)
+    os.makedirs(location, exist_ok=True)
+    for key in keys:
+        with open(os.path.join(location, f"call_tree_{key}.csv"), "wb") as buffer:
+            file = newest[key][0].file
+            shutil.copyfileobj(file, buffer)
+            file.seek(0)
+    logger.info(f"CSV files saved to: {os.path.abspath(location)}")
 
     # Delete all nodes and edges, create uniqueness constraints and indexes
     logger.info("Purging database")
