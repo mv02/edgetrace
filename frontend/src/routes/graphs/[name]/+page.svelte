@@ -110,15 +110,6 @@
   </div>
 
   <aside class="flex flex-col border-l-2 border-l-gray-200 p-4 lg:w-80 dark:border-l-gray-800">
-    {#if view?.selectedNode}
-      <div class="flex flex-col gap-4">
-        <h3>Method Properties</h3>
-        <MethodProperties node={view.selectedNode} />
-      </div>
-
-      <Hr />
-    {/if}
-
     {#if graph}
       <div>
         <h3 class="mb-4">Graph Options</h3>
@@ -128,6 +119,15 @@
         >
           Compound nodes
         </Checkbox>
+      </div>
+    {/if}
+
+    {#if view?.selectedNode}
+      <Hr />
+
+      <div class="flex flex-col gap-4">
+        <h3>Method Properties</h3>
+        <MethodProperties node={view.selectedNode} />
       </div>
     {/if}
   </aside>
