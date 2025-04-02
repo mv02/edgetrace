@@ -164,14 +164,23 @@ def import_csv(
     logger.info("Creating edges between method nodes")
     targets_csv = io.TextIOWrapper(newest["targets"][0].file)
     reader = csv.DictReader(targets_csv)
+    targets = list(reader)
+
+    for i in range(0, len(targets), 1000):
+        batch = targets[i : i + 1000]
+        driver.execute_query(
+            "UNWIND $data AS row "
+            "MATCH (t:Method {Graph: $graph, Id: row.TargetId}) "
+            "MATCH (i:Invoke {Graph: $graph, Id: row.InvokeId}) "
+            "MATCH (s:Method {Graph: $graph, Id: i.MethodId}) "
+            "MERGE (s)-[r:CALLS {Graph: $graph}]->(t) "
+            "RETURN count(DISTINCT r) AS edge_count",
+            data=batch,
+            graph=graph,
+        ).records[0]
+
     (edge_count,) = driver.execute_query(
-        "UNWIND $data AS row "
-        "MATCH (t:Method {Graph: $graph, Id: row.TargetId}) "
-        "MATCH (i:Invoke {Graph: $graph, Id: row.InvokeId}) "
-        "MATCH (s:Method {Graph: $graph, Id: i.MethodId}) "
-        "MERGE (s)-[r:CALLS {Graph: $graph}]->(t) "
-        "RETURN count(DISTINCT r) AS edge_count",
-        data=[row for row in reader],
+        "MATCH ()-[r:CALLS {Graph: $graph}]->() RETURN count(r) AS edge_count",
         graph=graph,
     ).records[0]
 
