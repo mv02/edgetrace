@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .routers import database
+from .routers import csv_import, database
 
 app = FastAPI()
 
@@ -20,4 +20,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(csv_import.router)
 app.include_router(database.router)
