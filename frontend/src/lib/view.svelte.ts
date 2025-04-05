@@ -43,12 +43,12 @@ export default class View {
   constructor(
     elements: ElementDefinition[],
     graphName: string,
-    title?: string,
+    title: string,
     compoundNodesShown: boolean = true,
     darkMode: boolean = false,
   ) {
     this.graphName = graphName;
-    this.title = title ?? "Query";
+    this.title = title.length > 50 ? title.substring(0, 50) + "…" : title;
     this.timestamp = new Date();
     this.cy = cytoscape({
       minZoom: 0.1,
