@@ -76,7 +76,7 @@
 
     {#if currentGraph}
       <h3>Method Tree</h3>
-      <Search clearable bind:value={graphs[page.params.name].searchQuery} />
+      <Search clearable bind:value={currentGraph.searchQuery} />
       {#await data.tree}
         <Spinner class="mx-auto" color="blue" />
       {:then result}
@@ -97,7 +97,7 @@
         <ButtonGroup size="sm">
           <RadioButton
             value={i}
-            bind:group={graphs[page.params.name].viewIndex}
+            bind:group={currentGraph.viewIndex}
             color="primary"
             class="px-2 py-1"
           >
