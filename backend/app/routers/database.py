@@ -187,11 +187,10 @@ def import_csv(
             "MATCH (t:Method {Graph: $graph, Id: row.TargetId}) "
             "MATCH (i:Invoke {Graph: $graph, Id: row.InvokeId}) "
             "MATCH (s:Method {Graph: $graph, Id: i.MethodId}) "
-            "MERGE (s)-[r:CALLS {Graph: $graph}]->(t) "
-            "RETURN count(DISTINCT r) AS edge_count",
+            "MERGE (s)-[r:CALLS {Graph: $graph}]->(t)",
             data=batch,
             graph=graph,
-        ).records[0]
+        )
 
     (edge_count,) = driver.execute_query(
         "MATCH ()-[r:CALLS {Graph: $graph}]->() RETURN count(r) AS edge_count",
