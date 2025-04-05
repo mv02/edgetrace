@@ -15,16 +15,16 @@
   /** All graphs identified by their name. */
   let graphs: Record<string, GraphContext> = $state({});
   /** The current graph. */
-  let graph = $derived(graphs[page.params.name]);
+  let currentGraph = $derived(graphs[page.params.name]);
   /** Views of the current graph. */
-  let views = $derived(graph?.views ?? []);
+  let views = $derived(currentGraph?.views ?? []);
   /** Index of the currently selected view. */
-  let viewIndex = $derived(graph?.viewIndex);
+  let viewIndex = $derived(currentGraph?.viewIndex);
   /** The currently selected view. */
-  let view = $derived(views[viewIndex]);
+  let currentView = $derived(views[viewIndex]);
 
   const closeView = (index: number) => {
-    view?.detach();
+    currentView?.detach();
     views[index].destroy();
     graphs[page.params.name].views.splice(index, 1);
     if (viewIndex > index) {
@@ -51,7 +51,7 @@
     for (const view of views) {
       view.detach();
     }
-    view?.attach(container);
+    currentView?.attach(container);
   });
 
   onMount(() => {
@@ -63,16 +63,16 @@
     });
   });
 
-  beforeNavigate(() => view?.detach());
+  beforeNavigate(() => currentView?.detach());
 </script>
 
 <main class="flex">
   <aside
     class="flex flex-col gap-4 overflow-y-auto border-r-2 border-r-gray-200 p-4 lg:w-80 dark:border-r-gray-800"
   >
-    <Button onclick={() => view?.resetLayout()}>Reset layout</Button>
+    <Button onclick={() => currentView?.resetLayout()}>Reset layout</Button>
 
-    {#if graph}
+    {#if currentGraph}
       <h3>Method Tree</h3>
       <Search clearable bind:value={graphs[page.params.name].searchQuery} />
       {#await data.tree}
@@ -110,7 +110,7 @@
   </div>
 
   <aside class="flex flex-col border-l-2 border-l-gray-200 p-4 lg:w-80 dark:border-l-gray-800">
-    {#if graph}
+    {#if currentGraph}
       <div>
         <h3 class="mb-4">Graph Options</h3>
         <Checkbox
@@ -122,12 +122,12 @@
       </div>
     {/if}
 
-    {#if view?.selectedNode}
+    {#if currentView?.selectedNode}
       <Hr />
 
       <div class="flex flex-col gap-4">
         <h3>Method Properties</h3>
-        <MethodProperties node={view.selectedNode} />
+        <MethodProperties node={currentView.selectedNode} />
       </div>
     {/if}
   </aside>
