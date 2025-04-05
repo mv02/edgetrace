@@ -9,12 +9,23 @@
   import TreeView from "$lib/TreeView.svelte";
   import type { GraphContext } from "$lib/types";
 
+  const GRAPH_DEFAULTS: Partial<GraphContext> = {
+    views: [],
+    viewIndex: 0,
+    searchQuery: "",
+    compoundNodesShown: true,
+  };
+
   let { data } = $props();
 
   let container: HTMLElement;
 
   /** All graphs identified by their name. */
-  let graphs: Record<string, GraphContext> = $state({});
+  let graphs: Record<string, GraphContext> = $state(
+    Object.fromEntries(
+      Object.entries(data.graphs).map(([name, graph]) => [name, { ...graph, ...GRAPH_DEFAULTS }]),
+    ),
+  );
   /** The current graph. */
   let currentGraph = $derived(graphs[page.params.name]);
   /** Views of the current graph. */
@@ -35,19 +46,6 @@
       graphs[page.params.name].viewIndex = Math.max(views.length - 1, 0);
     }
   };
-
-  $effect(() => {
-    // Create new graph entry if it doesn't exist
-    if (!graphs[page.params.name]) {
-      graphs[page.params.name] = {
-        ...data.graphs[page.params.name],
-        views: [],
-        viewIndex: 0,
-        searchQuery: "",
-        compoundNodesShown: true,
-      };
-    }
-  });
 
   $effect(() => {
     for (const view of views) {
