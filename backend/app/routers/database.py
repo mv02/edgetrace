@@ -38,7 +38,7 @@ def get_method_by_id(graph_name: str, id: str):
     record = driver.execute_query(
         "MATCH (m:Method {Id: $id, Graph: $graph}) "
         "OPTIONAL MATCH p = ALL SHORTEST (e:Method {IsEntryPoint: 'true', Graph: $graph}) "
-        "-[:CALLS {Graph: $graph}]->+(m) "
+        "-[:CALLS]->+(m) "
         "RETURN m, nodes(p) AS path LIMIT 1",
         id=id,
         graph=graph_name,

@@ -52,7 +52,7 @@ def import_csv(
 
     # Delete all nodes and edges, create uniqueness constraints and indexes
     logger.info("Purging database")
-    driver.execute_query("MATCH ()-[r {Graph: $graph}]-() DELETE r", graph=graph)
+    driver.execute_query("MATCH ({Graph: $graph})-[r]-() DELETE r", graph=graph)
     driver.execute_query("MATCH (n {Graph: $graph}) DELETE n", graph=graph)
     driver.execute_query(
         "CREATE CONSTRAINT unique_method_id IF NOT EXISTS "
@@ -95,22 +95,18 @@ def import_csv(
     logger.info("Creating edges between method nodes")
     targets_csv = io.TextIOWrapper(newest["targets"][0].file)
     reader = csv.DictReader(targets_csv)
-    targets = list(reader)
-
-    for i in range(0, len(targets), 1000):
-        batch = targets[i : i + 1000]
-        driver.execute_query(
-            "UNWIND $data AS row "
-            "MATCH (t:Method {Graph: $graph, Id: row.TargetId}) "
-            "MATCH (i:Invoke {Graph: $graph, Id: row.InvokeId}) "
-            "MATCH (s:Method {Graph: $graph, Id: i.MethodId}) "
-            "MERGE (s)-[r:CALLS {Graph: $graph}]->(t)",
-            data=batch,
-            graph=graph,
-        )
+    driver.execute_query(
+        "UNWIND $data AS row "
+        "MATCH (t:Method {Graph: $graph, Id: row.TargetId}) "
+        "MATCH (i:Invoke {Graph: $graph, Id: row.InvokeId}) "
+        "MATCH (s:Method {Graph: $graph, Id: i.MethodId}) "
+        "MERGE (s)-[r:CALLS]->(t)",
+        data=list(reader),
+        graph=graph,
+    )
 
     (edge_count,) = driver.execute_query(
-        "MATCH ()-[r:CALLS {Graph: $graph}]->() RETURN count(r) AS edge_count",
+        "MATCH ({Graph: $graph})-[r]->() RETURN count(r) AS edge_count",
         graph=graph,
     ).records[0]
 
