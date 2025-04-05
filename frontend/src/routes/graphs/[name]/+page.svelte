@@ -2,8 +2,9 @@
   import { onMount } from "svelte";
   import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
-  import { Button, ButtonGroup, Checkbox, Hr, RadioButton, Search, Spinner } from "flowbite-svelte";
+  import { Button, ButtonGroup, Hr, RadioButton, Search, Spinner } from "flowbite-svelte";
   import { CloseOutline } from "flowbite-svelte-icons";
+  import GraphOptions from "$lib/GraphOptions.svelte";
   import MethodProperties from "$lib/MethodProperties.svelte";
   import TreeView from "$lib/TreeView.svelte";
   import type { GraphContext } from "$lib/types";
@@ -112,14 +113,9 @@
 
   <aside class="flex flex-col border-l-2 border-l-gray-200 p-4 lg:w-80 dark:border-l-gray-800">
     {#if currentGraph}
-      <div>
-        <h3 class="mb-4">Graph Options</h3>
-        <Checkbox
-          bind:checked={graphs[page.params.name].compoundNodesShown}
-          onchange={() => views.forEach((v) => v.toggleCompoundNodes())}
-        >
-          Compound nodes
-        </Checkbox>
+      <div class="flex flex-col gap-4">
+        <h3>Graph Options</h3>
+        <GraphOptions bind:graphs />
       </div>
     {/if}
 
