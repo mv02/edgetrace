@@ -14,6 +14,8 @@
     viewIndex: 0,
     searchQuery: "",
     compoundNodesShown: true,
+    diffOtherGraph: "",
+    diffMaxIterations: 1000,
   };
 
   let { data } = $props();

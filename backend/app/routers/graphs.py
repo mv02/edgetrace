@@ -2,11 +2,12 @@ from fastapi import APIRouter
 
 from ..driver import driver
 from ..utils import methods_to_tree
-from . import methods
+from . import diff, methods
 
 router = APIRouter(prefix="/graphs")
 
 router.include_router(methods.router)
+router.include_router(diff.router)
 
 
 @router.get("")

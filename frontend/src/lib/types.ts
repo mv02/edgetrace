@@ -11,6 +11,8 @@ export type GraphContext = GraphInfo & {
   viewIndex: number;
   searchQuery: string;
   compoundNodesShown: boolean;
+  diffOtherGraph: string;
+  diffMaxIterations: number;
 };
 
 export type Tree = {
