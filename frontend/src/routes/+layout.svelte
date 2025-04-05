@@ -13,7 +13,7 @@
     </span>
   </NavBrand>
   <NavUl activeUrl={page.url.pathname}>
-    {#each data.graphs as graph}
+    {#each Object.values(data.graphs) as graph}
       <NavLi href="/graphs/{graph.name}">{graph.name}</NavLi>
     {/each}
     <NavLi href="/manage">Manage</NavLi>

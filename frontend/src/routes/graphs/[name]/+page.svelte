@@ -39,6 +39,7 @@
     // Create new graph entry if it doesn't exist
     if (!graphs[page.params.name]) {
       graphs[page.params.name] = {
+        ...data.graphs[page.params.name],
         views: [],
         viewIndex: 0,
         searchQuery: "",
