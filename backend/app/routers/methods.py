@@ -1,34 +1,12 @@
 from fastapi import APIRouter
 
 from ..driver import driver
-from ..utils import CytoscapeElement, invoke_to_cy, method_to_cy, methods_to_tree
+from ..utils import CytoscapeElement, invoke_to_cy, method_to_cy
 
-router = APIRouter()
-
-
-@router.get("/graphs")
-def get_graphs():
-    records = driver.execute_query(
-        "MATCH (m) "
-        "OPTIONAL MATCH (m)-[r]->() "
-        "RETURN m.graph AS name, count(DISTINCT m) AS nodeCount, count(r) AS edgeCount "
-        "ORDER BY name"
-    ).records
-    return [record.data() for record in records]
+router = APIRouter(prefix="/{graph_name}/method")
 
 
-@router.get("/graphs/{graph_name}/tree")
-def get_method_tree(graph_name: str):
-    records = driver.execute_query(
-        "MATCH (m {graph: $graph}) RETURN m.id AS id, m.name AS name, m.parent AS parent ORDER BY parent, name",
-        graph=graph_name,
-    ).records
-
-    methods = [record.data() for record in records]
-    return methods_to_tree(methods)
-
-
-@router.get("/graphs/{graph_name}/method/{id}")
+@router.get("/{id}")
 def get_method_by_id(graph_name: str, id: int):
     record = driver.execute_query(
         "MATCH (m {id: $id, graph: $graph}) "
@@ -49,7 +27,7 @@ def get_method_by_id(graph_name: str, id: int):
     return result
 
 
-@router.get("/graphs/{graph_name}/method/{id}/callers")
+@router.get("/{id}/callers")
 def get_method_callers(graph_name: str, id: int):
     record = driver.execute_query(
         "MATCH (m {id: $id, graph: $graph}) "
@@ -66,7 +44,7 @@ def get_method_callers(graph_name: str, id: int):
     return result
 
 
-@router.get("/graphs/{graph_name}/method/{id}/callees")
+@router.get("/{id}/callees")
 def get_method_callees(graph_name: str, id: int):
     record = driver.execute_query(
         "MATCH (m {id: $id, graph: $graph}) "
