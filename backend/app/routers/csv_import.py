@@ -7,6 +7,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
+from app.utils import invoke_from_csv, method_from_csv, target_from_csv
+
 from ..driver import driver
 
 CSV_DIR = "csv"
@@ -52,23 +54,23 @@ def import_csv(
 
     # Delete all nodes and edges, create uniqueness constraints and indexes
     logger.info("Purging database")
-    driver.execute_query("MATCH ({Graph: $graph})-[r]-() DELETE r", graph=graph)
-    driver.execute_query("MATCH (n {Graph: $graph}) DELETE n", graph=graph)
+    driver.execute_query("MATCH ({graph: $graph})-[r]-() DELETE r", graph=graph)
+    driver.execute_query("MATCH (n {graph: $graph}) DELETE n", graph=graph)
     driver.execute_query(
         "CREATE CONSTRAINT unique_method_id IF NOT EXISTS "
-        "FOR (m:Method) REQUIRE (m.Id, m.Graph) IS UNIQUE"
+        "FOR (m:Method) REQUIRE (m.id, m.graph) IS UNIQUE"
     )
     driver.execute_query(
         "CREATE CONSTRAINT unique_invoke_id IF NOT EXISTS "
-        "FOR (i:Invoke) REQUIRE (i.Id, i.Graph) IS UNIQUE"
+        "FOR (i:Invoke) REQUIRE (i.id, i.graph) IS UNIQUE"
     )
-    driver.execute_query("CREATE INDEX method_id IF NOT EXISTS FOR (m:Method) ON m.Id")
-    driver.execute_query("CREATE INDEX invoke_id IF NOT EXISTS FOR (i:Invoke) ON i.Id")
+    driver.execute_query("CREATE INDEX method_id IF NOT EXISTS FOR (m:Method) ON m.id")
+    driver.execute_query("CREATE INDEX invoke_id IF NOT EXISTS FOR (i:Invoke) ON i.id")
     driver.execute_query(
-        "CREATE INDEX method_graph IF NOT EXISTS FOR (m:Method) ON m.Graph"
+        "CREATE INDEX method_graph IF NOT EXISTS FOR (m:Method) ON m.graph"
     )
     driver.execute_query(
-        "CREATE INDEX invoke_graph IF NOT EXISTS FOR (i:Invoke) ON i.Graph"
+        "CREATE INDEX invoke_graph IF NOT EXISTS FOR (i:Invoke) ON i.graph"
     )
 
     # Create method nodes
@@ -76,8 +78,8 @@ def import_csv(
     methods_csv = io.TextIOWrapper(newest["methods"][0].file)
     reader = csv.DictReader(methods_csv)
     (node_count,) = driver.execute_query(
-        "UNWIND $data as row CREATE (m:Method {Graph: $graph}) SET m += row RETURN count(*) AS node_count",
-        data=[row for row in reader],
+        "UNWIND $data AS row CREATE (m:Method {graph: $graph}) SET m += row RETURN count(*) AS node_count",
+        data=[method_from_csv(row) for row in reader],
         graph=graph,
     ).records[0]
 
@@ -86,8 +88,8 @@ def import_csv(
     invokes_csv = io.TextIOWrapper(newest["invokes"][0].file)
     reader = csv.DictReader(invokes_csv)
     driver.execute_query(
-        "UNWIND $data as row CREATE (i:Invoke {Graph: $graph}) SET i += row",
-        data=[row for row in reader],
+        "UNWIND $data AS row CREATE (i:Invoke {graph: $graph}) SET i += row",
+        data=[invoke_from_csv(row) for row in reader],
         graph=graph,
     )
 
@@ -97,16 +99,16 @@ def import_csv(
     reader = csv.DictReader(targets_csv)
     driver.execute_query(
         "UNWIND $data AS row "
-        "MATCH (t:Method {Graph: $graph, Id: row.TargetId}) "
-        "MATCH (i:Invoke {Graph: $graph, Id: row.InvokeId}) "
-        "MATCH (s:Method {Graph: $graph, Id: i.MethodId}) "
+        "MATCH (t:Method {graph: $graph, id: row.target_id}) "
+        "MATCH (i:Invoke {graph: $graph, id: row.invoke_id}) "
+        "MATCH (s:Method {graph: $graph, id: i.method_id}) "
         "MERGE (s)-[r:CALLS]->(t)",
-        data=list(reader),
+        data=[target_from_csv(row) for row in reader],
         graph=graph,
     )
 
     (edge_count,) = driver.execute_query(
-        "MATCH ({Graph: $graph})-[r]->() RETURN count(r) AS edge_count",
+        "MATCH ({graph: $graph})-[r]->() RETURN count(r) AS edge_count",
         graph=graph,
     ).records[0]
 
