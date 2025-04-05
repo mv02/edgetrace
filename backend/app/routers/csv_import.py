@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from app.utils import invoke_from_csv, method_from_csv, target_from_csv
+from app.utils import Invoke, invoke_from_csv, method_from_csv
 
 from ..driver import driver
 
@@ -83,27 +83,47 @@ def import_csv(
         graph=graph,
     ).records[0]
 
-    # Create temporary invoke nodes
-    logger.info("Creating temporary invoke nodes")
+    # Map method IDs to element IDs
+    logger.info("Mapping method IDs to element IDs")
+    records = driver.execute_query(
+        "MATCH (m {graph: $graph}) RETURN m.id AS id, elementId(m) AS element_id",
+        graph=graph,
+    ).records
+    element_ids: dict[int, str] = {
+        record["id"]: record["element_id"] for record in records
+    }
+
+    # Create a map of invokes
+    logger.info("Parsing invokes")
     invokes_csv = io.TextIOWrapper(newest["invokes"][0].file)
     reader = csv.DictReader(invokes_csv)
-    driver.execute_query(
-        "UNWIND $data AS row CREATE (i:Invoke {graph: $graph}) SET i += row",
-        data=[invoke_from_csv(row) for row in reader],
-        graph=graph,
-    )
+
+    invokes: dict[int, Invoke] = {}
+    for row in reader:
+        invoke = invoke_from_csv(row)
+        invokes[invoke["id"]] = invoke
 
     # Create edges between method nodes
     logger.info("Creating edges between method nodes")
     targets_csv = io.TextIOWrapper(newest["targets"][0].file)
     reader = csv.DictReader(targets_csv)
+
+    edges: list[dict[str, str]] = []
+    for row in reader:
+        invoke_id = int(row["InvokeId"])
+        invoke = invokes[invoke_id]
+        edge = {
+            "source_element_id": element_ids[invoke["method_id"]],
+            "target_element_id": element_ids[int(row["TargetId"])],
+        }
+        edges.append(edge)
+
     driver.execute_query(
         "UNWIND $data AS row "
-        "MATCH (t:Method {graph: $graph, id: row.target_id}) "
-        "MATCH (i:Invoke {graph: $graph, id: row.invoke_id}) "
-        "MATCH (s:Method {graph: $graph, id: i.method_id}) "
+        "MATCH (s:Method) WHERE elementId(s) = row.source_element_id "
+        "MATCH (t:Method) WHERE elementId(t) = row.target_element_id "
         "MERGE (s)-[r:CALLS]->(t)",
-        data=[target_from_csv(row) for row in reader],
+        data=edges,
         graph=graph,
     )
 
@@ -111,10 +131,6 @@ def import_csv(
         "MATCH ({graph: $graph})-[r]->() RETURN count(r) AS edge_count",
         graph=graph,
     ).records[0]
-
-    # Delete temporary invoke nodes
-    logger.info("Deleting temporary invoke nodes")
-    driver.execute_query("MATCH (i:Invoke) DELETE i")
 
     message = f"Imported {node_count} nodes and {edge_count} edges"
     logger.info(message)

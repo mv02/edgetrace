@@ -20,11 +20,6 @@ class Invoke(TypedDict):
     is_direct: bool
 
 
-class Target(TypedDict):
-    invoke_id: int
-    target_id: int
-
-
 type CytoscapeElement = dict[str, Any]
 type Tree = dict[str, Tree | int]
 
@@ -52,11 +47,6 @@ def invoke_from_csv(row: dict[str, str]) -> Invoke:
         "target_id": int(row["TargetId"]),
         "is_direct": row["IsDirect"] == "true",
     }
-
-
-def target_from_csv(row: dict[str, str]) -> Target:
-    """Convert CSV record to call target dict."""
-    return {"invoke_id": int(row["InvokeId"]), "target_id": int(row["TargetId"])}
 
 
 def method_to_cy(method: Method, color: str | None = None) -> list[CytoscapeElement]:
