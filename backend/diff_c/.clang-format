@@ -1,0 +1,6 @@
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+ColumnLimit: 100
+IndentWidth: 4
+PointerAlignment: Left
