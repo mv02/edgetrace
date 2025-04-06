@@ -22,8 +22,7 @@ def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
         "SET r.value = row.value",
         graph=graph_name,
         data=[
-            {"source_id": str(k[0]), "target_id": str(k[1]), "value": v}
-            for k, v in edges.items()
+            {"source_id": k[0], "target_id": k[1], "value": v} for k, v in edges.items()
         ],
     )
     return
