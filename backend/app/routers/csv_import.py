@@ -77,11 +77,12 @@ def import_csv(
     logger.info("Creating method nodes")
     methods_csv = io.TextIOWrapper(newest["methods"][0].file)
     reader = csv.DictReader(methods_csv)
-    (node_count,) = driver.execute_query(
-        "UNWIND $data AS row CREATE (m:Method {graph: $graph}) SET m += row RETURN count(*) AS node_count",
+    summary = driver.execute_query(
+        "UNWIND $data AS row CREATE (m:Method {graph: $graph}) SET m += row",
         data=[method_from_csv(row) for row in reader],
         graph=graph,
-    ).records[0]
+    ).summary
+    node_count = summary.counters.nodes_created
 
     # Map method IDs to element IDs
     logger.info("Mapping method IDs to element IDs")
@@ -118,19 +119,15 @@ def import_csv(
         }
         edges.append(edge)
 
-    driver.execute_query(
+    summary = driver.execute_query(
         "UNWIND $data AS row "
         "MATCH (s:Method) WHERE elementId(s) = row.source_element_id "
         "MATCH (t:Method) WHERE elementId(t) = row.target_element_id "
         "MERGE (s)-[r:CALLS]->(t)",
         data=edges,
         graph=graph,
-    )
-
-    (edge_count,) = driver.execute_query(
-        "MATCH ({graph: $graph})-[r]->() RETURN count(r) AS edge_count",
-        graph=graph,
-    ).records[0]
+    ).summary
+    edge_count = summary.counters.relationships_created
 
     message = f"Imported {node_count} nodes and {edge_count} edges"
     logger.info(message)
