@@ -4,7 +4,7 @@ from typing import Any, TypedDict
 class Method(TypedDict):
     id: int
     name: str
-    parent: str
+    parent_class: str
     parameters: list[str]
     return_type: str
     display: str
@@ -35,7 +35,7 @@ def method_from_csv(row: dict[str, str]) -> Method:
     return {
         "id": int(row["Id"]),
         "name": row["Name"],
-        "parent": row["Type"],
+        "parent_class": row["Type"],
         "parameters": [] if row["Parameters"] == "empty" else row["Parameters"].split(),
         "return_type": row["Return"],
         "display": row["Display"],
@@ -60,12 +60,12 @@ def node_to_cy(node: Method, color: str | None = None) -> list[CytoscapeElement]
     result: list[CytoscapeElement] = [
         {
             "group": "nodes",
-            "data": {"label": node["name"], **node},
+            "data": {"label": node["name"], "parent": node["parent_class"], **node},
             **({"style": {"background-color": color}} if color else {}),
         }
     ]
 
-    t = node["parent"]
+    t = node["parent_class"]
     level = 1
     while "." in t:
         parent_t = t[: t.rindex(".")]

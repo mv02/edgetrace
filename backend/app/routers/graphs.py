@@ -24,7 +24,7 @@ def get_graphs():
 @router.get("/{graph_name}/tree")
 def get_method_tree(graph_name: str):
     records = driver.execute_query(
-        "MATCH (m {graph: $graph}) RETURN m.id AS id, m.name AS name, m.parent AS parent ORDER BY parent, name",
+        "MATCH (m {graph: $graph}) RETURN m.id AS id, m.name AS name, m.parent_class AS parent ORDER BY parent, name",
         graph=graph_name,
     ).records
 

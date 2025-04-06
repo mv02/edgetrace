@@ -17,7 +17,7 @@
   <Badge>Method {node.data("id")}</Badge>
 </div>
 
-<DataField label="Class">{node.data("parent")}</DataField>
+<DataField label="Class">{node.data("parent_class")}</DataField>
 <DataField label="Name">{node.data("name")}</DataField>
 
 <DataField label="Parameters ({node.data('parameters').length})">
