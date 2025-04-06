@@ -45,7 +45,6 @@ method_t* method_create(int id, char* name, char* declared_type, char* params, c
     method->is_entrypoint = is_entrypoint;
     method->reachability = is_entrypoint ? TRULY_REACHABLE : UNREACHABLE;
     method->value = 0;
-    method->next = NULL;
     method->equivalent = NULL;
 
     return method;
@@ -53,9 +52,6 @@ method_t* method_create(int id, char* name, char* declared_type, char* params, c
 
 void method_destroy(method_t* method)
 {
-    if (method->next != NULL) {
-        method_destroy(method->next);
-    }
     free(method->name);
     free(method->declared_type);
     free(method->params);

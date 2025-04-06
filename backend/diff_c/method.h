@@ -17,7 +17,6 @@ typedef struct method {
     bool is_entrypoint;
     enum method_reachability reachability;
     double value;
-    struct method* next;
     struct method* equivalent;
 } method_t;
 
