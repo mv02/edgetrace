@@ -20,6 +20,12 @@ class Invoke(TypedDict):
     is_direct: bool
 
 
+class Edge(TypedDict):
+    source: int
+    target: int
+    value: float
+
+
 type CytoscapeElement = dict[str, Any]
 type Tree = dict[str, Tree | int]
 
@@ -49,17 +55,17 @@ def invoke_from_csv(row: dict[str, str]) -> Invoke:
     }
 
 
-def method_to_cy(method: Method, color: str | None = None) -> list[CytoscapeElement]:
-    """Convert a method to Cytoscape.js node."""
+def node_to_cy(node: Method, color: str | None = None) -> list[CytoscapeElement]:
+    """Convert a node to Cytoscape.js node."""
     result: list[CytoscapeElement] = [
         {
             "group": "nodes",
-            "data": {"label": method["name"], **method},
+            "data": {"label": node["name"], **node},
             **({"style": {"background-color": color}} if color else {}),
         }
     ]
 
-    t = method["parent"]
+    t = node["parent"]
     level = 1
     while "." in t:
         parent_t = t[: t.rindex(".")]
@@ -81,22 +87,11 @@ def method_to_cy(method: Method, color: str | None = None) -> list[CytoscapeElem
     return result
 
 
-def invoke_to_cy(
-    source: Method, target: Method, color: str | None = None
-) -> CytoscapeElement:
-    """Convert an invoke to Cytoscape.js edge."""
+def edge_to_cy(edge: Edge) -> CytoscapeElement:
+    """Convert an edge between nodes to Cytoscape.js edge."""
     return {
         "group": "edges",
-        "data": {
-            "id": f"{source['id']}->{target['id']}",
-            "source": source["id"],
-            "target": target["id"],
-        },
-        **(
-            {"style": {"line-color": color, "target-arrow-color": color}}
-            if color
-            else {}
-        ),
+        "data": {"id": f"{edge['source']}->{edge['target']}", **edge},
     }
 
 

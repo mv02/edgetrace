@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from ..driver import driver
-from ..utils import CytoscapeElement, invoke_to_cy, method_to_cy
+from ..utils import CytoscapeElement, Edge, Method, edge_to_cy, node_to_cy
 
 router = APIRouter(prefix="/{graph_name}/method")
 
@@ -12,50 +12,65 @@ def get_method_by_id(graph_name: str, id: int):
         "MATCH (m {id: $id, graph: $graph}) "
         "OPTIONAL MATCH p = ALL SHORTEST (e {graph: $graph})-->+(m) "
         "WHERE e.is_entrypoint "
-        "RETURN m, nodes(p) AS path LIMIT 1",
+        "RETURN m, nodes(p) AS path, [r in relationships(p) | r.value] AS edge_values LIMIT 1",
         id=id,
         graph=graph_name,
     ).records[0]
 
-    m, path = record
+    m: Method
+    path: list[Method]
+    edge_values: list[float]
+
+    m, path, edge_values = record
     if path is None:
-        return [*method_to_cy(m)]
+        return [*node_to_cy(m)]
 
     result: list[CytoscapeElement] = []
-    for m1, m2 in zip(path, path[1:]):
-        result += [*method_to_cy(m1), *method_to_cy(m2), invoke_to_cy(m1, m2)]
+    for i, (m1, m2) in enumerate(zip(path, path[1:])):
+        edge: Edge = {"source": m1["id"], "target": m2["id"], "value": edge_values[i]}
+        result += [
+            *node_to_cy(m1),
+            *node_to_cy(m2),
+            edge_to_cy(edge),
+        ]
     return result
 
 
 @router.get("/{id}/callers")
 def get_method_callers(graph_name: str, id: int):
-    record = driver.execute_query(
+    records = driver.execute_query(
         "MATCH (m {id: $id, graph: $graph}) "
-        "OPTIONAL MATCH (caller {graph: $graph})-->(m) "
-        "RETURN m, collect(caller) AS callers",
+        "OPTIONAL MATCH (caller {graph: $graph})-[r]->(m) "
+        "RETURN caller, r.value AS edge_value",
         id=id,
         graph=graph_name,
-    ).records[0]
+    ).records
 
-    m, callers = record
     result: list[CytoscapeElement] = []
-    for caller in callers:
-        result += [*method_to_cy(caller), invoke_to_cy(caller, m)]
+    for record in records:
+        caller, edge_value = record
+        if caller is None:
+            continue
+        edge: Edge = {"source": caller["id"], "target": id, "value": edge_value}
+        result += [*node_to_cy(caller), edge_to_cy(edge)]
     return result
 
 
 @router.get("/{id}/callees")
 def get_method_callees(graph_name: str, id: int):
-    record = driver.execute_query(
+    records = driver.execute_query(
         "MATCH (m {id: $id, graph: $graph}) "
-        "OPTIONAL MATCH (m)-->(callee {graph: $graph}) "
-        "RETURN m, collect(callee) AS callees",
+        "OPTIONAL MATCH (m)-[r]->(callee {graph: $graph}) "
+        "RETURN callee, r.value AS edge_value",
         id=id,
         graph=graph_name,
-    ).records[0]
+    ).records
 
-    m, callees = record
     result: list[CytoscapeElement] = []
-    for callee in callees:
-        result += [*method_to_cy(callee), invoke_to_cy(m, callee)]
+    for record in records:
+        callee, edge_value = record
+        if callee is None:
+            continue
+        edge: Edge = {"source": id, "target": callee["id"], "value": edge_value}
+        result += [*node_to_cy(callee), edge_to_cy(edge)]
     return result
