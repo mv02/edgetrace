@@ -6,6 +6,7 @@ import expandCollapse from "cytoscape-expand-collapse";
 import type {
   ColaLayoutOptions,
   Collection,
+  EdgeSingular,
   ElementDefinition,
   NodeCollection,
   NodeSingular,
@@ -35,7 +36,8 @@ export default class View {
   timestamp: Date;
   cy: cytoscape.Core;
   isAttached: boolean = false;
-  selectedNode?: cytoscape.NodeSingular = $state();
+  selectedNode?: NodeSingular = $state();
+  selectedEdge?: EdgeSingular = $state();
   compoundNodesShown: boolean;
   hiddenCompoundNodes: NodeCollection;
   contextMenu?: contextMenus.ContextMenu;
@@ -60,16 +62,14 @@ export default class View {
     this.add(elements);
     this.setColors(darkMode);
 
-    this.cy.on("tap", "node", (e: cytoscape.EventObject) => {
-      const node: NodeSingular = e.target;
-      if (node.is(COMPOUND_NODES)) {
-        // Compound node
-        // TODO: compound node properties
-        this.selectedNode = undefined;
-      } else {
-        // Regular node
-        this.selectedNode = e.target;
-      }
+    this.cy.on("tap", "node", (e) => {
+      const target: NodeSingular = e.target;
+      this.selectedNode = target.is(COMPOUND_NODES) ? undefined : target;
+      this.selectedEdge = undefined;
+    });
+    this.cy.on("tap", "edge", (e) => {
+      this.selectedNode = undefined;
+      this.selectedEdge = e.target;
     });
   }
 
