@@ -2,6 +2,8 @@
   import { page } from "$app/state";
   import { PUBLIC_API_URL } from "$env/static/public";
   import { Button, Checkbox, Label, Range, Select, Spinner } from "flowbite-svelte";
+  import { addView } from "$lib/view.svelte";
+  import View from "$lib/view.svelte";
   import type { GraphContext } from "./types";
 
   interface Props {
@@ -22,6 +24,21 @@
       { method: "POST" },
     );
     loading = false;
+    getTopEdges(10);
+  };
+
+  const getTopEdges = async (n: number) => {
+    const resp = await fetch(`${PUBLIC_API_URL}/graphs/${currentGraph.name}/diff/edges?n=${n}`);
+    addView(
+      currentGraph,
+      new View(
+        await resp.json(),
+        currentGraph.name,
+        `${currentGraph.name} − ${currentGraph.diffOtherGraph}`,
+        currentGraph.compoundNodesShown,
+        window.matchMedia("(prefers-color-scheme: dark)").matches,
+      ),
+    );
   };
 </script>
 

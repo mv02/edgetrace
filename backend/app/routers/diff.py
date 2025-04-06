@@ -4,6 +4,7 @@ from diff_c.diff import diff
 from fastapi import APIRouter
 
 from ..driver import driver
+from ..utils import CytoscapeElement, Edge, edge_to_cy, node_to_cy
 from .csv_import import CSV_DIR
 
 router = APIRouter(prefix="/{graph_name}/diff")
@@ -26,3 +27,24 @@ def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
         ],
     )
     return
+
+
+@router.get("/edges")
+def get_top_edges(graph_name: str, n: int):
+    records = driver.execute_query(
+        "MATCH (source {graph: $graph})-[r]->(target) WHERE r.value IS NOT NULL "
+        "ORDER BY r.value DESC RETURN source, r, target LIMIT $n",
+        graph=graph_name,
+        n=n,
+    ).records
+
+    result: list[CytoscapeElement] = []
+    for record in records:
+        source, r, target = record
+        edge: Edge = {
+            "source": source["id"],
+            "target": target["id"],
+            "value": r["value"],
+        }
+        result += [*node_to_cy(source), edge_to_cy(edge), *node_to_cy(target)]
+    return result

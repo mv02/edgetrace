@@ -1,5 +1,6 @@
 import { browser } from "$app/environment";
 import { PUBLIC_API_URL } from "$env/static/public";
+import chroma from "chroma-js";
 import cytoscape from "cytoscape";
 import cola from "cytoscape-cola";
 import expandCollapse from "cytoscape-expand-collapse";
@@ -18,6 +19,7 @@ const MAX_VIEWS = 10;
 const MAX_NEIGHBORS = 10;
 const COLORS_LIGHT = ["#f3f4f6", "#bfdbfe", "#bbf7d0", "#fef08a", "#fecaca", "#d8b4fe", "#f9a8d4"];
 const COLORS_DARK = ["#374151", "#1e40af", "#047857", "#a16207", "#b91c1c", "#7c3aed", "#be185d"];
+const COLOR_SCALE = chroma.scale("Viridis");
 const LAYOUT_OPTIONS: ColaLayoutOptions = { name: "cola", maxSimulationTime: 1000 };
 
 const LEAF_NODES = "node[!level]";
@@ -59,8 +61,8 @@ export default class View {
     });
     this.compoundNodesShown = compoundNodesShown;
     this.hiddenCompoundNodes = this.cy.collection();
-    this.add(elements);
     this.setColors(darkMode);
+    this.add(elements);
 
     this.cy.on("tap", "node", (e) => {
       const target: NodeSingular = e.target;
@@ -76,6 +78,21 @@ export default class View {
   resetLayout = () => {
     this.cy.reset();
     this.cy.layout(LAYOUT_OPTIONS).run();
+  };
+
+  updateDiffColoring = () => {
+    const maxDiffValue = Math.max(...this.cy.edges().map((edge) => edge.data("value")));
+    for (const edge of this.cy.edges()) {
+      edge.data("color", COLOR_SCALE(edge.data("value") / maxDiffValue).hex());
+    }
+    this.cy
+      .style()
+      .selector("edge[value > 0]")
+      .style({
+        "line-color": `data(color)`,
+        "target-arrow-color": "data(color)",
+        width: `mapData(value, 0, ${maxDiffValue}, 3, 6)`,
+      });
   };
 
   setColors = (darkMode: boolean = false) => {
@@ -115,6 +132,7 @@ export default class View {
   add = (elements: ElementDefinition[]) => {
     const added = this.cy.add(elements);
     if (!this.compoundNodesShown) this.hideCompoundNodes();
+    this.updateDiffColoring();
     return added;
   };
 
@@ -127,14 +145,21 @@ export default class View {
       removed = removed.union(parentsToRemove); // Include hidden compound nodes (not actually removed)
       this.hiddenCompoundNodes = this.hiddenCompoundNodes.difference(parentsToRemove);
     }
+    this.updateDiffColoring();
     return removed;
   };
 
   restore = (elements: Collection) => {
-    if (this.compoundNodesShown) return elements.restore();
+    if (this.compoundNodesShown) {
+      const restored = elements.restore();
+      this.updateDiffColoring();
+      return restored;
+    }
     const compoundNodes = elements.filter(COMPOUND_NODES);
     this.hiddenCompoundNodes = this.hiddenCompoundNodes.union(compoundNodes);
-    return elements.difference(compoundNodes).restore();
+    const restored = elements.difference(compoundNodes).restore();
+    this.updateDiffColoring();
+    return restored;
   };
 
   parent = (node: NodeCollection): NodeCollection => {
