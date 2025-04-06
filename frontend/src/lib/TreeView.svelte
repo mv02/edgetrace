@@ -75,7 +75,8 @@
       graph.viewIndex = 0;
     } else {
       // Add to current view
-      graph.views[graph.viewIndex].add(data, true);
+      graph.views[graph.viewIndex].add(data);
+      graph.views[graph.viewIndex].resetLayout();
     }
   };
 </script>
