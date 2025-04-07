@@ -23,17 +23,15 @@ def get_method_by_id(graph_name: str, id: int):
 
     m, path, edge_values = record
     if path is None:
-        return [*node_to_cy(m)]
+        return {"nodes": [*node_to_cy(m)]}
 
-    result: list[CytoscapeElement] = []
+    nodes: list[CytoscapeElement] = []
+    edges: list[CytoscapeElement] = []
     for i, (m1, m2) in enumerate(zip(path, path[1:])):
         edge: Edge = {"source": m1["id"], "target": m2["id"], "value": edge_values[i]}
-        result += [
-            *node_to_cy(m1),
-            *node_to_cy(m2),
-            edge_to_cy(edge),
-        ]
-    return result
+        nodes += [*node_to_cy(m1), *node_to_cy(m2)]
+        edges.append(edge_to_cy(edge))
+    return {"nodes": nodes, "edges": edges}
 
 
 @router.get("/{id}/callers")
