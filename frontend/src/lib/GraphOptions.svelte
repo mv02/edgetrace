@@ -2,18 +2,15 @@
   import { page } from "$app/state";
   import { PUBLIC_API_URL } from "$env/static/public";
   import { Button, Checkbox, Label, Range, Select, Spinner } from "flowbite-svelte";
-  import { addView } from "$lib/view.svelte";
-  import View from "$lib/view.svelte";
-  import type { GraphContext } from "./types";
+  import type Graph from "$lib/graph.svelte";
 
   interface Props {
-    graphs: Record<string, GraphContext>;
+    graphs: Record<string, Graph>;
   }
 
   let { graphs = $bindable() }: Props = $props();
 
   let currentGraph = $derived(graphs[page.params.name]);
-  let views = $derived(currentGraph.views);
 
   let loading = $state(false);
 
@@ -29,22 +26,14 @@
 
   const getTopEdges = async (n: number) => {
     const resp = await fetch(`${PUBLIC_API_URL}/graphs/${currentGraph.name}/diff/edges?n=${n}`);
-    addView(
-      currentGraph,
-      new View(
-        await resp.json(),
-        currentGraph.name,
-        `${currentGraph.name} − ${currentGraph.diffOtherGraph}`,
-        currentGraph.compoundNodesShown,
-        window.matchMedia("(prefers-color-scheme: dark)").matches,
-      ),
-    );
+    const data = await resp.json();
+    currentGraph.createView(data, `${currentGraph.name} − ${currentGraph.diffOtherGraph}`);
   };
 </script>
 
 <Checkbox
   bind:checked={currentGraph.compoundNodesShown}
-  onchange={() => views.forEach((v) => v.toggleCompoundNodes())}
+  onchange={() => currentGraph.updateCompoundNodes()}
   class="mb-4"
 >
   Compound nodes

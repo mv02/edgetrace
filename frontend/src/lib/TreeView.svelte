@@ -2,17 +2,16 @@
   import { PUBLIC_API_URL } from "$env/static/public";
   import { Accordion, AccordionItem } from "flowbite-svelte";
   import { ChevronDownOutline, ChevronUpOutline } from "flowbite-svelte-icons";
-  import { addView } from "$lib/view.svelte";
-  import View from "$lib/view.svelte";
   import TreeView from "$lib/TreeView.svelte";
-  import type { GraphContext, Tree } from "$lib/types";
+  import type Graph from "$lib/graph.svelte";
+  import type { Tree } from "$lib/types";
 
   /** Maximum number of results to expand the tree. */
   const MAX_EXPAND = 100;
 
   interface Props {
     tree: Tree;
-    graphs: Record<string, GraphContext>;
+    graphs: Record<string, Graph>;
     graphName: string;
     level?: number;
     searchQuery?: string;
@@ -62,21 +61,12 @@
     const data = await response.json();
     if (newView || graphs[graphName].views.length === 0) {
       // Create new view
-      addView(
-        graph,
-        new View(
-          data,
-          graphName,
-          name,
-          graph.compoundNodesShown,
-          window.matchMedia("(prefers-color-scheme: dark)").matches,
-        ),
-      );
+      graph.createView(data, name);
       graph.viewIndex = 0;
     } else {
       // Add to current view
-      graph.views[graph.viewIndex].add(data);
-      graph.views[graph.viewIndex].resetLayout();
+      graph.currentView.add(data);
+      graph.currentView.resetLayout();
     }
   };
 </script>

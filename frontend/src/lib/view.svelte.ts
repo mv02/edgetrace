@@ -13,9 +13,8 @@ import type {
   NodeSingular,
 } from "cytoscape";
 import type contextMenus from "cytoscape-context-menus";
-import type { GraphContext } from "$lib/types";
+import type Graph from "./graph.svelte";
 
-const MAX_VIEWS = 10;
 const MAX_NEIGHBORS = 10;
 const COLORS_LIGHT = ["#f3f4f6", "#bfdbfe", "#bbf7d0", "#fef08a", "#fecaca", "#d8b4fe", "#f9a8d4"];
 const COLORS_DARK = ["#374151", "#1e40af", "#047857", "#a16207", "#b91c1c", "#7c3aed", "#be185d"];
@@ -33,25 +32,18 @@ cytoscape.use(cola);
 cytoscape.use(expandCollapse);
 
 export default class View {
-  graphName: string;
+  graph: Graph;
   title: string;
   timestamp: Date;
   cy: cytoscape.Core;
   isAttached: boolean = false;
   selectedNode?: NodeSingular = $state();
   selectedEdge?: EdgeSingular = $state();
-  compoundNodesShown: boolean;
   hiddenCompoundNodes: NodeCollection;
   contextMenu?: contextMenus.ContextMenu;
 
-  constructor(
-    elements: ElementDefinition[],
-    graphName: string,
-    title: string,
-    compoundNodesShown: boolean = true,
-    darkMode: boolean = false,
-  ) {
-    this.graphName = graphName;
+  constructor(graph: Graph, elements: ElementDefinition[], title: string) {
+    this.graph = graph;
     this.title = title.length > 50 ? title.substring(0, 50) + "…" : title;
     this.timestamp = new Date();
     this.cy = cytoscape({
@@ -59,9 +51,8 @@ export default class View {
       maxZoom: 10,
       wheelSensitivity: 0.25,
     });
-    this.compoundNodesShown = compoundNodesShown;
     this.hiddenCompoundNodes = this.cy.collection();
-    this.setColors(darkMode);
+    this.updateColors();
     this.add(elements);
 
     this.cy.on("tap", "node", (e) => {
@@ -99,7 +90,8 @@ export default class View {
       });
   };
 
-  setColors = (darkMode: boolean = false) => {
+  updateColors = () => {
+    const darkMode = this.graph.darkMode;
     const colors = darkMode ? COLORS_DARK : COLORS_LIGHT;
     this.cy.style([
       { selector: "node", style: { label: "data(label)", color: darkMode ? "white" : "black" } },
@@ -135,7 +127,7 @@ export default class View {
 
   add = (elements: ElementDefinition[]) => {
     const added = this.cy.add(elements);
-    if (!this.compoundNodesShown) this.hideCompoundNodes();
+    if (!this.graph.compoundNodesShown) this.hideCompoundNodes();
     this.updateDiffColoring();
     return added;
   };
@@ -154,7 +146,7 @@ export default class View {
   };
 
   restore = (elements: Collection) => {
-    if (this.compoundNodesShown) {
+    if (this.graph.compoundNodesShown) {
       const restored = elements.restore();
       this.updateDiffColoring();
       return restored;
@@ -206,7 +198,7 @@ export default class View {
     if (!fetched) {
       // Fetch and add new neighbors
       const resp = await fetch(
-        `${PUBLIC_API_URL}/graphs/${this.graphName}/method/${node.data("id")}/${type}`,
+        `${PUBLIC_API_URL}/graphs/${this.graph.name}/method/${node.data("id")}/${type}`,
       );
       const data: ElementDefinition[] = await resp.json();
       // TODO: selectable neighbor limit, incremental expansion
@@ -230,7 +222,6 @@ export default class View {
   };
 
   showCompoundNodes = () => {
-    this.compoundNodesShown = true;
     // Restore hidden compound nodes
     this.hiddenCompoundNodes.restore();
     this.hiddenCompoundNodes = this.cy.collection();
@@ -242,7 +233,6 @@ export default class View {
   };
 
   hideCompoundNodes = () => {
-    this.compoundNodesShown = false;
     // Save original parents
     const leafNodes = this.cy.nodes(LEAF_NODES);
     for (const node of leafNodes) {
@@ -254,9 +244,9 @@ export default class View {
     this.hiddenCompoundNodes = this.hiddenCompoundNodes.union(removed) ?? removed;
   };
 
-  toggleCompoundNodes = () => {
-    if (this.compoundNodesShown) this.hideCompoundNodes();
-    else this.showCompoundNodes();
+  updateCompoundNodes = () => {
+    if (this.graph.compoundNodesShown) this.showCompoundNodes();
+    else this.hideCompoundNodes();
   };
 
   removeAll = () => {
@@ -308,10 +298,3 @@ export default class View {
     this.contextMenu = undefined;
   };
 }
-
-export const addView = (graph: GraphContext, view: View) => {
-  if (graph.views.length === MAX_VIEWS) {
-    graph.views.pop();
-  }
-  graph.views.unshift(view);
-};

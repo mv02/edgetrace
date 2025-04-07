@@ -5,65 +5,40 @@
   import { Button, ButtonGroup, Hr, RadioButton, Search, Spinner } from "flowbite-svelte";
   import { CloseOutline } from "flowbite-svelte-icons";
   import EdgeProperties from "$lib/EdgeProperties.svelte";
+  import Graph from "$lib/graph.svelte";
   import GraphOptions from "$lib/GraphOptions.svelte";
   import MethodProperties from "$lib/MethodProperties.svelte";
   import TreeView from "$lib/TreeView.svelte";
-  import type { GraphContext } from "$lib/types";
-
-  const GRAPH_DEFAULTS: Partial<GraphContext> = {
-    views: [],
-    viewIndex: 0,
-    searchQuery: "",
-    compoundNodesShown: true,
-    diffOtherGraph: "",
-    diffMaxIterations: 1000,
-  };
 
   let { data } = $props();
 
   let container: HTMLElement;
 
   /** All graphs identified by their name. */
-  let graphs: Record<string, GraphContext> = $state(
-    Object.fromEntries(
-      Object.entries(data.graphs).map(([name, graph]) => [name, { ...graph, ...GRAPH_DEFAULTS }]),
-    ),
+  let graphs: Record<string, Graph> = $state(
+    Object.fromEntries(Object.entries(data.graphs).map(([name, info]) => [name, new Graph(info)])),
   );
   /** The current graph. */
   let currentGraph = $derived(graphs[page.params.name]);
-  /** Views of the current graph. */
-  let views = $derived(currentGraph?.views ?? []);
-  /** Index of the currently selected view. */
-  let viewIndex = $derived(currentGraph?.viewIndex);
   /** The currently selected view. */
-  let currentView = $derived(views[viewIndex]);
-
-  const closeView = (index: number) => {
-    currentView?.detach();
-    views[index].destroy();
-    graphs[page.params.name].views.splice(index, 1);
-    if (viewIndex > index) {
-      graphs[page.params.name].viewIndex--;
-    }
-    if (viewIndex >= views.length) {
-      graphs[page.params.name].viewIndex = Math.max(views.length - 1, 0);
-    }
-  };
+  let currentView = $derived(currentGraph.currentView);
 
   $effect(() => {
-    for (const view of views) {
+    for (const view of currentGraph.views) {
       view.detach();
     }
     currentView?.attach(container);
   });
 
   onMount(() => {
+    // Set initial graph colors
+    const darkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    for (const graph of Object.values(graphs)) graph.setColors(darkMode);
+
     // Automatically set light/dark graph colors
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-      for (const view of views) {
-        view.setColors(e.matches);
-      }
-    });
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", (e) => currentGraph.setColors(e.matches));
   });
 
   beforeNavigate(() => currentView?.detach());
@@ -94,7 +69,7 @@
   <div class="relative flex-grow">
     <section class="h-full w-full" bind:this={container}></section>
     <footer class="absolute bottom-0 flex flex-wrap gap-2 p-2">
-      {#each views as view, i}
+      {#each currentGraph.views as view, i}
         <ButtonGroup size="sm">
           <RadioButton
             value={i}
@@ -104,7 +79,11 @@
           >
             {view.title}
           </RadioButton>
-          <Button onclick={() => closeView(i)} color="primary" class="cursor-default px-1 py-0">
+          <Button
+            onclick={() => currentGraph.closeView(i)}
+            color="primary"
+            class="cursor-default px-1 py-0"
+          >
             <CloseOutline class="h-4 w-4" />
           </Button>
         </ButtonGroup>
