@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from ..driver import driver
-from ..utils import methods_to_tree
+from ..utils.conversions import methods_to_tree
 from . import diff, methods
 
 router = APIRouter(prefix="/graphs")

@@ -7,9 +7,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from app.utils import Invoke, invoke_from_csv, method_from_csv
-
 from ..driver import driver
+from ..utils.conversions import invoke_from_csv, method_from_csv
+from ..utils.types import Invoke
 
 CSV_DIR = "csv"
 

@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
 from ..driver import driver
-from ..utils import CytoscapeElement, Edge, Method, edge_to_cy, node_to_cy
+from ..utils.conversions import edge_to_cy, node_to_cy
+from ..utils.types import CytoscapeElement, Edge, Method
 
 router = APIRouter(prefix="/{graph_name}/method")
 
