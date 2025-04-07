@@ -34,7 +34,6 @@ cytoscape.use(expandCollapse);
 export default class View {
   graph: Graph;
   title: string;
-  timestamp: Date;
   cy: cytoscape.Core;
   isAttached: boolean = false;
   selectedNode?: NodeSingular = $state();
@@ -45,7 +44,6 @@ export default class View {
   constructor(graph: Graph, elements: ElementDefinition[], title: string) {
     this.graph = graph;
     this.title = title.length > 50 ? title.substring(0, 50) + "…" : title;
-    this.timestamp = new Date();
     this.cy = cytoscape({
       minZoom: 0.1,
       maxZoom: 10,
