@@ -160,6 +160,7 @@ export default class View {
       this.showNode(parent);
       node?.move({ parent: parent.id() });
     }
+    this.updateDiffColoring();
   };
 
   showMethod = async (id: MethodId) => {
@@ -179,6 +180,7 @@ export default class View {
     const parentsToHide = this.parentsToHide(node);
     node.remove();
     parentsToHide.remove();
+    this.updateDiffColoring();
   };
 
   hideMethod = (id: MethodId) => {
