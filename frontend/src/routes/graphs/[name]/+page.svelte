@@ -4,10 +4,10 @@
   import { page } from "$app/state";
   import { Button, ButtonGroup, Hr, RadioButton, Search, Spinner } from "flowbite-svelte";
   import { CloseOutline } from "flowbite-svelte-icons";
-  import EdgeProperties from "$lib/EdgeProperties.svelte";
+  import EdgeDetails from "$lib/EdgeDetails.svelte";
   import Graph from "$lib/graph.svelte";
   import GraphOptions from "$lib/GraphOptions.svelte";
-  import MethodProperties from "$lib/MethodProperties.svelte";
+  import MethodDetails from "$lib/MethodDetails.svelte";
   import TreeView from "$lib/TreeView.svelte";
 
   let { data } = $props();
@@ -104,11 +104,11 @@
 
       <div class="flex flex-col gap-4">
         {#if currentView.selectedNode}
-          <h3>Method Properties</h3>
-          <MethodProperties node={currentView.selectedNode} />
+          <h3>Method Details</h3>
+          <MethodDetails node={currentView.selectedNode} />
         {:else}
-          <h3>Edge Properties</h3>
-          <EdgeProperties edge={currentView.selectedEdge} />
+          <h3>Edge Details</h3>
+          <EdgeDetails edge={currentView.selectedEdge} />
         {/if}
       </div>
     {/if}
