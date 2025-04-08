@@ -60,6 +60,19 @@ export default class Graph {
     return data;
   };
 
+  calculateDiff = async () => {
+    await fetch(
+      `${PUBLIC_API_URL}/graphs/${this.name}/diff/${this.diffOtherGraph}?max_iterations=${this.diffMaxIterations}`,
+      { method: "POST" },
+    );
+  };
+
+  fetchTopEdges = async (n: number) => {
+    const resp = await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/diff/edges?n=${n}`);
+    const data = await resp.json();
+    return data;
+  };
+
   updateCompoundNodes = () => {
     for (const view of this.views) view.updateCompoundNodes();
   };
