@@ -6,6 +6,7 @@ declare module "cytoscape-cola" {
 declare namespace cytoscape {
   interface ColaLayoutOptions extends LayoutOptions {
     name: "cola";
+    animate?: boolean;
     refresh?: number;
     maxSimulationTime?: number;
     ungrabifyWhileSimulating?: boolean;
@@ -23,6 +24,7 @@ declare namespace cytoscape {
     flow?: { axis: "x" | "y"; minSeparation: number };
     alignment?: ColaAlignmentOptions;
     gapInequalities?: ColaGapInequality[];
+    centerGraph?: boolean;
     edgeLength?: number | ((edge: EdgeSingular) => number);
     edgeSymDiffLength?: number | ((edge: EdgeSingular) => number);
     edgeJaccardLength?: number | ((edge: EdgeSingular) => number);
