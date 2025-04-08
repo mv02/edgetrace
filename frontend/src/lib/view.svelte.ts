@@ -192,9 +192,9 @@ export default class View {
       // Method node already exists
       this.showNode(node);
     } else {
-      // New method, get node definition and add it
-      const nodeDefinition = await this.graph.fetchMethod(id);
-      this.add(nodeDefinition);
+      // New method, get related element definitions and add it
+      const elementDefinitions = await this.graph.getOrFetchMethod(id);
+      this.add(elementDefinitions);
     }
   };
 

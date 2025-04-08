@@ -1,5 +1,6 @@
 import { PUBLIC_API_URL } from "$env/static/public";
 import View from "./view.svelte";
+import type { EdgeDefinition, ElementDefinition, NodeDefinition } from "cytoscape";
 import type { GraphInfo } from "./types";
 
 const MAX_VIEWS = 10;
@@ -18,6 +19,13 @@ export default class Graph {
   compoundNodesShown: boolean = $state(true);
   diffOtherGraph: string = $state("");
   diffMaxIterations: number = $state(1000);
+
+  /** Mapping of node ID to corresponding element definition. */
+  nodeDefinitions: Map<string, NodeDefinition> = new Map();
+  /** Mapping of edge ID to corresponding element definition. */
+  edgeDefinitions: Map<string, EdgeDefinition> = new Map();
+  /** Mapping of node ID to definitions of elements on its path to entrypoint. */
+  entrypointPathDefinitions: Map<string, ElementDefinition[]> = new Map();
 
   constructor(info: GraphInfo, darkMode: boolean = false) {
     this.name = info.name;
@@ -49,12 +57,60 @@ export default class Graph {
     }
   };
 
+  getOrFetchMethod = async (id: string, withEntrypoint: boolean = true) => {
+    if (this.nodeDefinitions.has(id)) {
+      // Node definition is present, use it
+      const nodeDefinition = this.nodeDefinitions.get(id);
+      if (!nodeDefinition) return [];
+
+      // Get also all parent node definitions
+      const parentDefinitions: NodeDefinition[] = [];
+      let parentId = nodeDefinition.data.parent;
+      while (parentId) {
+        let parentDefinition = parentId && this.nodeDefinitions.get(parentId);
+        if (!parentDefinition) break;
+        parentDefinitions.push(parentDefinition);
+        parentId = parentDefinition.data.parent;
+      }
+
+      const allDefinitions = [nodeDefinition, ...parentDefinitions];
+      if (!withEntrypoint) return allDefinitions;
+
+      if (this.entrypointPathDefinitions.has(id)) {
+        // Entrypoint path definition is required and present, use it
+        return [...(this.entrypointPathDefinitions.get(id) ?? []), ...allDefinitions];
+      }
+    }
+
+    // Node definition or entrypoint path definition is missing, fetch it
+    return await this.fetchMethod(id, withEntrypoint);
+  };
+
   fetchMethod = async (id: string, withEntrypoint: boolean = true) => {
     const url =
       `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}` +
       (withEntrypoint ? "?entrypoint=1" : "");
     const resp = await fetch(url);
-    const data = await resp.json();
+    const data: ElementDefinition[] = await resp.json();
+
+    for (const element of data) {
+      const elementId = element.data.id;
+      if (!elementId) continue;
+
+      if (element.group === "nodes") {
+        this.nodeDefinitions.set(elementId, element);
+      } else {
+        this.edgeDefinitions.set(elementId, element as EdgeDefinition);
+      }
+
+      if (withEntrypoint && elementId && elementId !== id) {
+        // Save as part of the node's path to entrypoint
+        this.entrypointPathDefinitions.set(id, [
+          ...(this.entrypointPathDefinitions.get(id) ?? []),
+          element,
+        ]);
+      }
+    }
     return data;
   };
 
