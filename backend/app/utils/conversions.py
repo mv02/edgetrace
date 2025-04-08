@@ -8,6 +8,23 @@ from .types import (
 )
 
 
+def fix_levels(elements: dict[str, CytoscapeNode]) -> dict[str, CytoscapeNode]:
+    """Fix compound node levels in given collection to eliminate color collisions."""
+    method_nodes = {x[0]: x[1] for x in elements.items() if "level" not in x[1]["data"]}
+
+    for node in method_nodes.values():
+        level = 1
+        parent_id = node["data"].get("parent")
+
+        while parent_id is not None:
+            parent = elements[parent_id]
+            parent["data"]["level"] = max(parent["data"]["level"], level)
+            level += 1
+            parent_id = parent["data"].get("parent")
+
+    return elements
+
+
 def method_from_csv(row: dict[str, str]) -> Method:
     """Convert CSV record to method dict."""
     return {

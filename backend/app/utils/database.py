@@ -1,6 +1,6 @@
 from ..driver import driver
-from ..utils.conversions import edge_to_cy, node_to_cy
-from .types import CytoscapeElement, Edge
+from ..utils.conversions import edge_to_cy, fix_levels, node_to_cy
+from .types import CytoscapeEdge, CytoscapeElement, CytoscapeNode, Edge
 
 
 def fetch_method(
@@ -18,7 +18,8 @@ def fetch_method(
 
     records = driver.execute_query(query, id=id, graph=graph_name).records
 
-    elements: dict[str, CytoscapeElement] = {}
+    cy_nodes: dict[str, CytoscapeNode] = {}
+    cy_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
         nodes = []
@@ -34,13 +35,15 @@ def fetch_method(
                 "target": rel.end_node["id"],
                 "value": rel["value"],
             }
-            elements |= edge_to_cy(edge)
+            cy_edges |= edge_to_cy(edge)
 
         for node in nodes:
-            elements |= node_to_cy(node)
+            cy_nodes |= node_to_cy(node)
 
-        elements |= node_to_cy(record["m"])
+        cy_nodes |= node_to_cy(record["m"])
 
+    fix_levels(cy_nodes)
+    elements = cy_nodes | cy_edges
     return list(elements.values())
 
 
