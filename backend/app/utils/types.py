@@ -1,8 +1,11 @@
 from typing import Any, TypedDict
 
 
+type ElementId = int | str
+
+
 class Method(TypedDict):
-    id: int
+    id: ElementId
     name: str
     parent_class: str
     parameters: list[str]

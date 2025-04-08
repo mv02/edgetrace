@@ -1,6 +1,6 @@
 from ..driver import driver
 from ..utils.conversions import edge_to_cy, node_to_cy
-from .types import CytoscapeElement, Edge
+from .types import CytoscapeElement, Edge, ElementId
 
 
 def fetch_method(
@@ -18,7 +18,7 @@ def fetch_method(
 
     records = driver.execute_query(query, id=id, graph=graph_name).records
 
-    result: list[CytoscapeElement] = []
+    elements: dict[ElementId, CytoscapeElement] = {}
 
     for record in records:
         nodes = []
@@ -34,14 +34,15 @@ def fetch_method(
                 "target": rel.end_node["id"],
                 "value": rel["value"],
             }
-            result.append(edge_to_cy(edge))
+            edge_id, cy_edge = edge_to_cy(edge)
+            elements[edge_id] = cy_edge
 
         for node in nodes:
-            result += node_to_cy(node)
+            elements |= node_to_cy(node)
 
-    result += node_to_cy(record["m"])
+        elements |= node_to_cy(record["m"])
 
-    return result
+    return list(elements.values())
 
 
 def fetch_method_callers(graph_name: str, method_id: int, caller_id: int | None = None):
@@ -58,7 +59,7 @@ def fetch_method_callers(graph_name: str, method_id: int, caller_id: int | None 
         query, id=method_id, caller_id=caller_id, graph=graph_name
     ).records
 
-    result: list[CytoscapeElement] = []
+    elements: dict[ElementId, CytoscapeElement] = {}
 
     for record in records:
         caller, r = record
@@ -67,9 +68,10 @@ def fetch_method_callers(graph_name: str, method_id: int, caller_id: int | None 
             "target": method_id,
             "value": r["value"],
         }
-        result += node_to_cy(caller)
-        result.append(edge_to_cy(edge))
-    return result
+        elements |= node_to_cy(caller)
+        edge_id, cy_edge = edge_to_cy(edge)
+        elements[edge_id] = cy_edge
+    return list(elements.values())
 
 
 def fetch_method_callees(graph_name: str, method_id: int, callee_id: int | None = None):
@@ -86,7 +88,7 @@ def fetch_method_callees(graph_name: str, method_id: int, callee_id: int | None 
         query, id=method_id, callee_id=callee_id, graph=graph_name
     ).records
 
-    result: list[CytoscapeElement] = []
+    elements: dict[ElementId, CytoscapeElement] = {}
 
     for record in records:
         callee, r = record
@@ -95,6 +97,7 @@ def fetch_method_callees(graph_name: str, method_id: int, callee_id: int | None 
             "target": callee["id"],
             "value": r["value"],
         }
-        result += node_to_cy(callee)
-        result.append(edge_to_cy(edge))
-    return result
+        elements |= node_to_cy(callee)
+        edge_id, cy_edge = edge_to_cy(edge)
+        elements[edge_id] = cy_edge
+    return list(elements.values())

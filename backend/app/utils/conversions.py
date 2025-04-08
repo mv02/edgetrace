@@ -1,4 +1,4 @@
-from .types import CytoscapeElement, Edge, Invoke, Method, Tree
+from .types import CytoscapeElement, Edge, Invoke, Method, ElementId, Tree
 
 
 def method_from_csv(row: dict[str, str]) -> Method:
@@ -26,43 +26,44 @@ def invoke_from_csv(row: dict[str, str]) -> Invoke:
     }
 
 
-def node_to_cy(node: Method, color: str | None = None) -> list[CytoscapeElement]:
-    """Convert a node to Cytoscape.js node."""
-    result: list[CytoscapeElement] = [
-        {
+def node_to_cy(node: Method) -> dict[ElementId, CytoscapeElement]:
+    """Convert a node to Cytoscape.js node and its parent nodes."""
+    result: dict[ElementId, CytoscapeElement] = {
+        node["id"]: {
             "group": "nodes",
             "data": {"label": node["name"], "parent": node["parent_class"], **node},
-            **({"style": {"background-color": color}} if color else {}),
         }
-    ]
+    }
 
     t = node["parent_class"]
     level = 1
     while "." in t:
         parent_t = t[: t.rindex(".")]
-        result.append(
-            {
-                "group": "nodes",
-                "data": {
-                    "id": t,
-                    "parent": parent_t,
-                    "label": t[t.rindex(".") + 1 :],
-                    "level": level,
-                },
-            }
-        )
+        result[t] = {
+            "group": "nodes",
+            "data": {
+                "id": t,
+                "parent": parent_t,
+                "label": t[t.rindex(".") + 1 :],
+                "level": level,
+            },
+        }
         t = parent_t
         level += 1
-    result.append({"group": "nodes", "data": {"id": t, "label": t, "level": level}})
+    result[t] = {
+        "group": "nodes",
+        "data": {"id": t, "label": t, "level": level},
+    }
 
     return result
 
 
-def edge_to_cy(edge: Edge) -> CytoscapeElement:
+def edge_to_cy(edge: Edge) -> tuple[str, CytoscapeElement]:
     """Convert an edge between nodes to Cytoscape.js edge."""
-    return {
+    id = f"{edge['source']}->{edge['target']}"
+    return id, {
         "group": "edges",
-        "data": {"id": f"{edge['source']}->{edge['target']}", **edge},
+        "data": {"id": id, **edge},
     }
 
 
