@@ -316,6 +316,12 @@ export default class View {
     this.contextMenu = this.cy.contextMenus({
       menuItems: [
         {
+          id: "hide",
+          content: "Hide node",
+          selector: LEAF_NODES,
+          onClickFunction: (e) => this.hideNode(e.target),
+        },
+        {
           id: "show-callers",
           content: "Show callers",
           selector: LEAF_NODES,
