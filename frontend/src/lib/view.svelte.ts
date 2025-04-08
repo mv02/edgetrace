@@ -68,14 +68,18 @@ export default class View {
 
     this.updateColors();
 
-    this.cy.on("tap", "node", (e) => {
+    this.cy.on("select", "node", (e) => {
       const target: NodeSingular = e.target;
       this.selectedNode = target.is(COMPOUND_NODES) ? undefined : target;
       this.selectedEdge = undefined;
     });
-    this.cy.on("tap", "edge", (e) => {
+    this.cy.on("select", "edge", (e) => {
       this.selectedNode = undefined;
       this.selectedEdge = e.target;
+    });
+    this.cy.on("unselect", () => {
+      this.selectedNode = undefined;
+      this.selectedEdge = undefined;
     });
   }
 
