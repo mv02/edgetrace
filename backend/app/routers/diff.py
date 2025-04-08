@@ -13,6 +13,9 @@ router = APIRouter(prefix="/{graph_name}/diff")
 
 @router.post("/{other_graph_name}")
 def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
+    driver.execute_query(
+        "MATCH ({graph: $graph})-[r]->() SET r.value = 0", graph=graph_name
+    )
     edges = diff(
         os.path.join(CSV_DIR, graph_name),
         os.path.join(CSV_DIR, other_graph_name),
