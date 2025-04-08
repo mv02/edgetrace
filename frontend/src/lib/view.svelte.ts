@@ -84,13 +84,15 @@ export default class View {
   };
 
   updateDiffColoring = () => {
-    const minDiffValue = Math.min(...this.cy.edges().map((edge) => edge.data("value")));
-    const maxDiffValue = Math.max(...this.cy.edges().map((edge) => edge.data("value")));
+    let minDiffValue = Math.min(...this.cy.edges().map((edge) => edge.data("value")));
+    let maxDiffValue = Math.max(...this.cy.edges().map((edge) => edge.data("value")));
+    if (minDiffValue === maxDiffValue) {
+      minDiffValue = 0;
+      maxDiffValue = 1;
+    }
     for (const edge of this.cy.edges()) {
-      edge.data(
-        "color",
-        COLOR_SCALE((edge.data("value") - minDiffValue) / (maxDiffValue - minDiffValue)).hex(),
-      );
+      const weight = (edge.data("value") - minDiffValue) / (maxDiffValue - minDiffValue);
+      edge.data("color", COLOR_SCALE(weight).hex());
     }
     this.cy
       .style()
