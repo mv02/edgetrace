@@ -5,6 +5,8 @@
   import { MinusOutline, PlusOutline } from "flowbite-svelte-icons";
   import type Graph from "$lib/graph.svelte";
 
+  const BOUNDING_BOX_SCALING_FACTOR = 0.02;
+
   interface Props {
     graphs: Record<string, Graph>;
   }
@@ -32,7 +34,13 @@
     currentView.removeAll(); // TODO: do not remove all
     currentView.add(edges);
     currentView.topEdgesShown = n;
-    currentView.resetLayout();
+    if (newView) {
+      currentView.cy.one("render", () =>
+        currentView.resetLayout(true, n * BOUNDING_BOX_SCALING_FACTOR),
+      );
+    } else {
+      currentView.resetLayout(true, n * BOUNDING_BOX_SCALING_FACTOR);
+    }
   };
 </script>
 

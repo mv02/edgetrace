@@ -80,9 +80,24 @@ export default class View {
     });
   }
 
-  resetLayout = () => {
-    this.cy.reset();
-    this.cy.layout(LAYOUT_OPTIONS).run();
+  resetLayout = (
+    randomize: boolean = false,
+    boundingBoxScale: number = 1,
+    animate: boolean = true,
+  ) => {
+    boundingBoxScale = Math.max(Math.min(boundingBoxScale, 1), 0.5);
+    let options: ColaLayoutOptions = { ...LAYOUT_OPTIONS, randomize, animate };
+    if (randomize) {
+      console.log("Bounding box", boundingBoxScale);
+      // Smaller bounding box to reduce node spread
+      options.boundingBox = {
+        x1: 0,
+        y1: 0,
+        w: this.cy.width() * boundingBoxScale,
+        h: this.cy.height() * boundingBoxScale,
+      };
+    }
+    this.cy.layout(options).run();
   };
 
   updateDiffColoring = () => {
