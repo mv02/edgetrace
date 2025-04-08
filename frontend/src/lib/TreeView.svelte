@@ -56,18 +56,13 @@
     return matchingMethod ? { tree: result, count } : { tree: {}, count: 0 };
   };
 
-  const findMethod = async (id: number, name: string, newView: boolean = true) => {
-    const response = await fetch(`${PUBLIC_API_URL}/graphs/${graphName}/method/${id}`);
-    const data = await response.json();
+  const findMethod = (id: number, name: string, newView: boolean = true) => {
     if (newView || graphs[graphName].views.length === 0) {
       // Create new view
-      graph.createView(data, name);
+      graph.createView(name);
       graph.viewIndex = 0;
-    } else {
-      // Add to current view
-      graph.currentView.add(data);
-      graph.currentView.resetLayout();
     }
+    graph.currentView.showMethod(id).then(() => graph.currentView.resetLayout());
   };
 </script>
 

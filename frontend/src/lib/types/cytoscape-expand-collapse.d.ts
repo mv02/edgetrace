@@ -21,7 +21,7 @@ declare module "cytoscape-expand-collapse" {
     zIndex?: number;
   }
 
-  interface ExpandCollapseInstance {
+  export interface ExpandCollapseInstance {
     expandAll(): void;
     collapseAll(): void;
     expand(nodes: cytoscape.NodeCollection): void;

@@ -1,21 +1,22 @@
 import { browser } from "$app/environment";
-import { PUBLIC_API_URL } from "$env/static/public";
 import chroma from "chroma-js";
 import cytoscape from "cytoscape";
 import cola from "cytoscape-cola";
 import expandCollapse from "cytoscape-expand-collapse";
 import type {
   ColaLayoutOptions,
-  Collection,
+  EdgeCollection,
   EdgeSingular,
   ElementDefinition,
+  ElementsDefinition,
   NodeCollection,
   NodeSingular,
 } from "cytoscape";
 import type contextMenus from "cytoscape-context-menus";
 import type Graph from "./graph.svelte";
+import type { MethodId } from "./types";
+import type { ExpandCollapseInstance } from "cytoscape-expand-collapse";
 
-const MAX_NEIGHBORS = 10;
 const COLORS_LIGHT = ["#f3f4f6", "#bfdbfe", "#bbf7d0", "#fef08a", "#fecaca", "#d8b4fe", "#f9a8d4"];
 const COLORS_DARK = ["#374151", "#1e40af", "#047857", "#a16207", "#b91c1c", "#7c3aed", "#be185d"];
 const COLOR_SCALE = chroma.scale("Viridis");
@@ -23,6 +24,7 @@ const LAYOUT_OPTIONS: ColaLayoutOptions = { name: "cola", maxSimulationTime: 100
 
 const LEAF_NODES = "node[!level]";
 const COMPOUND_NODES = "node[level > 0]";
+const COLLAPSED_NODES = "node.cy-expand-collapse-collapsed-node";
 
 if (browser) {
   const contextMenus = (await import("cytoscape-context-menus")).default;
@@ -36,12 +38,25 @@ export default class View {
   title: string;
   cy: cytoscape.Core;
   isAttached: boolean = false;
+
+  /** Mapping of node ID to corresponding node. */
+  nodes: Map<string, NodeSingular> = new Map();
+  /** Mapping of node ID to parent node ID. */
+  parentIds: Map<string, string> = new Map();
+  /** Mapping of node ID to incoming edges. */
+  incomers: Map<string, EdgeCollection> = new Map();
+  /** Mapping of node ID to outgoing edges. */
+  outgoers: Map<string, EdgeCollection> = new Map();
+
+  /** Edges between collapsed compound nodes. */
+  metaEdges?: EdgeCollection;
+
   selectedNode?: NodeSingular = $state();
   selectedEdge?: EdgeSingular = $state();
-  hiddenCompoundNodes: NodeCollection;
+  expandCollapse?: ExpandCollapseInstance;
   contextMenu?: contextMenus.ContextMenu;
 
-  constructor(graph: Graph, elements: ElementDefinition[], title: string) {
+  constructor(graph: Graph, title: string) {
     this.graph = graph;
     this.title = title.length > 50 ? title.substring(0, 50) + "…" : title;
     this.cy = cytoscape({
@@ -49,9 +64,8 @@ export default class View {
       maxZoom: 10,
       wheelSensitivity: 0.25,
     });
-    this.hiddenCompoundNodes = this.cy.collection();
+
     this.updateColors();
-    this.add(elements);
 
     this.cy.on("tap", "node", (e) => {
       const target: NodeSingular = e.target;
@@ -110,7 +124,7 @@ export default class View {
     this.cy.mount(container);
     this.isAttached = true;
     this.createContextMenu();
-    this.cy.expandCollapse({ animate: false, undoable: false, zIndex: 0 });
+    this.expandCollapse = this.cy.expandCollapse({ animate: false, undoable: false, zIndex: 0 });
     if (!prevContainer) {
       this.resetLayout();
     }
@@ -123,123 +137,140 @@ export default class View {
     this.isAttached = false;
   };
 
-  add = (elements: ElementDefinition[]) => {
+  showNode = (node: NodeSingular) => {
+    const id = node.id();
+    const parentId = this.parentIds.get(id);
+    const parent = parentId && this.nodes.get(parentId);
+
+    if (node.is(COMPOUND_NODES) && !this.graph.compoundNodesShown) return;
+
+    // Restore the node and connected edges
+    node?.restore();
+    // Only edges whose other node is shown
+    this.incomers
+      .get(id)
+      ?.filter((edge) => edge.source().inside())
+      .restore();
+    this.outgoers
+      .get(id)
+      ?.filter((edge) => edge.target().inside())
+      .restore();
+
+    if (parent) {
+      this.showNode(parent);
+      node?.move({ parent: parent.id() });
+    }
+  };
+
+  showMethod = async (id: MethodId) => {
+    const node = this.nodes.get(id.toString());
+
+    if (node) {
+      // Method node already exists
+      this.showNode(node);
+    } else {
+      // New method, get node definition and add it
+      const nodeDefinition = await this.graph.fetchMethod(id);
+      this.add(nodeDefinition);
+    }
+  };
+
+  hideNode = (node: NodeSingular) => {
+    const parentsToHide = this.parentsToHide(node);
+    node.remove();
+    parentsToHide.remove();
+  };
+
+  hideMethod = (id: MethodId) => {
+    const node = this.cy.nodes().getElementById(id.toString());
+    this.hideNode(node);
+  };
+
+  add = (elements?: ElementDefinition | ElementDefinition[] | ElementsDefinition) => {
+    if (!elements) return;
     const added = this.cy.add(elements);
+
+    for (const node of added.nodes()) {
+      // Save parent IDs of all added nodes
+      this.nodes.set(node.id(), node);
+      this.parentIds.set(node.id(), node.parent().first().id());
+    }
+    for (const edge of added.edges()) {
+      // Save all added edges as node incomers and outgoers
+      const sourceId = edge.source().id();
+      const targetId = edge.target().id();
+      this.incomers.set(targetId, edge.union(this.incomers.get(targetId) ?? edge));
+      this.outgoers.set(sourceId, edge.union(this.outgoers.get(sourceId) ?? edge));
+    }
+
     if (!this.graph.compoundNodesShown) this.hideCompoundNodes();
     this.updateDiffColoring();
     return added;
   };
 
-  remove = (nodes: NodeCollection) => {
-    let removed = this.cy.collection();
-    for (const node of nodes) {
-      const parentsToRemove = this.parentsToRemove(node);
-      removed = removed.union(node.remove());
-      removed = removed.union(parentsToRemove.remove());
-      removed = removed.union(parentsToRemove); // Include hidden compound nodes (not actually removed)
-      this.hiddenCompoundNodes = this.hiddenCompoundNodes.difference(parentsToRemove);
-    }
-    this.updateDiffColoring();
-    return removed;
-  };
-
-  restore = (elements: Collection) => {
-    if (this.graph.compoundNodesShown) {
-      const restored = elements.restore();
-      this.updateDiffColoring();
-      return restored;
-    }
-    const compoundNodes = elements.filter(COMPOUND_NODES);
-    this.hiddenCompoundNodes = this.hiddenCompoundNodes.union(compoundNodes);
-    const restored = elements.difference(compoundNodes).restore();
-    this.updateDiffColoring();
-    return restored;
-  };
-
-  parent = (node: NodeCollection): NodeCollection => {
+  parentsToHide = (node: NodeSingular | NodeCollection): NodeCollection => {
     const parent = node.parent();
-    if (parent.nonempty()) return parent;
-
-    const id = node.is(LEAF_NODES) ? node.data("savedParent") : node.data("parent");
-    return this.hiddenCompoundNodes.filter(`[id = "${id}"]`);
-  };
-
-  children = (node: NodeSingular): NodeCollection => {
-    const children = node.children();
-    if (children.nonempty()) return children;
-
-    const compoundChildren = this.hiddenCompoundNodes.filter(`[parent = "${node.id()}"]`);
-    const leafChildren = this.cy.nodes(`[savedParent = "${node.id()}"]`);
-    return compoundChildren.union(leafChildren);
-  };
-
-  parentsToRemove = (node: NodeCollection): NodeCollection => {
-    const parent = this.parent(node);
     if (node.is(LEAF_NODES)) {
       // Leaf node
       return parent
-        .map((ele) => this.parentsToRemove(ele))
+        .map((ele) => this.parentsToHide(ele))
         .reduce((col, cur) => col.union(cur), this.cy.collection());
     }
     // Compound node
-    const children = this.children(node.first());
+    const children = node.children();
     if (children.length !== 1) return this.cy.collection();
-    return node.union(this.parentsToRemove(parent));
+    return node.union(this.parentsToHide(parent));
   };
 
   showNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
-    const neighbors: Collection | undefined = node.data(type);
-    if (neighbors) this.restore(neighbors);
-
-    const fetched: boolean = node.data(`${type}Fetched`) ?? false;
-
-    if (!fetched) {
-      // Fetch and add new neighbors
-      const resp = await fetch(
-        `${PUBLIC_API_URL}/graphs/${this.graph.name}/method/${node.data("id")}/${type}`,
-      );
-      const data: ElementDefinition[] = await resp.json();
-      // TODO: selectable neighbor limit, incremental expansion
-      const added = this.add(data.slice(0, MAX_NEIGHBORS * 2));
-      if (added.length > 0) {
-        this.cy.layout(LAYOUT_OPTIONS).run();
-      }
-      node.data(type, neighbors?.union(added) ?? added);
-      node.data(`${type}Fetched`, true);
-    }
-
-    this.unselectAll();
-    node.select();
-    this.selectedNode = node;
+    // TODO
   };
 
   hideNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
-    const neighbors = type === "callers" ? node.incomers("node") : node.outgoers("node");
-    const removed = this.remove(neighbors);
-    node.data(type, neighbors.union(removed));
+    // TODO
   };
 
   showCompoundNodes = () => {
-    // Restore hidden compound nodes
-    this.hiddenCompoundNodes.restore();
-    this.hiddenCompoundNodes = this.cy.collection();
-    // Restore original parents
-    for (const node of this.cy.nodes(LEAF_NODES)) {
-      node.move({ parent: node.data("savedParent") });
-      node.data("savedParent", undefined);
+    for (const [id, parentId] of this.parentIds.entries()) {
+      // Get the node and restore it if it was hidden
+      const node = this.nodes.get(id);
+      if (!node) continue;
+      if (!node.is(COLLAPSED_NODES) && node.removed()) continue;
+      this.showNode(node);
+
+      if (!this.expandCollapse?.isCollapsible(node)) {
+        // Workaround for issues with nested collapsed nodes
+        this.expandCollapse?.expand(node);
+        this.expandCollapse?.collapse(node);
+      }
+
+      // Get and restore the parent
+      const parent = this.nodes.get(parentId);
+      if (!parent) continue;
+      this.showNode(parent);
+
+      // Move node to its original parent
+      this.nodes.get(id)?.move({ parent: parent.id() });
     }
+
+    // Restore edges between compound nodes
+    this.metaEdges?.restore();
+    this.metaEdges = undefined;
   };
 
   hideCompoundNodes = () => {
-    // Save original parents
-    const leafNodes = this.cy.nodes(LEAF_NODES);
-    for (const node of leafNodes) {
-      node.data("savedParent", node.data("parent"));
+    // Save edges between compound nodes
+    const metaEdges = this.cy.edges(".cy-expand-collapse-meta-edge");
+    this.metaEdges = this.metaEdges?.union(metaEdges) ?? metaEdges;
+    // Remove all nodes from their parents
+    for (const node of this.nodes.values()) {
+      if (node.removed()) continue;
       node.move({ parent: null });
     }
-    // Remove and save compound nodes
-    const removed = this.cy.nodes(COMPOUND_NODES).remove();
-    this.hiddenCompoundNodes = this.hiddenCompoundNodes.union(removed) ?? removed;
+    // Remove the parent nodes
+    for (const parentId of this.parentIds.values()) {
+      this.nodes.get(parentId)?.remove();
+    }
   };
 
   updateCompoundNodes = () => {

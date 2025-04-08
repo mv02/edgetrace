@@ -27,7 +27,8 @@
   const getTopEdges = async (n: number) => {
     const resp = await fetch(`${PUBLIC_API_URL}/graphs/${currentGraph.name}/diff/edges?n=${n}`);
     const data = await resp.json();
-    currentGraph.createView(data, `${currentGraph.name} − ${currentGraph.diffOtherGraph}`);
+    const view = currentGraph.createView(`${currentGraph.name} − ${currentGraph.diffOtherGraph}`);
+    view.add(data);
   };
 </script>
 

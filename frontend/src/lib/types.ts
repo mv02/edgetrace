@@ -1,3 +1,5 @@
+export type MethodId = number | string;
+
 
 export type GraphInfo = {
   name: string;

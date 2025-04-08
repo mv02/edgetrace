@@ -1,6 +1,6 @@
+import { PUBLIC_API_URL } from "$env/static/public";
 import View from "./view.svelte";
-import type { GraphInfo } from "./types";
-import type { ElementDefinition } from "cytoscape";
+import type { GraphInfo, MethodId } from "./types";
 
 const MAX_VIEWS = 10;
 
@@ -31,9 +31,10 @@ export default class Graph {
     this.views.unshift(view);
   };
 
-  createView = (elements: ElementDefinition[], title: string) => {
-    const view = new View(this, elements, title);
+  createView = (title: string) => {
+    const view = new View(this, title);
     this.addView(view);
+    return view;
   };
 
   closeView = (index: number) => {
@@ -46,6 +47,17 @@ export default class Graph {
     if (this.viewIndex >= this.views.length) {
       this.viewIndex = Math.max(this.views.length - 1, 0);
     }
+  };
+
+  fetchMethod = async (id: MethodId, withEntrypoint: boolean = true) => {
+    id = id.toString();
+
+    const url =
+      `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}` +
+      (withEntrypoint ? "?entrypoint=1" : "");
+    const resp = await fetch(url);
+    const data = await resp.json();
+    return data;
   };
 
   updateCompoundNodes = () => {
