@@ -69,8 +69,8 @@ def diff(
     supergraph_directory: str,
     subgraph_directory: str,
     max_iterations: int,
-) -> dict[tuple[int, int], float]:
-    result: dict[tuple[int, int], float] = {}
+) -> dict[tuple[str, str], float]:
+    result: dict[tuple[str, str], float] = {}
 
     sup = diff_lib.diff_from_dirs(
         supergraph_directory.encode(), subgraph_directory.encode(), max_iterations
@@ -80,7 +80,7 @@ def diff(
     while edge:
         source = edge.contents.source
         target = edge.contents.target
-        result[(source.contents.id, target.contents.id)] = edge.contents.value
+        result[(str(source.contents.id), str(target.contents.id))] = edge.contents.value
         edge = edge.contents.next
 
     diff_lib.call_graph_destroy(sup)

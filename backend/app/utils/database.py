@@ -1,10 +1,10 @@
 from ..driver import driver
 from ..utils.conversions import edge_to_cy, node_to_cy
-from .types import CytoscapeElement, Edge, ElementId
+from .types import CytoscapeElement, Edge
 
 
 def fetch_method(
-    id: int,
+    id: str,
     graph_name: str,
     with_entrypoint: bool = False,
 ):
@@ -18,7 +18,7 @@ def fetch_method(
 
     records = driver.execute_query(query, id=id, graph=graph_name).records
 
-    elements: dict[ElementId, CytoscapeElement] = {}
+    elements: dict[str, CytoscapeElement] = {}
 
     for record in records:
         nodes = []
@@ -34,8 +34,7 @@ def fetch_method(
                 "target": rel.end_node["id"],
                 "value": rel["value"],
             }
-            edge_id, cy_edge = edge_to_cy(edge)
-            elements[edge_id] = cy_edge
+            elements |= edge_to_cy(edge)
 
         for node in nodes:
             elements |= node_to_cy(node)
@@ -45,7 +44,7 @@ def fetch_method(
     return list(elements.values())
 
 
-def fetch_method_callers(graph_name: str, method_id: int, caller_id: int | None = None):
+def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None = None):
     if caller_id is None:
         query = """MATCH (m {id: $id, graph: $graph})
         OPTIONAL MATCH (caller)-[r]->(m)
@@ -59,7 +58,7 @@ def fetch_method_callers(graph_name: str, method_id: int, caller_id: int | None 
         query, id=method_id, caller_id=caller_id, graph=graph_name
     ).records
 
-    elements: dict[ElementId, CytoscapeElement] = {}
+    elements: dict[str, CytoscapeElement] = {}
 
     for record in records:
         caller, r = record
@@ -69,12 +68,11 @@ def fetch_method_callers(graph_name: str, method_id: int, caller_id: int | None 
             "value": r["value"],
         }
         elements |= node_to_cy(caller)
-        edge_id, cy_edge = edge_to_cy(edge)
-        elements[edge_id] = cy_edge
+        elements |= edge_to_cy(edge)
     return list(elements.values())
 
 
-def fetch_method_callees(graph_name: str, method_id: int, callee_id: int | None = None):
+def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None = None):
     if callee_id is None:
         query = """MATCH (m {id: $id, graph: $graph})
         OPTIONAL MATCH (m)-[r]->(callee)
@@ -88,7 +86,7 @@ def fetch_method_callees(graph_name: str, method_id: int, callee_id: int | None 
         query, id=method_id, callee_id=callee_id, graph=graph_name
     ).records
 
-    elements: dict[ElementId, CytoscapeElement] = {}
+    elements: dict[str, CytoscapeElement] = {}
 
     for record in records:
         callee, r = record
@@ -98,6 +96,5 @@ def fetch_method_callees(graph_name: str, method_id: int, callee_id: int | None 
             "value": r["value"],
         }
         elements |= node_to_cy(callee)
-        edge_id, cy_edge = edge_to_cy(edge)
-        elements[edge_id] = cy_edge
+        elements |= edge_to_cy(edge)
     return list(elements.values())

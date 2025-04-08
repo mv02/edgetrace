@@ -1,6 +1,3 @@
-export type MethodId = number | string;
-
-
 export type GraphInfo = {
   name: string;
   nodeCount: number;
@@ -8,5 +5,5 @@ export type GraphInfo = {
 };
 
 export type Tree = {
-  [key: string]: number | Tree;
+  [key: string]: string | Tree;
 };

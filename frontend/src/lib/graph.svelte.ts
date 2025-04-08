@@ -1,6 +1,6 @@
 import { PUBLIC_API_URL } from "$env/static/public";
 import View from "./view.svelte";
-import type { GraphInfo, MethodId } from "./types";
+import type { GraphInfo } from "./types";
 
 const MAX_VIEWS = 10;
 
@@ -49,9 +49,7 @@ export default class Graph {
     }
   };
 
-  fetchMethod = async (id: MethodId, withEntrypoint: boolean = true) => {
-    id = id.toString();
-
+  fetchMethod = async (id: string, withEntrypoint: boolean = true) => {
     const url =
       `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}` +
       (withEntrypoint ? "?entrypoint=1" : "");

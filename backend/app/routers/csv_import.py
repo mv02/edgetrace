@@ -90,7 +90,7 @@ def import_csv(
         "MATCH (m {graph: $graph}) RETURN m.id AS id, elementId(m) AS element_id",
         graph=graph,
     ).records
-    element_ids: dict[int, str] = {
+    element_ids: dict[str, str] = {
         record["id"]: record["element_id"] for record in records
     }
 
@@ -99,7 +99,7 @@ def import_csv(
     invokes_csv = io.TextIOWrapper(newest["invokes"][0].file)
     reader = csv.DictReader(invokes_csv)
 
-    invokes: dict[int, Invoke] = {}
+    invokes: dict[str, Invoke] = {}
     for row in reader:
         invoke = invoke_from_csv(row)
         invokes[invoke["id"]] = invoke
@@ -111,11 +111,11 @@ def import_csv(
 
     edges: list[dict[str, str]] = []
     for row in reader:
-        invoke_id = int(row["InvokeId"])
+        invoke_id = row["InvokeId"]
         invoke = invokes[invoke_id]
         edge = {
             "source_element_id": element_ids[invoke["method_id"]],
-            "target_element_id": element_ids[int(row["TargetId"])],
+            "target_element_id": element_ids[row["TargetId"]],
         }
         edges.append(edge)
 

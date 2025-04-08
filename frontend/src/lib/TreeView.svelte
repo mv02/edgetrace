@@ -36,7 +36,7 @@
     let matchingMethod = false;
     let count = 0;
     for (const [key, content] of Object.entries(node)) {
-      if (typeof content === "number") {
+      if (typeof content === "string") {
         // Method
         if (key.toLowerCase().includes(searchQuery.toLowerCase())) {
           result[key] = content;
@@ -56,7 +56,7 @@
     return matchingMethod ? { tree: result, count } : { tree: {}, count: 0 };
   };
 
-  const findMethod = (id: number, name: string, newView: boolean = true) => {
+  const findMethod = (id: string, name: string, newView: boolean = true) => {
     if (newView || graphs[graphName].views.length === 0) {
       // Create new view
       graph.createView(name);
@@ -68,7 +68,7 @@
 
 <Accordion flush multiple --padding="{level * 8}px" class="flex flex-col">
   {#each Object.entries(filtered.tree) as [key, content]}
-    {#if typeof content === "number"}
+    {#if typeof content === "string"}
       <!-- No children, content is method ID -->
       <button
         onclick={(e) => findMethod(content, key, !(e.altKey || e.ctrlKey || e.shiftKey))}

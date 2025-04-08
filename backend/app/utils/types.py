@@ -1,11 +1,8 @@
-from typing import Any, TypedDict
-
-
-type ElementId = int | str
+from typing import Literal, TypedDict
 
 
 class Method(TypedDict):
-    id: ElementId
+    id: str
     name: str
     parent_class: str
     parameters: list[str]
@@ -16,18 +13,73 @@ class Method(TypedDict):
 
 
 class Invoke(TypedDict):
-    id: int
-    method_id: int
+    id: str
+    method_id: str
     bci: int
-    target_id: int
+    target_id: str
     is_direct: bool
 
 
 class Edge(TypedDict):
-    source: int
-    target: int
+    source: str
+    target: str
     value: float
 
 
-type CytoscapeElement = dict[str, Any]
-type Tree = dict[str, Tree | int]
+class CytoscapeElementData(TypedDict):
+    id: str
+
+
+class CytoscapeNodeRequiredData(CytoscapeElementData):
+    label: str
+
+
+class CytoscapeNodeOptionalData(TypedDict, total=False):
+    parent: str | None
+
+
+class CytoscapeNodeData(CytoscapeNodeRequiredData, CytoscapeNodeOptionalData):
+    pass
+
+
+class CytoscapeCompoundNodeData(CytoscapeNodeData):
+    level: int
+
+
+class CytoscapeMethodNodeData(CytoscapeNodeData, Method):
+    pass
+
+
+class CytoscapeEdgeRequiredData(CytoscapeElementData):
+    source: str
+    target: str
+
+
+class CytoscapeEdgeOptionalData(TypedDict, total=False):
+    value: float
+
+
+class CytoscapeEdgeData(CytoscapeEdgeRequiredData, CytoscapeEdgeOptionalData):
+    pass
+
+
+class CytoscapeCompoundNode(TypedDict):
+    group: Literal["nodes"]
+    data: CytoscapeCompoundNodeData
+
+
+class CytoscapeMethodNode(TypedDict):
+    group: Literal["nodes"]
+    data: CytoscapeMethodNodeData
+
+
+class CytoscapeEdge(TypedDict):
+    group: Literal["edges"]
+    data: CytoscapeEdgeData
+
+
+type CytoscapeNode = CytoscapeCompoundNode | CytoscapeMethodNode
+type CytoscapeElement = CytoscapeNode | CytoscapeEdge
+
+
+type Tree = dict[str, Tree | str]

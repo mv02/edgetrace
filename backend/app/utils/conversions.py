@@ -1,10 +1,17 @@
-from .types import CytoscapeElement, Edge, Invoke, Method, ElementId, Tree
+from .types import (
+    CytoscapeEdge,
+    CytoscapeNode,
+    Edge,
+    Invoke,
+    Method,
+    Tree,
+)
 
 
 def method_from_csv(row: dict[str, str]) -> Method:
     """Convert CSV record to method dict."""
     return {
-        "id": int(row["Id"]),
+        "id": row["Id"],
         "name": row["Name"],
         "parent_class": row["Type"],
         "parameters": [] if row["Parameters"] == "empty" else row["Parameters"].split(),
@@ -18,18 +25,20 @@ def method_from_csv(row: dict[str, str]) -> Method:
 def invoke_from_csv(row: dict[str, str]) -> Invoke:
     """Convert CSV record to invoke dict."""
     return {
-        "id": int(row["Id"]),
-        "method_id": int(row["MethodId"]),
+        "id": row["Id"],
+        "method_id": row["MethodId"],
         "bci": int(row["BytecodeIndexes"]),
-        "target_id": int(row["TargetId"]),
+        "target_id": row["TargetId"],
         "is_direct": row["IsDirect"] == "true",
     }
 
 
-def node_to_cy(node: Method) -> dict[ElementId, CytoscapeElement]:
+def node_to_cy(node: Method) -> dict[str, CytoscapeNode]:
     """Convert a node to Cytoscape.js node and its parent nodes."""
-    result: dict[ElementId, CytoscapeElement] = {
-        node["id"]: {
+    id = node["id"]
+
+    result: dict[str, CytoscapeNode] = {
+        id: {
             "group": "nodes",
             "data": {"label": node["name"], "parent": node["parent_class"], **node},
         }
@@ -58,13 +67,10 @@ def node_to_cy(node: Method) -> dict[ElementId, CytoscapeElement]:
     return result
 
 
-def edge_to_cy(edge: Edge) -> tuple[str, CytoscapeElement]:
+def edge_to_cy(edge: Edge) -> dict[str, CytoscapeEdge]:
     """Convert an edge between nodes to Cytoscape.js edge."""
     id = f"{edge['source']}->{edge['target']}"
-    return id, {
-        "group": "edges",
-        "data": {"id": id, **edge},
-    }
+    return {id: {"group": "edges", "data": {"id": id, **edge}}}
 
 
 def methods_to_tree(methods: list[dict]) -> Tree:

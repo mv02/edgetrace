@@ -14,7 +14,6 @@ import type {
 } from "cytoscape";
 import type contextMenus from "cytoscape-context-menus";
 import type Graph from "./graph.svelte";
-import type { MethodId } from "./types";
 import type { ExpandCollapseInstance } from "cytoscape-expand-collapse";
 
 const COLORS_LIGHT = ["#f3f4f6", "#bfdbfe", "#bbf7d0", "#fef08a", "#fecaca", "#d8b4fe", "#f9a8d4"];
@@ -182,8 +181,8 @@ export default class View {
     this.updateDiffColoring();
   };
 
-  showMethod = async (id: MethodId) => {
-    const node = this.nodes.get(id.toString());
+  showMethod = async (id: string) => {
+    const node = this.nodes.get(id);
 
     if (node) {
       // Method node already exists
@@ -202,8 +201,8 @@ export default class View {
     this.updateDiffColoring();
   };
 
-  hideMethod = (id: MethodId) => {
-    const node = this.cy.nodes().getElementById(id.toString());
+  hideMethod = (id: string) => {
+    const node = this.cy.nodes().getElementById(id);
     this.hideNode(node);
   };
 
