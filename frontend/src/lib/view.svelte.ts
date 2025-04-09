@@ -53,6 +53,7 @@ export default class View {
 
   selectedNode?: NodeSingular = $state();
   selectedEdge?: EdgeSingular = $state();
+  methodDetailsTab: "properties" | "callers" | "callees" = $state("properties");
   topEdgesShown: number = $state(0);
 
   expandCollapse?: ExpandCollapseInstance;

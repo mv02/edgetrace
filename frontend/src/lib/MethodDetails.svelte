@@ -9,7 +9,8 @@
   }
 
   let { graph }: Props = $props();
-  let node = $derived(graph.currentView.selectedNode);
+  let currentView = $derived(graph.currentView);
+  let node = $derived(currentView.selectedNode);
 
   let tab: "properties" | "callers" | "callees" = $state("properties");
 </script>
@@ -28,19 +29,31 @@
       size="xs"
       color="alternative"
       value="properties"
-      bind:group={tab}
+      bind:group={currentView.methodDetailsTab}
     >
       Properties
     </RadioButton>
-    <RadioButton class="flex-grow" size="xs" color="alternative" value="callers" bind:group={tab}>
+    <RadioButton
+      class="flex-grow"
+      size="xs"
+      color="alternative"
+      value="callers"
+      bind:group={currentView.methodDetailsTab}
+    >
       Callers
     </RadioButton>
-    <RadioButton class="flex-grow" size="xs" color="alternative" value="callees" bind:group={tab}>
+    <RadioButton
+      class="flex-grow"
+      size="xs"
+      color="alternative"
+      value="callees"
+      bind:group={currentView.methodDetailsTab}
+    >
       Callees
     </RadioButton>
   </ButtonGroup>
 
-  {#if tab === "properties"}
+  {#if currentView.methodDetailsTab === "properties"}
     <!-- Properties -->
     <DataField label="Class">{node.data("parent_class")}</DataField>
     <DataField label="Name">{node.data("name")}</DataField>
@@ -57,7 +70,7 @@
 
     <DataField label="Return Type">{node.data("return_type")}</DataField>
     <DataField label="Flags">{node.data("flags")}</DataField>
-  {:else if tab === "callers"}
+  {:else if currentView.methodDetailsTab === "callers"}
     <!-- Callers -->
     <MethodNeighbors {graph} type="callers" />
   {:else}
