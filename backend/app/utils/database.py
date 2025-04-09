@@ -28,7 +28,11 @@ def fetch_method(
         m, callers, callees, path = record
 
         if with_entrypoint and path is not None:
-            path_nodes = [list(node_to_cy(node).values())[0] for node in path.nodes]
+            path_nodes = [
+                list(node_to_cy(node).values())[0]
+                for node in path.nodes
+                if node["id"] != id
+            ]
 
             for rel in path.relationships:
                 edge: Edge = {
