@@ -21,26 +21,22 @@ def fetch_method(
     cy_nodes: dict[str, list[CytoscapeNode]] = {}
     cy_edges: dict[str, CytoscapeEdge] = {}
 
-    for record in records:
-        nodes = []
-        relationships = []
+    path_nodes: list[list[CytoscapeNode]] = []
+    path_edges: list[CytoscapeEdge] = []
 
+    for record in records:
         m, callers, callees, path = record
 
         if with_entrypoint and path is not None:
-            nodes += list(path.nodes)
-            relationships += list(path.relationships)
+            path_nodes = [list(node_to_cy(node).values())[0] for node in path.nodes]
 
-        for rel in relationships:
-            edge: Edge = {
-                "source": rel.start_node["id"],
-                "target": rel.end_node["id"],
-                "value": rel["value"],
-            }
-            cy_edges |= edge_to_cy(edge)
-
-        for node in nodes:
-            cy_nodes |= node_to_cy(node)
+            for rel in path.relationships:
+                edge: Edge = {
+                    "source": rel.start_node["id"],
+                    "target": rel.end_node["id"],
+                    "value": rel["value"],
+                }
+                path_edges.append(list(edge_to_cy(edge).values())[0])
 
         cy_nodes |= node_to_cy(m)
 
@@ -55,7 +51,11 @@ def fetch_method(
             definition = list(node_to_cy(callee).values())[0]
             method_node["data"]["callees"].append(definition)
 
-    return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
+    return {
+        "nodes": list(cy_nodes.values()),
+        "edges": list(cy_edges.values()),
+        "path": {"nodes": path_nodes, "edges": path_edges},
+    }
 
 
 def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None = None):

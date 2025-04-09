@@ -3,6 +3,7 @@ import chroma from "chroma-js";
 import cytoscape from "cytoscape";
 import cola from "cytoscape-cola";
 import expandCollapse from "cytoscape-expand-collapse";
+import { deduplicate } from "./utils";
 import type {
   ColaLayoutOptions,
   EdgeCollection,
@@ -194,8 +195,8 @@ export default class View {
       this.showNode(node);
     } else {
       // New method, get related element definitions and add it
-      const elementDefinitions = await this.graph.getOrFetchMethod(id);
-      this.add(elementDefinitions);
+      const data = await this.graph.getOrFetchMethod(id);
+      this.add(deduplicate([...data.nodes.flat(), ...data.edges]));
     }
   };
 
@@ -220,7 +221,7 @@ export default class View {
     }
 
     const data = await this.graph.getOrFetchMethodNeighbor(methodId, type, neighborId);
-    this.add([...data.nodes.flat(), ...data.edges]);
+    this.add(deduplicate([...data.nodes.flat(), ...data.edges]));
     this.resetLayout();
   };
 

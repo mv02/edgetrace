@@ -1,5 +1,4 @@
 import { PUBLIC_API_URL } from "$env/static/public";
-import { deduplicate } from "./utils";
 import View from "./view.svelte";
 import type {
   EdgeDefinition,
@@ -26,12 +25,14 @@ export default class Graph {
   diffOtherGraph: string = $state("");
   diffMaxIterations: number = $state(1000);
 
-  /** Mapping of node ID to corresponding element definition. */
-  nodeDefinitions: Map<string, NodeDefinition> = new Map();
+  /** Mapping of node ID to definition of corresponding node and its parents. */
+  nodeDefinitions: Map<string, NodeDefinition[]> = new Map();
   /** Mapping of edge ID to corresponding element definition. */
   edgeDefinitions: Map<string, EdgeDefinition> = new Map();
-  /** Mapping of node ID to definitions of elements on its path to entrypoint. */
-  entrypointPathDefinitions: Map<string, ElementDefinition[]> = new Map();
+  /** Mapping of node ID to definitions of nodes and their parents on its path to entrypoint. */
+  entrypointPathNodes: Map<string, NodeDefinition[][]> = new Map();
+  /** Mapping of node ID to definitions of edges on its path to entrypoint. */
+  entrypointPathEdges: Map<string, EdgeDefinition[]> = new Map();
 
   constructor(info: GraphInfo, darkMode: boolean = false) {
     this.name = info.name;
@@ -63,35 +64,18 @@ export default class Graph {
     }
   };
 
-  getParentDefinitions = (id: string) => {
-    const nodeDefinition = this.nodeDefinitions.get(id) as NodeDefinition;
-
-    const parentDefinitions: NodeDefinition[] = [];
-    let parentId = nodeDefinition.data.parent;
-    while (parentId) {
-      let parentDefinition = parentId && this.nodeDefinitions.get(parentId);
-      if (!parentDefinition) break;
-      parentDefinitions.push(parentDefinition);
-      parentId = parentDefinition.data.parent;
-    }
-    return parentDefinitions;
-  };
-
   getOrFetchMethod = async (id: string, withEntrypoint: boolean = true) => {
     if (this.nodeDefinitions.has(id)) {
       // Node definition is present, use it
-      const nodeDefinition = this.nodeDefinitions.get(id);
-      if (!nodeDefinition) return [];
+      const nodeWithParents = this.nodeDefinitions.get(id) as NodeDefinition[];
 
-      // Get also all parent node definitions
-      const parentDefinitions = this.getParentDefinitions(id);
+      if (!withEntrypoint) return { nodes: [nodeWithParents], edges: [] };
 
-      const allDefinitions = [nodeDefinition, ...parentDefinitions];
-      if (!withEntrypoint) return allDefinitions;
-
-      if (this.entrypointPathDefinitions.has(id)) {
+      if (this.entrypointPathNodes.has(id) && this.entrypointPathEdges.has(id)) {
         // Entrypoint path definition is required and present, use it
-        return deduplicate([...(this.entrypointPathDefinitions.get(id) ?? []), ...allDefinitions]);
+        const pathNodes = this.entrypointPathNodes.get(id) as NodeDefinition[][];
+        const pathEdges = this.entrypointPathEdges.get(id) as EdgeDefinition[];
+        return { nodes: [...pathNodes, nodeWithParents], edges: pathEdges };
       }
     }
 
@@ -106,38 +90,38 @@ export default class Graph {
     const resp = await fetch(url);
     const data: BackendResponseData = await resp.json();
 
-    for (const element of [...data.nodes.flat(), ...data.edges]) {
-      const elementId = element.data.id;
-      if (!elementId) continue;
+    for (const nodeWithParents of data.nodes) {
+      const methodNode = nodeWithParents[0];
+      const nodeId = methodNode.data.id;
+      nodeId && this.nodeDefinitions.set(nodeId, nodeWithParents);
 
-      if (element.group === "nodes" && !this.nodeDefinitions.has(elementId)) {
-        this.nodeDefinitions.set(elementId, element);
-      } else {
-        this.edgeDefinitions.set(elementId, element as EdgeDefinition);
-      }
+      const callers: NodeDefinition[][] = methodNode.data.callers ?? [];
+      const callees: NodeDefinition[][] = methodNode.data.callees ?? [];
 
-      const callers: NodeDefinition[][] = element.data.callers ?? [];
-      const callees: NodeDefinition[][] = element.data.callees ?? [];
-
-      for (const neighbors of [...callers, ...callees]) {
-        const neighborId = neighbors[0].data.id;
+      for (const neighborWithParents of [...callers, ...callees]) {
+        const neighborId = neighborWithParents[0].data.id;
         if (neighborId && !this.nodeDefinitions.has(neighborId)) {
-          for (const subnode of neighbors) {
-            const subnodeId = subnode.data.id;
-            subnodeId && this.nodeDefinitions.set(subnodeId, subnode);
-          }
+          this.nodeDefinitions.set(neighborId, neighborWithParents);
         }
       }
-
-      if (withEntrypoint && elementId && elementId !== id) {
-        // Save as part of the node's path to entrypoint
-        this.entrypointPathDefinitions.set(id, [
-          ...(this.entrypointPathDefinitions.get(id) ?? []),
-          element,
-        ]);
-      }
     }
-    return deduplicate([...data.nodes.flat(), ...data.edges]);
+
+    for (const edge of data.edges) {
+      const elementId = edge.data.id;
+      elementId && this.edgeDefinitions.set(elementId, edge);
+    }
+
+    if (withEntrypoint && data.path) {
+      // Save elements as the node's path to entrypoint
+      this.entrypointPathNodes.set(id, data.path.nodes);
+      this.entrypointPathEdges.set(id, data.path.edges);
+      return {
+        nodes: [...data.path.nodes, ...data.nodes],
+        edges: [...data.path.edges, ...data.edges],
+      };
+    }
+
+    return { nodes: data.nodes, edges: data.edges };
   };
 
   getOrFetchMethodNeighbor = async (
@@ -148,12 +132,12 @@ export default class Graph {
   ) => {
     if (this.nodeDefinitions.has(methodId)) {
       // Node definition is present, use it
-      const nodeDefinition = this.nodeDefinitions.get(methodId) as NodeDefinition;
+      const nodeWithParents = this.nodeDefinitions.get(methodId) as NodeDefinition[];
 
       let neighbor: NodeDefinition[] | undefined;
 
       // Try to get neighbor definitions list from inside node definition
-      const neighbors: NodeDefinition[][] | undefined = nodeDefinition.data[type];
+      const neighbors: NodeDefinition[][] | undefined = nodeWithParents[0].data[type];
       if (neighbors) {
         // Neighbor definitions list present inside the node definition
         neighbor = neighbors.filter((neighbor) => {
@@ -185,7 +169,7 @@ export default class Graph {
     // Neighbor definition or edge definition is missing, fetch it
     const data = await this.fetchMethodNeighbors(methodId, type, neighborId);
     if (!withEdges) return { nodes: data.nodes, edges: [] };
-    return { nodes: data.nodes, edges: deduplicate(data.edges) };
+    return { nodes: data.nodes, edges: data.edges };
   };
 
   getOrFetchAllMethodNeighbors = async (
@@ -194,13 +178,13 @@ export default class Graph {
     withEdges: boolean = true,
   ) => {
     if (this.nodeDefinitions.has(methodId)) {
-      const nodeDefinition = this.nodeDefinitions.get(methodId) as NodeDefinition;
+      const nodeWithParents = this.nodeDefinitions.get(methodId) as NodeDefinition[];
 
       // Try to get neighbor definitions list from inside node definition
-      const definitions: NodeDefinition[][] | undefined = nodeDefinition.data[type];
+      const neighbors: NodeDefinition[][] | undefined = nodeWithParents[0].data[type];
 
-      if (definitions) {
-        if (!withEdges) return { nodes: definitions, edges: [] };
+      if (neighbors) {
+        if (!withEdges) return { nodes: neighbors, edges: [] };
         // TODO: get existing edge definitions
       }
     }
@@ -208,7 +192,7 @@ export default class Graph {
     // Neighbor definition or edge definition is missing, fetch it
     const data = await this.fetchMethodNeighbors(methodId, type);
     if (!withEdges) return { nodes: data.nodes, edges: [] };
-    return { nodes: data.nodes, edges: deduplicate(data.edges) };
+    return { nodes: data.nodes, edges: data.edges };
   };
 
   fetchMethodNeighbors = async (
@@ -223,17 +207,18 @@ export default class Graph {
     const resp = await fetch(url);
     const data: BackendResponseData = await resp.json();
 
-    for (const element of [...data.nodes.flat(), ...data.edges]) {
-      const elementId = element.data.id;
-      if (!elementId) continue;
-
-      if (element.group === "nodes") {
-        this.nodeDefinitions.set(elementId, element);
-      } else {
-        this.edgeDefinitions.set(elementId, element as EdgeDefinition);
-      }
+    for (const nodeWithParents of data.nodes) {
+      const methodNode = nodeWithParents[0];
+      const nodeId = methodNode.data.id;
+      nodeId && this.nodeDefinitions.set(nodeId, nodeWithParents);
     }
-    return data;
+
+    for (const edge of data.edges) {
+      const elementId = edge.data.id;
+      elementId && this.edgeDefinitions.set(elementId, edge);
+    }
+
+    return { nodes: data.nodes, edges: data.edges };
   };
 
   calculateDiff = async () => {
