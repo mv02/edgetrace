@@ -6,7 +6,7 @@ import type {
   ElementsDefinition,
   NodeDefinition,
 } from "cytoscape";
-import type { GraphInfo } from "./types";
+import type { BackendResponseData, GraphInfo } from "./types";
 
 const MAX_VIEWS = 10;
 
@@ -96,13 +96,13 @@ export default class Graph {
       `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}` +
       (withEntrypoint ? "?entrypoint=1" : "");
     const resp = await fetch(url);
-    const data: ElementsDefinition = await resp.json();
+    const data: BackendResponseData = await resp.json();
 
-    for (const element of [...data.nodes, ...data.edges]) {
+    for (const element of [...data.nodes.flat(), ...data.edges]) {
       const elementId = element.data.id;
       if (!elementId) continue;
 
-      if (element.group === "nodes") {
+      if (element.group === "nodes" && !this.nodeDefinitions.has(elementId)) {
         this.nodeDefinitions.set(elementId, element);
       } else {
         this.edgeDefinitions.set(elementId, element as EdgeDefinition);
@@ -116,7 +116,7 @@ export default class Graph {
         ]);
       }
     }
-    return data;
+    return [...data.nodes.flat(), ...data.edges];
   };
 
   calculateDiff = async () => {

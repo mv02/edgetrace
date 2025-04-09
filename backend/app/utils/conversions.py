@@ -50,22 +50,22 @@ def invoke_from_csv(row: dict[str, str]) -> Invoke:
     }
 
 
-def node_to_cy(node: Method) -> tuple[dict[str, CytoscapeNode], list[CytoscapeNode]]:
+def node_to_cy(node: Method) -> dict[str, list[CytoscapeNode]]:
     """Convert a node to Cytoscape.js node and its parent nodes."""
     id = node["id"]
 
-    result: dict[str, CytoscapeNode] = {
-        id: {
-            "group": "nodes",
-            "data": {"label": node["name"], "parent": node["parent_class"], **node},
-        }
+    cy_node: CytoscapeNode = {
+        "group": "nodes",
+        "data": {"label": node["name"], "parent": node["parent_class"], **node},
     }
+
+    result: dict[str, list[CytoscapeNode]] = {id: [cy_node]}
 
     t = node["parent_class"]
     level = 1
     while "." in t:
         parent_t = t[: t.rindex(".")]
-        result[t] = {
+        parent_node: CytoscapeNode = {
             "group": "nodes",
             "data": {
                 "id": t,
@@ -74,14 +74,12 @@ def node_to_cy(node: Method) -> tuple[dict[str, CytoscapeNode], list[CytoscapeNo
                 "level": level,
             },
         }
+        result[id].append(parent_node)
         t = parent_t
         level += 1
-    result[t] = {
-        "group": "nodes",
-        "data": {"id": t, "label": t, "level": level},
-    }
+    result[id].append({"group": "nodes", "data": {"id": t, "label": t, "level": level}})
 
-    return result, list(result.values())
+    return result
 
 
 def edge_to_cy(edge: Edge) -> dict[str, CytoscapeEdge]:

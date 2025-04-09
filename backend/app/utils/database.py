@@ -1,5 +1,5 @@
 from ..driver import driver
-from ..utils.conversions import edge_to_cy, fix_levels, node_to_cy
+from ..utils.conversions import edge_to_cy, node_to_cy
 from .types import CytoscapeEdge, CytoscapeNode, Edge
 
 
@@ -18,7 +18,7 @@ def fetch_method(
 
     records = driver.execute_query(query, id=id, graph=graph_name).records
 
-    cy_nodes: dict[str, CytoscapeNode] = {}
+    cy_nodes: dict[str, list[CytoscapeNode]] = {}
     cy_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
@@ -38,11 +38,10 @@ def fetch_method(
             cy_edges |= edge_to_cy(edge)
 
         for node in nodes:
-            cy_nodes |= node_to_cy(node)[0]
+            cy_nodes |= node_to_cy(node)
 
-        cy_nodes |= node_to_cy(record["m"])[0]
+        cy_nodes |= node_to_cy(record["m"])
 
-    fix_levels(cy_nodes)
     return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
 
 
@@ -60,7 +59,7 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
         query, id=method_id, caller_id=caller_id, graph=graph_name
     ).records
 
-    cy_nodes: dict[str, CytoscapeNode] = {}
+    cy_nodes: dict[str, list[CytoscapeNode]] = {}
     cy_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
@@ -70,7 +69,7 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
             "target": method_id,
             "value": r["value"],
         }
-        cy_nodes |= node_to_cy(caller)[0]
+        cy_nodes |= node_to_cy(caller)
         cy_edges |= edge_to_cy(edge)
     return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
 
@@ -89,7 +88,7 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
         query, id=method_id, callee_id=callee_id, graph=graph_name
     ).records
 
-    cy_nodes: dict[str, CytoscapeNode] = {}
+    cy_nodes: dict[str, list[CytoscapeNode]] = {}
     cy_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
@@ -99,6 +98,6 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
             "target": callee["id"],
             "value": r["value"],
         }
-        cy_nodes |= node_to_cy(callee)[0]
+        cy_nodes |= node_to_cy(callee)
         cy_edges |= edge_to_cy(edge)
     return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
