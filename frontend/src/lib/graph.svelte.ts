@@ -1,4 +1,5 @@
 import { PUBLIC_API_URL } from "$env/static/public";
+import { deduplicate } from "./utils";
 import View from "./view.svelte";
 import type {
   EdgeDefinition,
@@ -83,7 +84,7 @@ export default class Graph {
 
       if (this.entrypointPathDefinitions.has(id)) {
         // Entrypoint path definition is required and present, use it
-        return [...(this.entrypointPathDefinitions.get(id) ?? []), ...allDefinitions];
+        return deduplicate([...(this.entrypointPathDefinitions.get(id) ?? []), ...allDefinitions]);
       }
     }
 
@@ -116,7 +117,7 @@ export default class Graph {
         ]);
       }
     }
-    return [...data.nodes.flat(), ...data.edges];
+    return deduplicate([...data.nodes.flat(), ...data.edges]);
   };
 
   calculateDiff = async () => {
