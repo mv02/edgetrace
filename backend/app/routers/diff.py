@@ -51,6 +51,6 @@ def get_top_edges(graph_name: str, n: int):
             "target": target["id"],
             "value": r["value"],
         }
-        elements |= node_to_cy(source) | edge_to_cy(edge) | node_to_cy(target)
+        elements |= node_to_cy(source)[0] | edge_to_cy(edge) | node_to_cy(target)[0]
 
     return list(elements.values())

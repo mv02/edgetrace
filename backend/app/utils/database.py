@@ -38,9 +38,9 @@ def fetch_method(
             cy_edges |= edge_to_cy(edge)
 
         for node in nodes:
-            cy_nodes |= node_to_cy(node)
+            cy_nodes |= node_to_cy(node)[0]
 
-        cy_nodes |= node_to_cy(record["m"])
+        cy_nodes |= node_to_cy(record["m"])[0]
 
     fix_levels(cy_nodes)
     elements = cy_nodes | cy_edges
@@ -70,7 +70,7 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
             "target": method_id,
             "value": r["value"],
         }
-        elements |= node_to_cy(caller)
+        elements |= node_to_cy(caller)[0]
         elements |= edge_to_cy(edge)
     return list(elements.values())
 
@@ -98,6 +98,6 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
             "target": callee["id"],
             "value": r["value"],
         }
-        elements |= node_to_cy(callee)
+        elements |= node_to_cy(callee)[0]
         elements |= edge_to_cy(edge)
     return list(elements.values())

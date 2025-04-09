@@ -50,7 +50,7 @@ def invoke_from_csv(row: dict[str, str]) -> Invoke:
     }
 
 
-def node_to_cy(node: Method) -> dict[str, CytoscapeNode]:
+def node_to_cy(node: Method) -> tuple[dict[str, CytoscapeNode], list[CytoscapeNode]]:
     """Convert a node to Cytoscape.js node and its parent nodes."""
     id = node["id"]
 
@@ -81,7 +81,7 @@ def node_to_cy(node: Method) -> dict[str, CytoscapeNode]:
         "data": {"id": t, "label": t, "level": level},
     }
 
-    return result
+    return result, list(result.values())
 
 
 def edge_to_cy(edge: Edge) -> dict[str, CytoscapeEdge]:
