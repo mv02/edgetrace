@@ -105,7 +105,7 @@
       <div class="flex flex-col gap-4">
         {#if currentView.selectedNode}
           <h3>Method Details</h3>
-          <MethodDetails node={currentView.selectedNode} />
+          <MethodDetails graph={currentGraph} />
         {:else}
           <h3>Edge Details</h3>
           <EdgeDetails edge={currentView.selectedEdge} />

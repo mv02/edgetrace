@@ -39,7 +39,7 @@ export default class View {
   isAttached: boolean = false;
 
   /** Mapping of node ID to corresponding node. */
-  nodes: Map<string, NodeSingular> = new Map();
+  nodes: Map<string, NodeSingular> = $state(new Map());
   /** Mapping of node ID to parent node ID. */
   parentIds: Map<string, string> = new Map();
   /** Mapping of node ID to incoming edges. */
@@ -183,6 +183,7 @@ export default class View {
       node?.move({ parent: parent.id() });
     }
     this.updateDiffColoring();
+    this.nodes = new Map(this.nodes);
   };
 
   showMethod = async (id: string) => {
@@ -198,11 +199,37 @@ export default class View {
     }
   };
 
+  showMethodNeighbor = async (
+    methodId: string,
+    type: "callers" | "callees",
+    neighborId: string,
+  ) => {
+    const neighbor = this.nodes.get(neighborId);
+
+    if (neighbor) {
+      const edge =
+        type === "callers"
+          ? this.incomers.get(methodId)?.filter((ele) => ele.source().id() === neighborId)
+          : this.outgoers.get(methodId)?.filter((ele) => ele.target().id() === neighborId);
+
+      // Neighbor node and edge are both present, show them
+      if (edge?.nonempty()) {
+        this.showNode(neighbor);
+        return;
+      }
+    }
+
+    const data = await this.graph.getOrFetchMethodNeighbor(methodId, type, neighborId);
+    this.add([...data.nodes.flat(), ...data.edges]);
+    this.resetLayout();
+  };
+
   hideNode = (node: NodeSingular) => {
     const parentsToHide = this.parentsToHide(node);
     node.remove();
     parentsToHide.remove();
     this.updateDiffColoring();
+    this.nodes = new Map(this.nodes);
   };
 
   hideMethod = (id: string) => {
@@ -229,6 +256,7 @@ export default class View {
 
     if (!this.graph.compoundNodesShown) this.hideCompoundNodes();
     this.updateDiffColoring();
+    this.nodes = new Map(this.nodes);
     return added;
   };
 

@@ -9,12 +9,12 @@ def fetch_method(
     with_entrypoint: bool = False,
 ):
     query = """MATCH (m {id: $id, graph: $graph})
-    OPTIONAL MATCH (caller)-[e1]->(m)
-    OPTIONAL MATCH (m)-[e2]->(callee)
+    OPTIONAL MATCH (caller)-->(m)
+    OPTIONAL MATCH (m)-->(callee)
     OPTIONAL MATCH p = ALL SHORTEST (e {graph: $graph})-->+(m)
     WHERE e.is_entrypoint
-    RETURN m, collect(e1) AS caller_edges, collect(caller) AS callers,
-    collect(e2) AS callee_edges, collect(callee) AS callees, p AS path"""
+    RETURN m, collect(DISTINCT caller) AS callers,
+    collect(DISTINCT callee) AS callees, p AS path"""
 
     records = driver.execute_query(query, id=id, graph=graph_name).records
 
@@ -25,9 +25,11 @@ def fetch_method(
         nodes = []
         relationships = []
 
-        if with_entrypoint and record["path"] is not None:
-            nodes += list(record["path"].nodes)
-            relationships += list(record["path"].relationships)
+        m, callers, callees, path = record
+
+        if with_entrypoint and path is not None:
+            nodes += list(path.nodes)
+            relationships += list(path.relationships)
 
         for rel in relationships:
             edge: Edge = {
@@ -40,7 +42,18 @@ def fetch_method(
         for node in nodes:
             cy_nodes |= node_to_cy(node)
 
-        cy_nodes |= node_to_cy(record["m"])
+        cy_nodes |= node_to_cy(m)
+
+        method_node = cy_nodes[id][0]
+        method_node["data"]["callers"] = []
+        method_node["data"]["callees"] = []
+
+        for caller in callers:
+            definition = list(node_to_cy(caller).values())[0]
+            method_node["data"]["callers"].append(definition)
+        for callee in callees:
+            definition = list(node_to_cy(callee).values())[0]
+            method_node["data"]["callees"].append(definition)
 
     return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
 
