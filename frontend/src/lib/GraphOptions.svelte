@@ -1,8 +1,8 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { PUBLIC_API_URL } from "$env/static/public";
   import { Button, ButtonGroup, Checkbox, Label, Range, Select, Spinner } from "flowbite-svelte";
   import { MinusOutline, PlusOutline } from "flowbite-svelte-icons";
+  import { deduplicate } from "./utils";
   import type Graph from "$lib/graph.svelte";
 
   const BOUNDING_BOX_SCALING_FACTOR = 0.02;
@@ -27,12 +27,12 @@
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
-    const edges = await currentGraph.fetchTopEdges(n);
+    const data = await currentGraph.fetchTopEdges(n);
     if (newView) {
       currentGraph.createView(`${currentGraph.name} − ${currentGraph.diffOtherGraph}`);
     }
     currentView.removeAll(); // TODO: do not remove all
-    currentView.add(edges);
+    currentView.add(deduplicate([...data.nodes.flat(), ...data.edges]));
     currentView.topEdgesShown = n;
     if (newView) {
       currentView.cy.one("render", () =>

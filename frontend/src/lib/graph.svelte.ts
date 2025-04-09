@@ -230,7 +230,7 @@ export default class Graph {
 
   fetchTopEdges = async (n: number) => {
     const resp = await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/diff/edges?n=${n}`);
-    const data = await resp.json();
+    const data: BackendResponseData = await resp.json();
     return data;
   };
 
