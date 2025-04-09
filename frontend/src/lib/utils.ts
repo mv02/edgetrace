@@ -1,4 +1,4 @@
-import type { ElementDefinition } from "cytoscape";
+import type { ElementDefinition, ElementsDefinition } from "cytoscape";
 
 export const deduplicate = (elements: ElementDefinition[]) => {
   const seen = new Set<string>();
@@ -9,4 +9,8 @@ export const deduplicate = (elements: ElementDefinition[]) => {
     seen.add(id);
     return true;
   });
+};
+
+export const clone = (elements: ElementDefinition[]): ElementDefinition[] => {
+  return elements.map((ele) => ({ group: ele.group, data: { ...ele.data } }));
 };

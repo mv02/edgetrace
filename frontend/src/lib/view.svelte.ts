@@ -3,7 +3,7 @@ import chroma from "chroma-js";
 import cytoscape from "cytoscape";
 import cola from "cytoscape-cola";
 import expandCollapse from "cytoscape-expand-collapse";
-import { deduplicate } from "./utils";
+import { clone, deduplicate } from "./utils";
 import type {
   ColaLayoutOptions,
   EdgeCollection,
@@ -239,9 +239,9 @@ export default class View {
     this.hideNode(node);
   };
 
-  add = (elements?: ElementDefinition | ElementDefinition[] | ElementsDefinition) => {
+  add = (elements?: ElementDefinition[]) => {
     if (!elements) return;
-    const added = this.cy.add(elements);
+    const added = this.cy.add(clone(elements));
 
     for (const node of added.nodes()) {
       // Save parent IDs of all added nodes
