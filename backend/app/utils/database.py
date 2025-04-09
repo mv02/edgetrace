@@ -77,6 +77,8 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
 
     for record in records:
         caller, r = record
+        if caller is None:
+            continue
         edge: Edge = {
             "source": caller["id"],
             "target": method_id,
@@ -106,6 +108,8 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
 
     for record in records:
         callee, r = record
+        if callee is None:
+            continue
         edge: Edge = {
             "source": method_id,
             "target": callee["id"],
