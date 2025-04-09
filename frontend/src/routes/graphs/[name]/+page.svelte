@@ -102,7 +102,7 @@
     {#if currentView?.selectedNode || currentView?.selectedEdge}
       <Hr />
 
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4 overflow-y-auto">
         {#if currentView.selectedNode}
           <h3>Method Details</h3>
           <MethodDetails graph={currentGraph} />

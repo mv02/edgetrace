@@ -44,10 +44,11 @@
     <Button size="xs" color="alternative">Show all</Button>
   {/if}
 </div>
-<Listgroup>
+
+<Listgroup defaultClass="overflow-y-auto">
   {#each neighbors ?? [] as neighbor}
-    <ListgroupItem normalClass="flex w-full justify-between items-center">
-      <span class="max-w-full flex-shrink text-ellipsis">{neighbor[0].data.name}</span>
+    <ListgroupItem normalClass="flex gap-2 justify-between items-center">
+      <span class="overflow-x-hidden text-ellipsis">{neighbor[0].data.name}</span>
 
       {#if graph.currentView.nodes.get(neighbor[0].data.id as string)?.inside()}
         <EyeOutline
