@@ -11,8 +11,6 @@
   let { graph }: Props = $props();
   let currentView = $derived(graph.currentView);
   let node = $derived(currentView.selectedNode);
-
-  let tab: "properties" | "callers" | "callees" = $state("properties");
 </script>
 
 {#if node}
