@@ -1,6 +1,11 @@
 import { PUBLIC_API_URL } from "$env/static/public";
 import View from "./view.svelte";
-import type { EdgeDefinition, ElementDefinition, NodeDefinition } from "cytoscape";
+import type {
+  EdgeDefinition,
+  ElementDefinition,
+  ElementsDefinition,
+  NodeDefinition,
+} from "cytoscape";
 import type { GraphInfo } from "./types";
 
 const MAX_VIEWS = 10;
@@ -91,9 +96,9 @@ export default class Graph {
       `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}` +
       (withEntrypoint ? "?entrypoint=1" : "");
     const resp = await fetch(url);
-    const data: ElementDefinition[] = await resp.json();
+    const data: ElementsDefinition = await resp.json();
 
-    for (const element of data) {
+    for (const element of [...data.nodes, ...data.edges]) {
       const elementId = element.data.id;
       if (!elementId) continue;
 

@@ -1,6 +1,6 @@
 from ..driver import driver
 from ..utils.conversions import edge_to_cy, fix_levels, node_to_cy
-from .types import CytoscapeEdge, CytoscapeElement, CytoscapeNode, Edge
+from .types import CytoscapeEdge, CytoscapeNode, Edge
 
 
 def fetch_method(
@@ -43,8 +43,7 @@ def fetch_method(
         cy_nodes |= node_to_cy(record["m"])[0]
 
     fix_levels(cy_nodes)
-    elements = cy_nodes | cy_edges
-    return list(elements.values())
+    return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
 
 
 def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None = None):
@@ -61,7 +60,8 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
         query, id=method_id, caller_id=caller_id, graph=graph_name
     ).records
 
-    elements: dict[str, CytoscapeElement] = {}
+    cy_nodes: dict[str, CytoscapeNode] = {}
+    cy_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
         caller, r = record
@@ -70,9 +70,9 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
             "target": method_id,
             "value": r["value"],
         }
-        elements |= node_to_cy(caller)[0]
-        elements |= edge_to_cy(edge)
-    return list(elements.values())
+        cy_nodes |= node_to_cy(caller)[0]
+        cy_edges |= edge_to_cy(edge)
+    return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
 
 
 def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None = None):
@@ -89,7 +89,8 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
         query, id=method_id, callee_id=callee_id, graph=graph_name
     ).records
 
-    elements: dict[str, CytoscapeElement] = {}
+    cy_nodes: dict[str, CytoscapeNode] = {}
+    cy_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
         callee, r = record
@@ -98,6 +99,6 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
             "target": callee["id"],
             "value": r["value"],
         }
-        elements |= node_to_cy(callee)[0]
-        elements |= edge_to_cy(edge)
-    return list(elements.values())
+        cy_nodes |= node_to_cy(callee)[0]
+        cy_edges |= edge_to_cy(edge)
+    return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
