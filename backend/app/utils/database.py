@@ -62,11 +62,17 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
     if caller_id is None:
         query = """MATCH (m {id: $id, graph: $graph})
         OPTIONAL MATCH (caller)-[r]->(m)
-        RETURN caller, r"""
+        OPTIONAL MATCH (neighbor_caller)-->(caller)
+        OPTIONAL MATCH (caller)-->(neighbor_callee)
+        RETURN caller, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
+        collect(DISTINCT neighbor_callee) AS neighbor_callees"""
     else:
         query = """MATCH (m {id: $id, graph: $graph})
         OPTIONAL MATCH (caller {id: $caller_id})-[r]->(m)
-        RETURN caller, r"""
+        OPTIONAL MATCH (neighbor_caller)-->(caller)
+        OPTIONAL MATCH (caller)-->(neighbor_callee)
+        RETURN caller, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
+        collect(DISTINCT neighbor_callee) AS neighbor_callees"""
 
     records = driver.execute_query(
         query, id=method_id, caller_id=caller_id, graph=graph_name
@@ -76,7 +82,7 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
     cy_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
-        caller, r = record
+        caller, r, neighbor_callers, neighbor_callees = record
         if caller is None:
             continue
         edge: Edge = {
@@ -86,6 +92,18 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
         }
         cy_nodes |= node_to_cy(caller)
         cy_edges |= edge_to_cy(edge)
+
+        caller_node = cy_nodes[caller["id"]][0]
+        caller_node["data"]["callers"] = []
+        caller_node["data"]["callees"] = []
+
+        for caller in neighbor_callers:
+            definition = list(node_to_cy(caller).values())[0]
+            caller_node["data"]["callers"].append(definition)
+        for callee in neighbor_callees:
+            definition = list(node_to_cy(callee).values())[0]
+            caller_node["data"]["callees"].append(definition)
+
     return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
 
 
@@ -93,11 +111,17 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
     if callee_id is None:
         query = """MATCH (m {id: $id, graph: $graph})
         OPTIONAL MATCH (m)-[r]->(callee)
-        RETURN callee, r"""
+        OPTIONAL MATCH (neighbor_caller)-->(callee)
+        OPTIONAL MATCH (callee)-->(neighbor_callee)
+        RETURN callee, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
+        collect(DISTINCT neighbor_callee) AS neighbor_callees"""
     else:
         query = """MATCH (m {id: $id, graph: $graph})
         OPTIONAL MATCH (m)-[r]->(callee {id: $callee_id})
-        RETURN callee, r"""
+        OPTIONAL MATCH (neighbor_caller)-->(callee)
+        OPTIONAL MATCH (callee)-->(neighbor_callee)
+        RETURN callee, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
+        collect(DISTINCT neighbor_callee) AS neighbor_callees"""
 
     records = driver.execute_query(
         query, id=method_id, callee_id=callee_id, graph=graph_name
@@ -107,7 +131,7 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
     cy_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
-        callee, r = record
+        callee, r, neighbor_callers, neighbor_callees = record
         if callee is None:
             continue
         edge: Edge = {
@@ -117,4 +141,16 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
         }
         cy_nodes |= node_to_cy(callee)
         cy_edges |= edge_to_cy(edge)
+
+        callee_node = cy_nodes[callee["id"]][0]
+        callee_node["data"]["callers"] = []
+        callee_node["data"]["callees"] = []
+
+        for caller in neighbor_callers:
+            definition = list(node_to_cy(caller).values())[0]
+            callee_node["data"]["callers"].append(definition)
+        for callee in neighbor_callees:
+            definition = list(node_to_cy(callee).values())[0]
+            callee_node["data"]["callees"].append(definition)
+
     return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
