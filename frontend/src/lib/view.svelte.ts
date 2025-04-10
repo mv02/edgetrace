@@ -138,6 +138,7 @@ export default class View {
           "background-color": (ele) => colors[(ele.data("level") - 1) % colors.length],
         },
       },
+      { selector: COLLAPSED_NODES, style: { "border-color": "#cccccc", "border-width": 1 } },
       { selector: "edge", style: { "curve-style": "bezier", "target-arrow-shape": "triangle" } },
     ]);
   };
