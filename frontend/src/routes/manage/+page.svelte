@@ -1,19 +1,56 @@
 <script lang="ts">
   import { invalidate } from "$app/navigation";
   import { PUBLIC_API_URL } from "$env/static/public";
-  import { Alert, Button, Fileupload, Helper, Input, Label, Spinner } from "flowbite-svelte";
+  import {
+    Alert,
+    Button,
+    Card,
+    Fileupload,
+    Helper,
+    Input,
+    Label,
+    Listgroup,
+    Spinner,
+  } from "flowbite-svelte";
   import { CheckCircleSolid, ExclamationCircleSolid } from "flowbite-svelte-icons";
+  import type { GraphInfo } from "$lib/types";
+  import type { LayoutProps } from "../$types";
+
+  let { data }: LayoutProps = $props();
+
+  let selectedGraph: GraphInfo | undefined = $state();
+  let deleteLoading: boolean = $state(false);
+  let deleteOk: boolean = $state(false);
+  let DeleteMessageIcon = $derived(deleteOk ? CheckCircleSolid : ExclamationCircleSolid);
+  let deleteMessage: string | undefined = $state();
 
   let graphName: string | undefined = $state();
   let files: FileList | undefined = $state();
-  let loading = $state(false);
-  let ok = $state(false);
-  let Icon = $derived(ok ? CheckCircleSolid : ExclamationCircleSolid);
-  let message: string | undefined = $state();
+  let importLoading: boolean = $state(false);
+  let importOk: boolean = $state(false);
+  let ImportMessageIcon = $derived(importOk ? CheckCircleSolid : ExclamationCircleSolid);
+  let importMessage: string | undefined = $state();
+
+  const deleteGraph = async () => {
+    if (!selectedGraph) return;
+    deleteMessage = undefined;
+    importMessage = undefined;
+    deleteLoading = true;
+    const resp = await fetch(`${PUBLIC_API_URL}/graphs/${selectedGraph.name}`, {
+      method: "DELETE",
+    });
+    deleteOk = resp.ok;
+    deleteMessage = (await resp.json()).message;
+    deleteLoading = false;
+    selectedGraph = undefined;
+    invalidate(`${PUBLIC_API_URL}/graphs`);
+  };
 
   async function submit(e: SubmitEvent) {
     e.preventDefault();
-    loading = true;
+    deleteMessage = undefined;
+    importMessage = undefined;
+    importLoading = true;
     const formData = new FormData();
     formData.append("graph", graphName ?? "graph-1");
     for (const file of files as FileList) {
@@ -21,47 +58,111 @@
       formData.append("timestamps", file.lastModified.toString());
     }
     const resp = await fetch(`${PUBLIC_API_URL}/import`, { method: "POST", body: formData });
-    ok = resp.ok;
-    const data = await resp.json();
-    message = data.message;
-    loading = false;
+    importOk = resp.ok;
+    importMessage = (await resp.json()).message;
+    importLoading = false;
     invalidate(`${PUBLIC_API_URL}/graphs`);
   }
 </script>
 
-<main class="container mx-auto flex flex-col items-start gap-4 p-8">
-  <h1>Manage Databases</h1>
+<main class="container mx-auto p-8">
+  <h1>Manage Graphs</h1>
 
-  <h2>Import Call Graph</h2>
+  <div class="flex justify-between gap-12">
+    <section class="flex-grow">
+      <h2>Available Call Graphs ({Object.keys(data.graphs).length})</h2>
 
-  {#if message}
-    <Alert color={ok ? "green" : "red"}>
-      <Icon slot="icon" />
-      {message}
-    </Alert>
-  {/if}
+      <div class="flex items-start gap-12">
+        {#if Object.keys(data.graphs).length > 0}
+          <Listgroup
+            active
+            items={Object.values(data.graphs).map((graph) => ({
+              ...graph,
+              current: graph.name === selectedGraph?.name,
+            }))}
+            let:item
+            on:click={(e) => (selectedGraph = e.detail)}
+            class="w-80"
+          >
+            {item.name}
+          </Listgroup>
+        {:else}
+          <div class="w-80"></div>
+        {/if}
 
-  <form onsubmit={submit} class="flex flex-col gap-4">
-    <div class="flex flex-col gap-2">
-      <Label for="name">Call graph name</Label>
-      <Input id="name" placeholder="graph-1" bind:value={graphName} disabled={loading} />
-    </div>
-    <div class="flex flex-col gap-2">
-      <Label for="files">Reports directory</Label>
-      <div class="flex gap-2">
-        <Fileupload id="files" webkitdirectory required multiple bind:files disabled={loading} />
-        <Button type="submit" disabled={loading || !files || files.length < 3}>
-          {#if loading}
-            <Spinner class="me-3" size="4" color="white" />
-          {/if}
-          Import
-        </Button>
+        {#if selectedGraph}
+          <Card class="flex flex-col gap-4">
+            <h3 class="font-semibold text-gray-900 dark:text-white">
+              <i class="nf nf-md-graph_outline"></i>
+              {selectedGraph.name}
+            </h3>
+
+            <p class="text-gray-500 dark:text-gray-400">
+              {selectedGraph.nodeCount} nodes, {selectedGraph.edgeCount} edges
+            </p>
+
+            <!-- TODO: self-end class doesn't work -->
+            <Button
+              color="red"
+              style="align-self: end"
+              onclick={deleteGraph}
+              disabled={deleteLoading}
+            >
+              {#if deleteLoading}
+                <Spinner class="me-3" size="4" color="white" />
+              {/if}
+              Delete
+            </Button>
+          </Card>
+        {:else if deleteMessage}
+          <Alert color={deleteOk ? "green" : "red"}>
+            <DeleteMessageIcon slot="icon" />
+            {deleteMessage}
+          </Alert>
+        {/if}
       </div>
-      <Helper>At least 3 CSV files (methods, invokes and targets).</Helper>
-    </div>
-  </form>
+    </section>
+
+    <form onsubmit={submit}>
+      <h2>Import Call Graph</h2>
+
+      <div class="flex flex-col gap-4">
+        {#if importMessage}
+          <Alert color={importOk ? "green" : "red"}>
+            <ImportMessageIcon slot="icon" />
+            {importMessage}
+          </Alert>
+        {/if}
+
+        <div class="flex flex-col gap-2">
+          <Label for="name">Call graph name</Label>
+          <Input id="name" placeholder="graph-1" bind:value={graphName} disabled={importLoading} />
+        </div>
+        <div class="flex flex-col gap-2">
+          <Label for="files">Reports directory</Label>
+          <div class="flex gap-2">
+            <Fileupload
+              id="files"
+              webkitdirectory
+              required
+              multiple
+              bind:files
+              disabled={importLoading}
+            />
+            <Button type="submit" disabled={importLoading || !files || files.length < 3}>
+              {#if importLoading}
+                <Spinner class="me-3" size="4" color="white" />
+              {/if}
+              Import
+            </Button>
+          </div>
+          <Helper>At least 3 CSV files (methods, invokes and targets).</Helper>
+        </div>
+      </div>
+    </form>
+  </div>
 </main>
 
 <svelte:head>
-  <title>Databases | Diff Tool</title>
+  <title>Graphs | Diff Tool</title>
 </svelte:head>

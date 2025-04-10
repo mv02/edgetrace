@@ -1,8 +1,13 @@
+import logging
+
 from fastapi import APIRouter
 
 from ..driver import driver
 from ..utils.conversions import methods_to_tree
 from . import diff, methods
+
+logger = logging.getLogger("uvicorn")
+logger.propagate = False
 
 router = APIRouter(prefix="/graphs")
 
@@ -19,6 +24,20 @@ def get_graphs():
         "ORDER BY name"
     ).records
     return [record.data() for record in records]
+
+
+@router.delete("/{graph_name}")
+def delete_graph(graph_name: str):
+    _, summary, _ = driver.execute_query(
+        "MATCH (m {graph: $graph}) OPTIONAL MATCH (m)-[r]->() DELETE r, m",
+        graph=graph_name,
+    )
+
+    node_count = summary.counters.nodes_deleted
+    edge_count = summary.counters.relationships_deleted
+    message = f"Deleted {node_count} nodes and {edge_count} edges"
+    logger.info(message)
+    return {"message": message}
 
 
 @router.get("/{graph_name}/tree")
