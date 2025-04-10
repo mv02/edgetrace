@@ -82,4 +82,5 @@ type CytoscapeNode = CytoscapeCompoundNode | CytoscapeMethodNode
 type CytoscapeElement = CytoscapeNode | CytoscapeEdge
 
 
+type NeighborType = Literal["callers"] | Literal["callees"]
 type Tree = dict[str, Tree | str]

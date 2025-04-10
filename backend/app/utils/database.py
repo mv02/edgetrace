@@ -1,6 +1,6 @@
 from ..driver import driver
 from ..utils.conversions import edge_to_cy, node_to_cy
-from .types import CytoscapeEdge, CytoscapeNode, Edge
+from .types import CytoscapeEdge, CytoscapeNode, Edge, NeighborType
 
 
 def fetch_method(
@@ -63,103 +63,66 @@ def fetch_method(
     }
 
 
-def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None = None):
-    if caller_id is None:
-        query = """MATCH (m {id: $id, graph: $graph})
-        OPTIONAL MATCH (caller)-[r]->(m)
-        OPTIONAL MATCH (neighbor_caller)-->(caller)
-        OPTIONAL MATCH (caller)-->(neighbor_callee)
-        ORDER BY neighbor_callee.name, neighbor_caller.name
-        RETURN caller, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
-        collect(DISTINCT neighbor_callee) AS neighbor_callees"""
+def fetch_method_neighbors(
+    graph_name: str,
+    method_id: str,
+    neighbor_type: NeighborType,
+    neighbor_id: str | None = None,
+):
+    if neighbor_type == "callers":
+        match_pattern = (
+            "(neighbor {id: $neighbor_id})-[r]->(m)"
+            if neighbor_id is not None
+            else "(neighbor)-[r]->(m)"
+        )
     else:
-        query = """MATCH (m {id: $id, graph: $graph})
-        OPTIONAL MATCH (caller {id: $caller_id})-[r]->(m)
-        OPTIONAL MATCH (neighbor_caller)-->(caller)
-        OPTIONAL MATCH (caller)-->(neighbor_callee)
-        ORDER BY neighbor_callee.name, neighbor_caller.name
-        RETURN caller, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
-        collect(DISTINCT neighbor_callee) AS neighbor_callees"""
+        match_pattern = (
+            "(m)-[r]->(neighbor {id: $neighbor_id})"
+            if neighbor_id is not None
+            else "(m)-[r]->(neighbor)"
+        )
+
+    query = f"""
+    MATCH (m {{id: $id, graph: $graph}})
+    OPTIONAL MATCH {match_pattern}
+    OPTIONAL MATCH (neighbor_caller)-->(neighbor)
+    OPTIONAL MATCH (neighbor)-->(neighbor_callee)
+    ORDER BY neighbor_caller.name, neighbor_callee.name
+    RETURN neighbor, r,
+           collect(DISTINCT neighbor_caller) AS neighbor_callers,
+           collect(DISTINCT neighbor_callee) AS neighbor_callees
+    """
 
     records = driver.execute_query(
-        query, id=method_id, caller_id=caller_id, graph=graph_name
+        query, id=method_id, neighbor_id=neighbor_id, graph=graph_name
     ).records
 
     cy_nodes: dict[str, list[CytoscapeNode]] = {}
     cy_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
-        caller, r, neighbor_callers, neighbor_callees = record
-        if caller is None:
+        neighbor, r, neighbor_callers, neighbor_callees = record
+
+        if neighbor is None:
             continue
+
         edge: Edge = {
-            "source": caller["id"],
-            "target": method_id,
+            "source": neighbor["id"] if neighbor_type == "callers" else method_id,
+            "target": method_id if neighbor_type == "callers" else neighbor["id"],
             "value": r["value"],
         }
-        cy_nodes |= node_to_cy(caller)
+        cy_nodes |= node_to_cy(neighbor)
         cy_edges |= edge_to_cy(edge)
 
-        caller_node = cy_nodes[caller["id"]][0]
-        caller_node["data"]["callers"] = []
-        caller_node["data"]["callees"] = []
+        neighbor_node = cy_nodes[neighbor["id"]][0]
+        neighbor_node["data"]["callers"] = []
+        neighbor_node["data"]["callees"] = []
 
         for caller in neighbor_callers:
             definition = list(node_to_cy(caller).values())[0]
-            caller_node["data"]["callers"].append(definition)
+            neighbor_node["data"]["callers"].append(definition)
         for callee in neighbor_callees:
             definition = list(node_to_cy(callee).values())[0]
-            caller_node["data"]["callees"].append(definition)
-
-    return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
-
-
-def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None = None):
-    if callee_id is None:
-        query = """MATCH (m {id: $id, graph: $graph})
-        OPTIONAL MATCH (m)-[r]->(callee)
-        OPTIONAL MATCH (neighbor_caller)-->(callee)
-        OPTIONAL MATCH (callee)-->(neighbor_callee)
-        ORDER BY neighbor_callee.name, neighbor_caller.name
-        RETURN callee, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
-        collect(DISTINCT neighbor_callee) AS neighbor_callees"""
-    else:
-        query = """MATCH (m {id: $id, graph: $graph})
-        OPTIONAL MATCH (m)-[r]->(callee {id: $callee_id})
-        OPTIONAL MATCH (neighbor_caller)-->(callee)
-        OPTIONAL MATCH (callee)-->(neighbor_callee)
-        ORDER BY neighbor_callee.name, neighbor_caller.name
-        RETURN callee, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
-        collect(DISTINCT neighbor_callee) AS neighbor_callees"""
-
-    records = driver.execute_query(
-        query, id=method_id, callee_id=callee_id, graph=graph_name
-    ).records
-
-    cy_nodes: dict[str, list[CytoscapeNode]] = {}
-    cy_edges: dict[str, CytoscapeEdge] = {}
-
-    for record in records:
-        callee, r, neighbor_callers, neighbor_callees = record
-        if callee is None:
-            continue
-        edge: Edge = {
-            "source": method_id,
-            "target": callee["id"],
-            "value": r["value"],
-        }
-        cy_nodes |= node_to_cy(callee)
-        cy_edges |= edge_to_cy(edge)
-
-        callee_node = cy_nodes[callee["id"]][0]
-        callee_node["data"]["callers"] = []
-        callee_node["data"]["callees"] = []
-
-        for caller in neighbor_callers:
-            definition = list(node_to_cy(caller).values())[0]
-            callee_node["data"]["callers"].append(definition)
-        for callee in neighbor_callees:
-            definition = list(node_to_cy(callee).values())[0]
-            callee_node["data"]["callees"].append(definition)
+            neighbor_node["data"]["callees"].append(definition)
 
     return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
