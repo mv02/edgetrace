@@ -83,6 +83,24 @@ export default class View {
       this.selectedNode = undefined;
       this.selectedEdge = undefined;
     });
+    this.cy.on("cxttap", LEAF_NODES, (e) => {
+      const target: NodeSingular = e.target;
+
+      for (const type of ["callers", "callees"]) {
+        const neighbors: NodeDefinition[][] = target.data(type) ?? [];
+
+        if (neighbors.every((neighbor) => !this.shown(neighbor))) {
+          this.contextMenu?.hideMenuItem(`hide-${type}`);
+        } else {
+          this.contextMenu?.showMenuItem(`hide-${type}`);
+        }
+        if (neighbors.every((neighbor) => this.shown(neighbor))) {
+          this.contextMenu?.hideMenuItem(`show-${type}`);
+        } else {
+          this.contextMenu?.showMenuItem(`show-${type}`);
+        }
+      }
+    });
   }
 
   resetLayout = (
@@ -160,6 +178,14 @@ export default class View {
     this.destroyContextMenu();
     this.cy.unmount();
     this.isAttached = false;
+  };
+
+  shown = (nodeWithParents: NodeDefinition[]) => {
+    const nodeId = nodeWithParents[0].data.id;
+    if (!nodeId) return false;
+    const node = this.nodes.get(nodeId);
+    if (!node) return false;
+    return node.inside();
   };
 
   showNode = (node: NodeSingular) => {

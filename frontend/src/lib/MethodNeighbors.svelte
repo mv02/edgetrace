@@ -40,12 +40,6 @@
     if (!node) return;
     graph.currentView.hideAllNodeNeighbors(node, type);
   };
-
-  const shown = (neighborWithParents: NodeDefinition[]) => {
-    const neighborNode = graph.currentView.nodes.get(neighborWithParents[0].data.id as string);
-    if (neighborNode?.inside()) return true;
-    return false;
-  };
 </script>
 
 <div class="flex items-center justify-between">
@@ -58,10 +52,10 @@
     <Button size="xs" color="alternative" onclick={getAllNeighbors}>Fetch</Button>
   {:else if neighbors.length > 0}
     <div class="flex gap-1">
-      {#if neighbors.some((n) => !shown(n))}
+      {#if neighbors.some((n) => !graph.currentView.shown(n))}
         <Button size="xs" color="alternative" onclick={showAllNeighbors}>Show all</Button>
       {/if}
-      {#if neighbors.some((n) => shown(n))}
+      {#if neighbors.some((n) => graph.currentView.shown(n))}
         <Button size="xs" color="alternative" onclick={hideAllNeighbors}>Hide all</Button>
       {/if}
     </div>
