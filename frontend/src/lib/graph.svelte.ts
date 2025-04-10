@@ -104,6 +104,16 @@ export default class Graph {
       // Save elements as the node's path to entrypoint
       this.entrypointPathNodes.set(id, data.path.nodes);
       this.entrypointPathEdges.set(id, data.path.edges);
+      // And their definitions as well
+      for (const nodeWithParents of data.path.nodes) {
+        const nodeId = nodeWithParents[0].data.id;
+        nodeId && this.nodeDefinitions.set(nodeId, nodeWithParents);
+      }
+      for (const edge of data.path.edges) {
+        const edgeId = edge.data.id;
+        edgeId && this.edgeDefinitions.set(edgeId, edge);
+      }
+
       return {
         nodes: [...data.path.nodes, ...data.nodes],
         edges: [...data.path.edges, ...data.edges],
