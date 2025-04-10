@@ -25,6 +25,13 @@ def fix_levels(elements: dict[str, CytoscapeNode]) -> dict[str, CytoscapeNode]:
     return elements
 
 
+def truncate(string: str, max_length: int = 25) -> str:
+    """Truncate string to maximum length."""
+    if len(string) > max_length:
+        return string[:max_length] + "…"
+    return string
+
+
 def method_from_csv(row: dict[str, str]) -> Method:
     """Convert CSV record to method dict."""
     return {
@@ -56,7 +63,11 @@ def node_to_cy(node: Method) -> dict[str, list[CytoscapeNode]]:
 
     cy_node: CytoscapeNode = {
         "group": "nodes",
-        "data": {"label": node["name"], "parent": node["parent_class"], **node},
+        "data": {
+            "label": truncate(node["name"]),
+            "parent": node["parent_class"],
+            **node,
+        },
     }
 
     result: dict[str, list[CytoscapeNode]] = {id: [cy_node]}
@@ -70,14 +81,16 @@ def node_to_cy(node: Method) -> dict[str, list[CytoscapeNode]]:
             "data": {
                 "id": t,
                 "parent": parent_t,
-                "label": t[t.rindex(".") + 1 :],
+                "label": truncate(t[t.rindex(".") + 1 :]),
                 "level": level,
             },
         }
         result[id].append(parent_node)
         t = parent_t
         level += 1
-    result[id].append({"group": "nodes", "data": {"id": t, "label": t, "level": level}})
+    result[id].append(
+        {"group": "nodes", "data": {"id": t, "label": truncate(t), "level": level}}
+    )
 
     return result
 
