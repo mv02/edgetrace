@@ -9,8 +9,8 @@ import type {
   EdgeCollection,
   EdgeSingular,
   ElementDefinition,
-  ElementsDefinition,
   NodeCollection,
+  NodeDefinition,
   NodeSingular,
 } from "cytoscape";
 import type contextMenus from "cytoscape-context-menus";
@@ -227,6 +227,31 @@ export default class View {
     this.resetLayout();
   };
 
+  showAllNodeNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
+    const neighbors: NodeDefinition[][] = node?.data(type);
+    let toShow: NodeCollection = this.cy.collection();
+
+    for (const neighborWithParents of neighbors) {
+      const neighborId = neighborWithParents[0].data.id;
+      const neighborNode = neighborId && this.nodes.get(neighborId);
+      if (!neighborNode) {
+        // A neighbor node is missing, get or fetch all neighbors
+        const data = await this.graph.getOrFetchAllMethodNeighbors(node.id(), type);
+        this.add(deduplicate([...data.nodes.flat(), ...data.edges]));
+        this.resetLayout();
+        return;
+      }
+      toShow = toShow.union(neighborNode);
+    }
+
+    for (const node of toShow) this.showNode(node);
+  };
+
+  showAllMethodNeighbors = async (methodId: string, type: "callers" | "callees") => {
+    const node = this.nodes.get(methodId);
+    node && (await this.showAllNodeNeighbors(node, type));
+  };
+
   hideNode = (node: NodeSingular) => {
     const parentsToHide = this.parentsToHide(node);
     node.remove();
@@ -238,6 +263,16 @@ export default class View {
   hideMethod = (id: string) => {
     const node = this.cy.nodes().getElementById(id);
     this.hideNode(node);
+  };
+
+  hideAllNodeNeighbors = (node: NodeSingular, type: "callers" | "callees") => {
+    const toHide = type === "callers" ? node.incomers("node") : node.outgoers("node");
+    for (const node of toHide) this.hideNode(node);
+  };
+
+  hideAllMethodNeighbors = (methodId: string, type: "callers" | "callees") => {
+    const node = this.nodes.get(methodId);
+    node && this.hideAllNodeNeighbors(node, type);
   };
 
   add = (elements?: ElementDefinition[]) => {
@@ -275,14 +310,6 @@ export default class View {
     const children = node.children();
     if (children.length !== 1) return this.cy.collection();
     return node.union(this.parentsToHide(parent));
-  };
-
-  showNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
-    // TODO
-  };
-
-  hideNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
-    // TODO
   };
 
   showCompoundNodes = () => {
@@ -359,25 +386,25 @@ export default class View {
           id: "show-callers",
           content: "Show callers",
           selector: LEAF_NODES,
-          onClickFunction: (e) => this.showNeighbors(e.target, "callers"),
+          onClickFunction: (e) => this.showAllNodeNeighbors(e.target, "callers"),
         },
         {
           id: "hide-callers",
           content: "Hide callers",
           selector: LEAF_NODES,
-          onClickFunction: (e) => this.hideNeighbors(e.target, "callers"),
+          onClickFunction: (e) => this.hideAllNodeNeighbors(e.target, "callers"),
         },
         {
           id: "show-callees",
           content: "Show callees",
           selector: LEAF_NODES,
-          onClickFunction: (e) => this.showNeighbors(e.target, "callees"),
+          onClickFunction: (e) => this.showAllNodeNeighbors(e.target, "callees"),
         },
         {
           id: "hide-callees",
           content: "Hide callees",
           selector: LEAF_NODES,
-          onClickFunction: (e) => this.hideNeighbors(e.target, "callees"),
+          onClickFunction: (e) => this.hideAllNodeNeighbors(e.target, "callees"),
         },
       ],
     });
