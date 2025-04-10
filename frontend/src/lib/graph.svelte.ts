@@ -91,24 +91,13 @@ export default class Graph {
     const data: BackendResponseData = await resp.json();
 
     for (const nodeWithParents of data.nodes) {
-      const methodNode = nodeWithParents[0];
-      const nodeId = methodNode.data.id;
+      const nodeId = nodeWithParents[0].data.id;
       nodeId && this.nodeDefinitions.set(nodeId, nodeWithParents);
-
-      const callers: NodeDefinition[][] = methodNode.data.callers ?? [];
-      const callees: NodeDefinition[][] = methodNode.data.callees ?? [];
-
-      for (const neighborWithParents of [...callers, ...callees]) {
-        const neighborId = neighborWithParents[0].data.id;
-        if (neighborId && !this.nodeDefinitions.has(neighborId)) {
-          this.nodeDefinitions.set(neighborId, neighborWithParents);
-        }
-      }
     }
 
     for (const edge of data.edges) {
-      const elementId = edge.data.id;
-      elementId && this.edgeDefinitions.set(elementId, edge);
+      const edgeId = edge.data.id;
+      edgeId && this.edgeDefinitions.set(edgeId, edge);
     }
 
     if (withEntrypoint && data.path) {
@@ -140,10 +129,7 @@ export default class Graph {
       const neighbors: NodeDefinition[][] | undefined = nodeWithParents[0].data[type];
       if (neighbors) {
         // Neighbor definitions list present inside the node definition
-        neighbor = neighbors.filter((neighbor) => {
-          const methodNode = neighbor[0];
-          return methodNode.data.id === neighborId;
-        })[0];
+        neighbor = neighbors.filter((neighbor) => neighbor[0].data.id === neighborId)[0];
       }
 
       if (neighbor) {
@@ -168,8 +154,7 @@ export default class Graph {
 
     // Neighbor definition or edge definition is missing, fetch it
     const data = await this.fetchMethodNeighbors(methodId, type, neighborId);
-    if (!withEdges) return { nodes: data.nodes, edges: [] };
-    return { nodes: data.nodes, edges: data.edges };
+    return { nodes: data.nodes, edges: withEdges ? data.edges : [] };
   };
 
   getOrFetchAllMethodNeighbors = async (
@@ -178,6 +163,7 @@ export default class Graph {
     withEdges: boolean = true,
   ) => {
     if (this.nodeDefinitions.has(methodId)) {
+      // Node definition is present, use it
       const nodeWithParents = this.nodeDefinitions.get(methodId) as NodeDefinition[];
 
       // Try to get neighbor definitions list from inside node definition
@@ -191,8 +177,7 @@ export default class Graph {
 
     // Neighbor definition or edge definition is missing, fetch it
     const data = await this.fetchMethodNeighbors(methodId, type);
-    if (!withEdges) return { nodes: data.nodes, edges: [] };
-    return { nodes: data.nodes, edges: data.edges };
+    return { nodes: data.nodes, edges: withEdges ? data.edges : [] };
   };
 
   fetchMethodNeighbors = async (
@@ -208,14 +193,13 @@ export default class Graph {
     const data: BackendResponseData = await resp.json();
 
     for (const nodeWithParents of data.nodes) {
-      const methodNode = nodeWithParents[0];
-      const nodeId = methodNode.data.id;
+      const nodeId = nodeWithParents[0].data.id;
       nodeId && this.nodeDefinitions.set(nodeId, nodeWithParents);
     }
 
     for (const edge of data.edges) {
-      const elementId = edge.data.id;
-      elementId && this.edgeDefinitions.set(elementId, edge);
+      const edgeId = edge.data.id;
+      edgeId && this.edgeDefinitions.set(edgeId, edge);
     }
 
     return { nodes: data.nodes, edges: data.edges };
