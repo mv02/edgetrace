@@ -13,6 +13,7 @@ def fetch_method(
     OPTIONAL MATCH (m)-->(callee)
     OPTIONAL MATCH p = ALL SHORTEST (e {graph: $graph})-->+(m)
     WHERE e.is_entrypoint
+    ORDER BY callee.name, caller.name
     RETURN m, collect(DISTINCT caller) AS callers,
     collect(DISTINCT callee) AS callees, p AS path"""
 
@@ -68,6 +69,7 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
         OPTIONAL MATCH (caller)-[r]->(m)
         OPTIONAL MATCH (neighbor_caller)-->(caller)
         OPTIONAL MATCH (caller)-->(neighbor_callee)
+        ORDER BY neighbor_callee.name, neighbor_caller.name
         RETURN caller, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
         collect(DISTINCT neighbor_callee) AS neighbor_callees"""
     else:
@@ -75,6 +77,7 @@ def fetch_method_callers(graph_name: str, method_id: str, caller_id: str | None 
         OPTIONAL MATCH (caller {id: $caller_id})-[r]->(m)
         OPTIONAL MATCH (neighbor_caller)-->(caller)
         OPTIONAL MATCH (caller)-->(neighbor_callee)
+        ORDER BY neighbor_callee.name, neighbor_caller.name
         RETURN caller, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
         collect(DISTINCT neighbor_callee) AS neighbor_callees"""
 
@@ -117,6 +120,7 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
         OPTIONAL MATCH (m)-[r]->(callee)
         OPTIONAL MATCH (neighbor_caller)-->(callee)
         OPTIONAL MATCH (callee)-->(neighbor_callee)
+        ORDER BY neighbor_callee.name, neighbor_caller.name
         RETURN callee, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
         collect(DISTINCT neighbor_callee) AS neighbor_callees"""
     else:
@@ -124,6 +128,7 @@ def fetch_method_callees(graph_name: str, method_id: str, callee_id: str | None 
         OPTIONAL MATCH (m)-[r]->(callee {id: $callee_id})
         OPTIONAL MATCH (neighbor_caller)-->(callee)
         OPTIONAL MATCH (callee)-->(neighbor_callee)
+        ORDER BY neighbor_callee.name, neighbor_caller.name
         RETURN callee, r, collect(DISTINCT neighbor_caller) AS neighbor_callers,
         collect(DISTINCT neighbor_callee) AS neighbor_callees"""
 
