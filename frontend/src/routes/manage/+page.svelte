@@ -101,18 +101,15 @@
               {selectedGraph.nodeCount} nodes, {selectedGraph.edgeCount} edges
             </p>
 
-            <!-- TODO: self-end class doesn't work -->
-            <Button
-              color="red"
-              style="align-self: end"
-              onclick={deleteGraph}
-              disabled={deleteLoading}
-            >
-              {#if deleteLoading}
-                <Spinner class="me-3" size="4" color="white" />
-              {/if}
-              Delete
-            </Button>
+            <div class="flex justify-between">
+              <Button href="/graphs/{selectedGraph.name}" disabled={deleteLoading}>View</Button>
+              <Button color="red" onclick={deleteGraph} disabled={deleteLoading}>
+                {#if deleteLoading}
+                  <Spinner class="me-3" size="4" color="white" />
+                {/if}
+                Delete
+              </Button>
+            </div>
           </Card>
         {:else if deleteMessage}
           <Alert color={deleteOk ? "green" : "red"}>
