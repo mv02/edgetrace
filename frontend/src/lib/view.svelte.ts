@@ -190,26 +190,32 @@ export default class View {
 
   showNode = (node: NodeSingular) => {
     const id = node.id();
-    const parentId = this.parentIds.get(id);
-    const parent = parentId && this.nodes.get(parentId);
+    const parentId = this.parentIds.get(id) as string;
+    const parent = this.nodes.get(parentId);
 
     if (node.is(COMPOUND_NODES) && !this.graph.compoundNodesShown) return;
 
-    // Restore the node and connected edges
-    node?.restore();
-    // Only edges whose other node is shown
-    this.incomers
-      .get(id)
-      ?.filter((edge) => edge.source().inside())
-      .restore();
-    this.outgoers
-      .get(id)
-      ?.filter((edge) => edge.target().inside())
-      .restore();
+    // Restore only if not inside a collapsed node
+    if (!parent || !this.expandCollapse?.isExpandable(parent)) {
+      // Restore the node and connected edges
+      node.restore();
+      // Only edges whose other node is shown
+      this.incomers
+        .get(id)
+        ?.filter((edge) => edge.source().inside())
+        .restore();
+      this.outgoers
+        .get(id)
+        ?.filter((edge) => edge.target().inside())
+        .restore();
+    }
 
     if (parent) {
       this.showNode(parent);
-      node?.move({ parent: parent.id() });
+      if (node.inside()) {
+        // The node has been restored, move it to its original parent
+        node.move({ parent: parentId });
+      }
     }
     this.updateDiffColoring();
     this.nodes = new Map(this.nodes);
@@ -339,26 +345,12 @@ export default class View {
   };
 
   showCompoundNodes = () => {
-    for (const [id, parentId] of this.parentIds.entries()) {
-      // Get the node and restore it if it was hidden
-      const node = this.nodes.get(id);
-      if (!node) continue;
-      if (!node.is(COLLAPSED_NODES) && node.removed()) continue;
+    for (const node of this.nodes.values()) {
+      // Skip method nodes that are hidden
+      if (node.removed() && node.is(LEAF_NODES)) continue;
+      // Skip compound nodes that are not collapsed (i.e. not the lowest level)
+      if (this.expandCollapse?.isCollapsible(node)) continue;
       this.showNode(node);
-
-      if (!this.expandCollapse?.isCollapsible(node)) {
-        // Workaround for issues with nested collapsed nodes
-        this.expandCollapse?.expand(node);
-        this.expandCollapse?.collapse(node);
-      }
-
-      // Get and restore the parent
-      const parent = this.nodes.get(parentId);
-      if (!parent) continue;
-      this.showNode(parent);
-
-      // Move node to its original parent
-      this.nodes.get(id)?.move({ parent: parent.id() });
     }
 
     // Restore edges between compound nodes
@@ -376,8 +368,8 @@ export default class View {
       node.move({ parent: null });
     }
     // Remove the parent nodes
-    for (const parentId of this.parentIds.values()) {
-      this.nodes.get(parentId)?.remove();
+    for (const node of this.nodes.values().filter((el) => el.is(COMPOUND_NODES))) {
+      node.remove();
     }
   };
 
