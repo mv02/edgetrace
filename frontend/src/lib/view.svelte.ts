@@ -195,6 +195,13 @@ export default class View {
 
     if (node.is(COMPOUND_NODES) && !this.graph.compoundNodesShown) return;
 
+    if (parent) {
+      // If showing a method node, expand all ancestors
+      this.showNode(parent, expand || node.is(LEAF_NODES));
+    }
+
+    if (expand) this.expandCollapse?.expand(node);
+
     // Restore only if not inside a collapsed node
     if (!parent || !this.expandCollapse?.isExpandable(parent)) {
       // Restore the node and connected edges
@@ -210,16 +217,11 @@ export default class View {
         .restore();
     }
 
-    if (expand) this.expandCollapse?.expand(node);
-
-    if (parent) {
-      // If showing a method node, expand all ancestors
-      this.showNode(parent, expand || node.is(LEAF_NODES));
-      if (node.inside()) {
-        // The node has been restored, move it to its original parent
-        node.move({ parent: parentId });
-      }
+    if (parent && node.inside()) {
+      // The node has been restored, move it to its original parent
+      node.move({ parent: parentId });
     }
+
     this.updateDiffColoring();
     this.nodes = new Map(this.nodes);
   };
