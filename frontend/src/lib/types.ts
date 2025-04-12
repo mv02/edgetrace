@@ -10,6 +10,7 @@ export type GraphInfo = {
   name: string;
   nodeCount: number;
   edgeCount: number;
+  otherGraph: string | null;
 };
 
 export type Tree = {

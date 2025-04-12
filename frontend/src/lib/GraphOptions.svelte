@@ -1,7 +1,19 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { Button, ButtonGroup, Checkbox, Label, Range, Select, Spinner } from "flowbite-svelte";
-  import { MinusOutline, PlusOutline } from "flowbite-svelte-icons";
+  import {
+    Accordion,
+    AccordionItem,
+    Alert,
+    Button,
+    ButtonGroup,
+    Checkbox,
+    Helper,
+    Label,
+    Range,
+    Select,
+    Spinner,
+  } from "flowbite-svelte";
+  import { ExclamationCircleSolid, MinusOutline, PlusOutline } from "flowbite-svelte-icons";
   import { deduplicate } from "./utils";
   import type Graph from "$lib/graph.svelte";
 
@@ -24,6 +36,7 @@
     await currentGraph.calculateDiff();
     loading = false;
     showTopEdges(10, true);
+    currentGraph.otherGraph = currentGraph.diffOtherGraph;
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
@@ -52,48 +65,22 @@
   Compound nodes
 </Checkbox>
 
-<div class="flex flex-col gap-4">
-  <Label>
-    Calculate difference
-    <Select class="mt-2" bind:value={currentGraph.diffOtherGraph}>
-      {#each Object.values(graphs).filter((graph) => graph !== currentGraph) as graph}
-        <option value={graph.name}>{currentGraph.name} − {graph.name}</option>
-      {/each}
-    </Select>
-  </Label>
+<!-- Difference calculated -->
+{#if currentGraph.otherGraph}
+  <Alert color="blue" class="flex flex-col gap-2">
+    <p>Compared with <span class="font-bold">{currentGraph.otherGraph}</span></p>
 
-  <div class="flex items-end">
-    <Label>
-      Maximum iterations
-      <Range
-        class="mt-2"
-        min="200"
-        max="10000"
-        step="200"
-        bind:value={currentGraph.diffMaxIterations}
-      />
-    </Label>
-    <span class="min-w-16 text-center">{currentGraph.diffMaxIterations}</span>
-  </div>
-
-  <Button onclick={calculateDiff} disabled={loading || !currentGraph.diffOtherGraph}>
-    {#if loading}
-      <Spinner class="me-3" size="4" color="white" />
-    {/if}
-    Diff
-  </Button>
-
-  {#if currentGraph.diffOtherGraph}
-    {#if currentView}
-      <div class="flex items-center justify-between">
+    {#if currentView?.topEdgesShown > 0}
+      <!-- Top edges are already shown -->
+      <div class="flex items-center justify-between gap-2">
         Showing top {currentView.topEdgesShown} edges
 
+        <!-- Edge count selection -->
         <ButtonGroup size="xs">
           <Button
             size="xs"
             class="py-1"
             onclick={() => showTopEdges(Math.max(currentView.topEdgesShown - 5, 0))}
-            disabled={currentView.topEdgesShown === 0}
           >
             <MinusOutline class="h-5 w-5" />
           </Button>
@@ -108,9 +95,63 @@
         </ButtonGroup>
       </div>
     {:else}
+      <!-- Top edges are not yet shown -->
       <Button size="xs" color="alternative" onclick={() => showTopEdges(10, true)}>
         Show top 10 edges
       </Button>
     {/if}
-  {/if}
-</div>
+  </Alert>
+{/if}
+
+<!-- Diff calculation section -->
+<Accordion flush>
+  <AccordionItem tag="h4" borderBottomClass="" paddingFlush="">
+    <span slot="header">Diff Calculation</span>
+
+    <div class="flex flex-col gap-4 pt-4">
+      <!-- Select other graph -->
+      <Label>
+        Calculate difference
+
+        <Select class="mt-2" bind:value={currentGraph.diffOtherGraph}>
+          {#each Object.values(graphs).filter((graph) => graph !== currentGraph) as graph}
+            <option value={graph.name}>{currentGraph.name} − {graph.name}</option>
+          {/each}
+        </Select>
+
+        {#if currentGraph.otherGraph && currentGraph.otherGraph !== currentGraph.diffOtherGraph}
+          <Helper class="mt-2 flex items-center gap-2" color="red">
+            <ExclamationCircleSolid />
+            <p>
+              This will overwrite the calculated difference between
+              <span class="font-bold">{currentGraph.name}</span>
+              and <span class="font-bold">{currentGraph.otherGraph}</span>.
+            </p>
+          </Helper>
+        {/if}
+      </Label>
+
+      <!-- Max iterations slider -->
+      <div class="flex items-end">
+        <Label>
+          Maximum iterations
+          <Range
+            class="mt-2"
+            min="200"
+            max="10000"
+            step="200"
+            bind:value={currentGraph.diffMaxIterations}
+          />
+        </Label>
+        <span class="min-w-16 text-center">{currentGraph.diffMaxIterations}</span>
+      </div>
+
+      <Button onclick={calculateDiff} disabled={loading || !currentGraph.diffOtherGraph}>
+        {#if loading}
+          <Spinner class="me-3" size="4" color="white" />
+        {/if}
+        {currentGraph.otherGraph === currentGraph.diffOtherGraph ? "Recalculate" : "Calculate"}
+      </Button>
+    </div>
+  </AccordionItem>
+</Accordion>

@@ -30,6 +30,11 @@ def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
             {"source_id": k[0], "target_id": k[1], "value": v} for k, v in edges.items()
         ],
     )
+    driver.execute_query(
+        "MERGE (meta:Meta {graph_name: $graph}) SET meta.other_graph = $other_graph",
+        graph=graph_name,
+        other_graph=other_graph_name,
+    )
     return
 
 

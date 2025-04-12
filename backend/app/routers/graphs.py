@@ -18,10 +18,12 @@ router.include_router(diff.router)
 @router.get("")
 def get_graphs():
     records = driver.execute_query(
-        "MATCH (m) "
+        "MATCH (m:Method) "
         "OPTIONAL MATCH (m)-[r]->() "
-        "RETURN m.graph AS name, count(DISTINCT m) AS nodeCount, count(r) AS edgeCount "
-        "ORDER BY name"
+        "WITH m.graph AS name, count(DISTINCT m) AS nodeCount, count(r) AS edgeCount "
+        "ORDER BY name "
+        "OPTIONAL MATCH (meta:Meta {graph_name: name}) "
+        "RETURN name, nodeCount, edgeCount, meta.other_graph AS otherGraph"
     ).records
     return [record.data() for record in records]
 
