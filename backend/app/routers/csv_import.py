@@ -57,6 +57,9 @@ def import_csv(
     driver.execute_query("MATCH ({graph: $graph})-[r]-() DELETE r", graph=graph)
     driver.execute_query("MATCH (n {graph: $graph}) DELETE n", graph=graph)
     driver.execute_query(
+        "OPTIONAL MATCH (meta:Meta {graph_name: $graph}) DELETE meta", graph=graph
+    )
+    driver.execute_query(
         "CREATE CONSTRAINT unique_method_id IF NOT EXISTS "
         "FOR (m:Method) REQUIRE (m.id, m.graph) IS UNIQUE"
     )
