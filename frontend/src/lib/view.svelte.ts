@@ -188,7 +188,7 @@ export default class View {
     return node.inside();
   };
 
-  showNode = (node: NodeSingular) => {
+  showNode = (node: NodeSingular, expand: boolean = false) => {
     const id = node.id();
     const parentId = this.parentIds.get(id) as string;
     const parent = this.nodes.get(parentId);
@@ -210,8 +210,11 @@ export default class View {
         .restore();
     }
 
+    if (expand) this.expandCollapse?.expand(node);
+
     if (parent) {
-      this.showNode(parent);
+      // If showing a method node, expand all ancestors
+      this.showNode(parent, expand || node.is(LEAF_NODES));
       if (node.inside()) {
         // The node has been restored, move it to its original parent
         node.move({ parent: parentId });
@@ -241,11 +244,19 @@ export default class View {
   ) => {
     const neighbor = this.nodes.get(neighborId);
 
+    // The edge can go from the neighbor node itself or from its parent
+    const possibleIds = [neighborId];
+    let parentId = this.parentIds.get(neighborId);
+    while (parentId) {
+      possibleIds.push(parentId);
+      parentId = this.parentIds.get(parentId);
+    }
+
     if (neighbor) {
       const edge =
         type === "callers"
-          ? this.incomers.get(methodId)?.filter((ele) => ele.source().id() === neighborId)
-          : this.outgoers.get(methodId)?.filter((ele) => ele.target().id() === neighborId);
+          ? this.incomers.get(methodId)?.filter((ele) => possibleIds.includes(ele.source().id()))
+          : this.outgoers.get(methodId)?.filter((ele) => possibleIds.includes(ele.target().id()));
 
       // Neighbor node and edge are both present, show them
       if (edge?.nonempty()) {
