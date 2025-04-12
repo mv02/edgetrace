@@ -31,7 +31,10 @@ def get_graphs():
 @router.delete("/{graph_name}")
 def delete_graph(graph_name: str):
     _, summary, _ = driver.execute_query(
-        "MATCH (m {graph: $graph}) OPTIONAL MATCH (m)-[r]->() DELETE r, m",
+        "MATCH (m {graph: $graph}) "
+        "OPTIONAL MATCH (m)-[r]->() "
+        "OPTIONAL MATCH (meta:Meta {other_graph: $graph}) "
+        "DELETE r, m, meta",
         graph=graph_name,
     )
 
