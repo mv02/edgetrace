@@ -29,6 +29,7 @@
   let views = $derived(currentGraph.views);
   let currentView = $derived(views[currentGraph.viewIndex]);
 
+  let diffSectionOpen = $state(false);
   let loading = $state(false);
 
   const calculateDiff = async () => {
@@ -37,6 +38,7 @@
     loading = false;
     showTopEdges(10, true);
     currentGraph.otherGraph = currentGraph.diffOtherGraph;
+    diffSectionOpen = false;
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
@@ -105,7 +107,7 @@
 
 <!-- Diff calculation section -->
 <Accordion flush>
-  <AccordionItem tag="h4" borderBottomClass="" paddingFlush="">
+  <AccordionItem tag="h4" borderBottomClass="" paddingFlush="" bind:open={diffSectionOpen}>
     <span slot="header">Diff Calculation</span>
 
     <div class="flex flex-col gap-4 pt-4">
