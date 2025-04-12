@@ -31,15 +31,16 @@ def get_graphs():
 @router.delete("/{graph_name}")
 def delete_graph(graph_name: str):
     _, summary, _ = driver.execute_query(
-        "MATCH (m {graph: $graph}) "
-        "OPTIONAL MATCH (m)-[r]->() "
-        "OPTIONAL MATCH (meta:Meta {other_graph: $graph}) "
-        "DELETE r, m, meta",
-        graph=graph_name,
+        "MATCH (m {graph: $graph}) DETACH DELETE m", graph=graph_name
     )
 
     node_count = summary.counters.nodes_deleted
     edge_count = summary.counters.relationships_deleted
+
+    driver.execute_query(
+        "MATCH (meta:Meta {graph_name: $graph}) DELETE meta", graph=graph_name
+    )
+
     message = f"Deleted {node_count} nodes and {edge_count} edges"
     logger.info(message)
     return {"message": message}
