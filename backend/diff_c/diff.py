@@ -56,7 +56,7 @@ class CallGraph(ctypes.Structure):
     ]
 
 
-diff_lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), "libdiff.so"))
+diff_lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), "../build/libdiff.so"))
 diff_lib.diff_from_dirs.argtypes = (
     ctypes.c_char_p,
     ctypes.c_char_p,
