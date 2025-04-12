@@ -221,8 +221,8 @@ export default class Graph {
   };
 
   calculateDiff = async () => {
-    await fetch(
       `${PUBLIC_API_URL}/graphs/${this.name}/diff/${this.diffOtherGraph}?max_iterations=${this.diffMaxIterations}`,
+    return await fetch(
       { method: "POST" },
     );
   };

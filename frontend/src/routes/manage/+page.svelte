@@ -36,14 +36,19 @@
     deleteMessage = undefined;
     importMessage = undefined;
     deleteLoading = true;
-    const resp = await fetch(`${PUBLIC_API_URL}/graphs/${selectedGraph.name}`, {
-      method: "DELETE",
-    });
-    deleteOk = resp.ok;
-    deleteMessage = (await resp.json()).message;
+    try {
+      const resp = await fetch(`${PUBLIC_API_URL}/graphs/${selectedGraph.name}`, {
+        method: "DELETE",
+      });
+      deleteOk = resp.ok;
+      deleteMessage = (await resp.json()).message;
+      invalidate(`${PUBLIC_API_URL}/graphs`);
+    } catch {
+      deleteOk = false;
+      deleteMessage = "Deleting call graph failed";
+    }
     deleteLoading = false;
     selectedGraph = undefined;
-    invalidate(`${PUBLIC_API_URL}/graphs`);
   };
 
   async function submit(e: SubmitEvent) {
@@ -57,11 +62,16 @@
       formData.append("files", file, file.name);
       formData.append("timestamps", file.lastModified.toString());
     }
-    const resp = await fetch(`${PUBLIC_API_URL}/import`, { method: "POST", body: formData });
-    importOk = resp.ok;
-    importMessage = (await resp.json()).message;
+    try {
+      const resp = await fetch(`${PUBLIC_API_URL}/import`, { method: "POST", body: formData });
+      importOk = resp.ok;
+      importMessage = (await resp.json()).message;
+      invalidate(`${PUBLIC_API_URL}/graphs`);
+    } catch {
+      importOk = false;
+      importMessage = "Importing call graph failed";
+    }
     importLoading = false;
-    invalidate(`${PUBLIC_API_URL}/graphs`);
   }
 </script>
 

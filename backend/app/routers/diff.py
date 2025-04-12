@@ -35,6 +35,7 @@ def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
         graph=graph_name,
         other_graph=other_graph_name,
     )
+    return {"message": "Difference calculated"}
     return
 
 

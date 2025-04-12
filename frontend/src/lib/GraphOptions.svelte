@@ -13,7 +13,12 @@
     Select,
     Spinner,
   } from "flowbite-svelte";
-  import { ExclamationCircleSolid, MinusOutline, PlusOutline } from "flowbite-svelte-icons";
+  import {
+    CheckCircleSolid,
+    ExclamationCircleSolid,
+    MinusOutline,
+    PlusOutline,
+  } from "flowbite-svelte-icons";
   import { deduplicate } from "./utils";
   import type Graph from "$lib/graph.svelte";
 
@@ -29,16 +34,27 @@
   let views = $derived(currentGraph.views);
   let currentView = $derived(views[currentGraph.viewIndex]);
 
-  let diffSectionOpen = $state(false);
-  let loading = $state(false);
+  let diffSectionOpen: boolean = $state(false);
+  let loading: boolean = $state(false);
+  let ok: boolean = $state(false);
+  let Icon = $derived(ok ? CheckCircleSolid : ExclamationCircleSolid);
+  let message: string | undefined = $state();
 
   const calculateDiff = async () => {
+    message = undefined;
     loading = true;
-    await currentGraph.calculateDiff();
+    try {
+      const resp = await currentGraph.calculateDiff();
+      ok = resp.ok;
+      message = (await resp.json()).message;
+      showTopEdges(10, true);
+      currentGraph.otherGraph = currentGraph.diffOtherGraph;
+      diffSectionOpen = false;
+    } catch {
+      ok = false;
+      message = "Difference calculation failed";
+    }
     loading = false;
-    showTopEdges(10, true);
-    currentGraph.otherGraph = currentGraph.diffOtherGraph;
-    diffSectionOpen = false;
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
@@ -157,3 +173,10 @@
     </div>
   </AccordionItem>
 </Accordion>
+
+{#if message}
+  <Alert color={ok ? "green" : "red"}>
+    <Icon slot="icon" />
+    {message}
+  </Alert>
+{/if}
