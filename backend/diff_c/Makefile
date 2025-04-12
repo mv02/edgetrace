@@ -6,19 +6,21 @@ OBJS = $(SRCS:.c=.o)
 
 bin_name = diff
 lib_name = libdiff.so
+lib_path = ../build
 
 .PHONY: lib clean
 
 $(bin_name): $(OBJS)
 	$(CC) $^ -o $@
 
-lib: $(lib_name)
+lib: $(lib_path)/$(lib_name)
 
-$(lib_name): $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@
+$(lib_path)/$(lib_name): $(OBJS)
+	mkdir -p $(lib_path)
+	$(CC) $(LDFLAGS) $^ -o $(lib_path)/$@
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
-	rm -f $(OBJS) $(bin_name) $(lib_name)
+	rm -f $(OBJS) $(bin_name) $(lib_path)/$(lib_name)
