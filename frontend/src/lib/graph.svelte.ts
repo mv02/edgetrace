@@ -1,11 +1,6 @@
 import { PUBLIC_API_URL } from "$env/static/public";
 import View from "./view.svelte";
-import type {
-  EdgeDefinition,
-  ElementDefinition,
-  ElementsDefinition,
-  NodeDefinition,
-} from "cytoscape";
+import type { EdgeDefinition, NodeDefinition } from "cytoscape";
 import type { BackendResponseData, GraphInfo } from "./types";
 
 const MAX_VIEWS = 10;

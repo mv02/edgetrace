@@ -6,7 +6,7 @@ from fastapi import APIRouter
 
 from ..driver import driver
 from ..utils.conversions import edge_to_cy, node_to_cy
-from ..utils.types import CytoscapeEdge, CytoscapeElement, CytoscapeNode, Edge
+from ..utils.types import CytoscapeEdge, CytoscapeNode, Edge
 from .csv_import import CSV_DIR
 
 router = APIRouter(prefix="/{graph_name}/diff")
