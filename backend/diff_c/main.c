@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "call_graph.h"
@@ -16,9 +17,8 @@ double level(method_t* m)
     return m->value;
 }
 
-void diff(call_graph_t* sup, call_graph_t* sub, int max_iterations)
+void diff(call_graph_t* sup, call_graph_t* sub, int max_iterations, int* i, bool* cancel_flag)
 {
-    int i = 1;
     double max = 1;
 
     call_graph_print(sup);
@@ -30,7 +30,7 @@ void diff(call_graph_t* sup, call_graph_t* sub, int max_iterations)
     link_equivalents(sup, sub);
 
     printf("Starting difference algorithm\n");
-    while (max > EPSILON && i <= max_iterations) {
+    while (max > EPSILON && *i <= max_iterations && !*cancel_flag) {
         max = 0;
 
         for (edge_t* e = sup->edges; e != NULL; e = e->next) {
@@ -53,20 +53,20 @@ void diff(call_graph_t* sup, call_graph_t* sub, int max_iterations)
             }
         }
 
-        if (i % 100 == 0 || i + 1 == max_iterations)
-            printf("Iteration %d, max %g\n", i, max);
-        i++;
+        if (*i % 100 == 0 || *i + 1 == max_iterations)
+            printf("Iteration %d, max %g\n", *i, max);
+        (*i)++;
     }
-    printf("Done, %d iterations.\n", i - 1);
+    printf("Done, %d iterations.\n", *i - 1);
 }
 
 call_graph_t* diff_from_dirs(char* supergraph_directory, char* subgraph_directory,
-                             int max_iterations)
+                             int max_iterations, int* i, bool* cancel_flag)
 {
     call_graph_t* sup = call_graph_create(supergraph_directory, "Supergraph");
     call_graph_t* sub = call_graph_create(subgraph_directory, "Subgraph");
 
-    diff(sup, sub, max_iterations);
+    diff(sup, sub, max_iterations, i, cancel_flag);
 
     call_graph_destroy(sub);
     // Caller should destroy the supergraph, return a pointer to it
@@ -81,7 +81,10 @@ int main(int argc, char* argv[])
     }
 
     int max_iterations = argc >= 4 ? atoi(argv[3]) : 1000;
-    call_graph_t* sup = diff_from_dirs(argv[1], argv[2], max_iterations);
+    int iteration_count = 0;
+    bool cancel_flag = false;
+    call_graph_t* sup =
+        diff_from_dirs(argv[1], argv[2], max_iterations, &iteration_count, &cancel_flag);
 
     int top_n = argc >= 5 ? atoi(argv[4]) : 10;
     if (top_n == 0) {
