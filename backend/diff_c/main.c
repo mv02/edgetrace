@@ -30,7 +30,7 @@ void diff(call_graph_t* sup, call_graph_t* sub, int max_iterations, int* i, bool
     link_equivalents(sup, sub);
 
     printf("Starting difference algorithm\n");
-    while (max > EPSILON && *i <= max_iterations && !*cancel_flag) {
+    while (max > EPSILON && *i < max_iterations && !*cancel_flag) {
         max = 0;
 
         for (edge_t* e = sup->edges; e != NULL; e = e->next) {
@@ -53,11 +53,11 @@ void diff(call_graph_t* sup, call_graph_t* sub, int max_iterations, int* i, bool
             }
         }
 
-        if (*i % 100 == 0 || *i + 1 == max_iterations)
-            printf("Iteration %d, max %g\n", *i, max);
         (*i)++;
+        if (*i % 100 == 0 || *i == max_iterations)
+            printf("Iteration %d, max %g\n", *i, max);
     }
-    printf("Done, %d iterations.\n", *i - 1);
+    printf("Done, %d iterations.\n", *i);
 }
 
 call_graph_t* diff_from_dirs(char* supergraph_directory, char* subgraph_directory,
