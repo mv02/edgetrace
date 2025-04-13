@@ -61,6 +61,8 @@ diff_lib.diff_from_dirs.argtypes = (
     ctypes.c_char_p,
     ctypes.c_char_p,
     ctypes.c_int,
+    ctypes.POINTER(ctypes.c_int),
+    ctypes.POINTER(ctypes.c_bool),
 )
 diff_lib.diff_from_dirs.restype = ctypes.POINTER(CallGraph)
 
@@ -69,11 +71,17 @@ def diff(
     supergraph_directory: str,
     subgraph_directory: str,
     max_iterations: int,
+    iteration_count: ctypes.c_int,
+    cancel_flag: ctypes.c_bool,
 ) -> dict[tuple[str, str], float]:
     result: dict[tuple[str, str], float] = {}
 
     sup = diff_lib.diff_from_dirs(
-        supergraph_directory.encode(), subgraph_directory.encode(), max_iterations
+        supergraph_directory.encode(),
+        subgraph_directory.encode(),
+        max_iterations,
+        ctypes.byref(iteration_count),
+        ctypes.byref(cancel_flag),
     )
 
     edge = sup.contents.edges

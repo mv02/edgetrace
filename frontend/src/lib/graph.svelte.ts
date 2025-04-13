@@ -221,10 +221,14 @@ export default class Graph {
   };
 
   calculateDiff = async () => {
-      `${PUBLIC_API_URL}/graphs/${this.name}/diff/${this.diffOtherGraph}?max_iterations=${this.diffMaxIterations}`,
     return await fetch(
+      `${PUBLIC_API_URL}/graphs/${this.name}/diff/start/${this.diffOtherGraph}?max_iterations=${this.diffMaxIterations}`,
       { method: "POST" },
     );
+  };
+
+  cancelDiff = async () => {
+    return await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/diff/cancel`, { method: "POST" });
   };
 
   fetchTopEdges = async (n: number) => {

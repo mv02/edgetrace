@@ -1,3 +1,4 @@
+import ctypes
 import os
 
 from diff_c.diff import diff
@@ -10,9 +11,14 @@ from .csv_import import CSV_DIR
 
 router = APIRouter(prefix="/{graph_name}/diff")
 
+iteration_count = ctypes.c_int(0)
+cancel_flag = ctypes.c_bool(False)
 
-@router.post("/{other_graph_name}")
+
+@router.post("/start/{other_graph_name}")
 def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
+    iteration_count.value = 0
+    cancel_flag.value = False
     driver.execute_query(
         "MATCH ({graph: $graph})-[r]->() SET r.value = 0", graph=graph_name
     )
@@ -20,6 +26,8 @@ def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
         os.path.join(CSV_DIR, graph_name),
         os.path.join(CSV_DIR, other_graph_name),
         max_iterations,
+        iteration_count,
+        cancel_flag,
     )
     driver.execute_query(
         "UNWIND $data AS row "
@@ -35,7 +43,15 @@ def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
         graph=graph_name,
         other_graph=other_graph_name,
     )
-    return {"message": "Difference calculated"}
+    return {
+        "message": f"Difference with {other_graph_name} calculated: {iteration_count.value - 1} iterations"
+    }
+
+
+@router.post("/cancel")
+def cancel_diff():
+    global cancel_flag
+    cancel_flag.value = True
     return
 
 

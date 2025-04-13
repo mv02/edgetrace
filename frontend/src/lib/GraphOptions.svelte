@@ -15,6 +15,7 @@
   } from "flowbite-svelte";
   import {
     CheckCircleSolid,
+    CloseOutline,
     ExclamationCircleSolid,
     MinusOutline,
     PlusOutline,
@@ -36,6 +37,7 @@
 
   let diffSectionOpen: boolean = $state(false);
   let loading: boolean = $state(false);
+  let cancelling: boolean = $state(false);
   let ok: boolean = $state(false);
   let Icon = $derived(ok ? CheckCircleSolid : ExclamationCircleSolid);
   let message: string | undefined = $state();
@@ -54,7 +56,12 @@
       ok = false;
       message = "Difference calculation failed";
     }
-    loading = false;
+    loading = cancelling = false;
+  };
+
+  const cancelDiff = async () => {
+    cancelling = true;
+    await currentGraph.cancelDiff();
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
@@ -164,12 +171,29 @@
         <span class="min-w-16 text-center">{currentGraph.diffMaxIterations}</span>
       </div>
 
-      <Button onclick={calculateDiff} disabled={loading || !currentGraph.diffOtherGraph}>
+      <ButtonGroup>
+        <Button
+          color="primary"
+          class="flex-grow"
+          onclick={calculateDiff}
+          disabled={loading || !currentGraph.diffOtherGraph}
+        >
+          {#if loading}
+            <Spinner class="me-3" size="4" color="white" />
+          {/if}
+          {#if cancelling}
+            Cancelling
+          {:else}
+            {currentGraph.otherGraph === currentGraph.diffOtherGraph ? "Recalculate" : "Calculate"}
+          {/if}
+        </Button>
+
         {#if loading}
-          <Spinner class="me-3" size="4" color="white" />
+          <Button color="red" onclick={cancelDiff} disabled={cancelling}>
+            <CloseOutline />
+          </Button>
         {/if}
-        {currentGraph.otherGraph === currentGraph.diffOtherGraph ? "Recalculate" : "Calculate"}
-      </Button>
+      </ButtonGroup>
     </div>
   </AccordionItem>
 </Accordion>
