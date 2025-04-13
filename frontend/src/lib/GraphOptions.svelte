@@ -77,6 +77,10 @@
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
+    if (n === 0) {
+      currentGraph.closeView(currentGraph.viewIndex);
+      return;
+    }
     const data = await currentGraph.fetchTopEdges(n);
     if (newView) {
       currentGraph.createView(`${currentGraph.name} − ${currentGraph.diffOtherGraph}`);
