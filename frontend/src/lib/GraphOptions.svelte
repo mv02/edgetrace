@@ -38,15 +38,23 @@
 
   let diffSectionOpen: boolean = $state(false);
   let loading: boolean = $state(false);
-  let cancelling: boolean = $state(false);
+  let status: "calculating" | "saving" | "cancelling" = $state("calculating");
   let ok: boolean = $state(false);
   let Icon = $derived(ok ? CheckCircleSolid : ExclamationCircleSolid);
   let message: string | undefined = $state();
 
+  let ws: WebSocket;
+
   const calculateDiff = async () => {
     message = undefined;
     loading = true;
+    status = "calculating";
+    currentGraph.currentIterations = 0;
+
     try {
+      ws = currentGraph.diffWebsocket;
+      ws.addEventListener("message", (e) => e.data === "saving" && (status = "saving"));
+
       const resp = await currentGraph.calculateDiff();
       ok = resp.ok;
       const data = await resp.json();
@@ -59,12 +67,13 @@
       ok = false;
       message = "Difference calculation failed";
     }
-    loading = cancelling = false;
+    loading = false;
   };
 
   const cancelDiff = async () => {
-    cancelling = true;
+    status = "cancelling";
     await currentGraph.cancelDiff();
+    status = "saving";
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
@@ -188,16 +197,20 @@
         >
           {#if loading}
             <Spinner class="me-3" size="4" color="white" />
-          {/if}
-          {#if cancelling}
-            Cancelling
+            {#if status === "cancelling"}
+              Cancelling
+            {:else if status === "saving"}
+              Saving
+            {:else}
+              {currentGraph.currentIterations} iterations
+            {/if}
           {:else}
             {currentGraph.otherGraph === currentGraph.diffOtherGraph ? "Recalculate" : "Calculate"}
           {/if}
         </Button>
 
         {#if loading}
-          <Button color="red" onclick={cancelDiff} disabled={cancelling}>
+          <Button color="red" onclick={cancelDiff} disabled={status !== "calculating"}>
             <CloseOutline />
           </Button>
         {/if}

@@ -11,6 +11,7 @@ export default class Graph {
   readonly edgeCount: number;
   otherGraph: string | null = $state(null);
   iterations: number | null = $state(null);
+  currentIterations: number = $state(0);
 
   views: View[] = $state([]);
   viewIndex: number = $state(0);
@@ -227,6 +228,12 @@ export default class Graph {
   cancelDiff = async () => {
     return await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/diff/cancel`, { method: "POST" });
   };
+
+  get diffWebsocket() {
+    const ws = new WebSocket(`${PUBLIC_API_URL}/graphs/${this.name}/diff/ws`);
+    ws.addEventListener("message", (e) => (this.currentIterations = parseInt(e.data)));
+    return ws;
+  }
 
   fetchTopEdges = async (n: number) => {
     const resp = await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/diff/edges?n=${n}`);
