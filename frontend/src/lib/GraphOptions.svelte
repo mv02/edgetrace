@@ -49,9 +49,11 @@
     try {
       const resp = await currentGraph.calculateDiff();
       ok = resp.ok;
-      message = (await resp.json()).message;
+      const data = await resp.json();
+      message = data.message;
       showTopEdges(10, true);
       currentGraph.otherGraph = currentGraph.diffOtherGraph;
+      currentGraph.iterations = data.iterations;
       diffSectionOpen = false;
     } catch {
       ok = false;
@@ -96,7 +98,10 @@
 <!-- Difference calculated -->
 {#if currentGraph.otherGraph}
   <Alert color="blue" class="flex flex-col gap-2">
-    <p>Compared with <span class="font-bold">{currentGraph.otherGraph}</span></p>
+    <p>
+      Compared with <span class="font-bold">{currentGraph.otherGraph}</span>
+      ({currentGraph.iterations} iter.)
+    </p>
 
     {#if currentView?.topEdgesShown > 0}
       <!-- Top edges are already shown -->

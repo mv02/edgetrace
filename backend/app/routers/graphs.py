@@ -23,7 +23,8 @@ def get_graphs():
         "WITH m.graph AS name, count(DISTINCT m) AS nodeCount, count(r) AS edgeCount "
         "ORDER BY name "
         "OPTIONAL MATCH (meta:Meta {graph_name: name}) "
-        "RETURN name, nodeCount, edgeCount, meta.other_graph AS otherGraph"
+        "RETURN name, nodeCount, edgeCount, meta.other_graph AS otherGraph, "
+        "       meta.iterations AS iterations"
     ).records
     return [record.data() for record in records]
 

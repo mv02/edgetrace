@@ -10,6 +10,7 @@ export default class Graph {
   readonly nodeCount: number;
   readonly edgeCount: number;
   otherGraph: string | null = $state(null);
+  iterations: number | null = $state(null);
 
   views: View[] = $state([]);
   viewIndex: number = $state(0);
@@ -35,6 +36,7 @@ export default class Graph {
     this.nodeCount = info.nodeCount;
     this.edgeCount = info.edgeCount;
     this.otherGraph = info.otherGraph;
+    this.iterations = info.iterations;
     if (info.otherGraph) {
       this.diffOtherGraph = info.otherGraph;
     }

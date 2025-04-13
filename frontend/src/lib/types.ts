@@ -11,6 +11,7 @@ export type GraphInfo = {
   nodeCount: number;
   edgeCount: number;
   otherGraph: string | null;
+  iterations: number | null;
 };
 
 export type Tree = {

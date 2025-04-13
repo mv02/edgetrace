@@ -39,12 +39,15 @@ def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
         ],
     )
     driver.execute_query(
-        "MERGE (meta:Meta {graph_name: $graph}) SET meta.other_graph = $other_graph",
+        "MERGE (meta:Meta {graph_name: $graph}) "
+        "SET meta.other_graph = $other_graph, meta.iterations = $iterations",
         graph=graph_name,
         other_graph=other_graph_name,
+        iterations=iteration_count.value - 1,
     )
     return {
-        "message": f"Difference with {other_graph_name} calculated: {iteration_count.value - 1} iterations"
+        "message": f"Difference with {other_graph_name} calculated: {iteration_count.value - 1} iterations",
+        "iterations": iteration_count.value - 1,
     }
 
 
