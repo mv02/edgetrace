@@ -49,13 +49,13 @@ def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
         "SET meta.other_graph = $other_graph, meta.iterations = $iterations",
         graph=graph_name,
         other_graph=other_graph_name,
-        iterations=iteration_count.value - 1,
+        iterations=iteration_count.value,
     )
     saving = False
 
     return {
-        "message": f"Difference with {other_graph_name} calculated: {iteration_count.value - 1} iterations",
-        "iterations": iteration_count.value - 1,
+        "message": f"Difference with {other_graph_name} calculated: {iteration_count.value} iterations",
+        "iterations": iteration_count.value,
     }
 
 
