@@ -54,7 +54,7 @@ void diff(call_graph_t* sup, call_graph_t* sub, int max_iterations, int* i, bool
         }
 
         (*i)++;
-        if (*i % 100 == 0 || *i == max_iterations)
+        if (*i % 100 == 0 || *i == max_iterations || max <= EPSILON)
             printf("Iteration %d, max %g\n", *i, max);
     }
     printf("Done, %d iterations.\n", *i);
