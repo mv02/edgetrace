@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
   import {
     Accordion,
@@ -80,6 +81,8 @@
       currentView.resetLayout(true, n * BOUNDING_BOX_SCALING_FACTOR);
     }
   };
+
+  beforeNavigate(() => (message = undefined));
 </script>
 
 <Checkbox
@@ -129,7 +132,7 @@
 {/if}
 
 <!-- Diff calculation section -->
-<Accordion flush>
+<Accordion flush onclick={() => (message = undefined)}>
   <AccordionItem tag="h4" borderBottomClass="" paddingFlush="" bind:open={diffSectionOpen}>
     <span slot="header">Diff Calculation</span>
 
