@@ -18,5 +18,10 @@
 <DataField label="Target">{edge.target().data("name")}</DataField>
 
 {#if edge.data("value") !== null}
-  <DataField label="Difference Value">{edge.data("value")}</DataField>
+  <DataField label="Difference Value">
+    {edge.data("value")}
+    {#if edge.data("value") > 0 && !edge.data("relevant")}
+      <br />(source node not in the other graph)
+    {/if}
+  </DataField>
 {/if}

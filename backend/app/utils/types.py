@@ -24,6 +24,7 @@ class Edge(TypedDict):
     source: str
     target: str
     value: float
+    relevant: bool
 
 
 class CytoscapeElementData(TypedDict):

@@ -124,8 +124,9 @@ export default class View {
   };
 
   updateDiffColoring = () => {
-    let minDiffValue = Math.min(...this.cy.edges().map((edge) => edge.data("value")));
-    let maxDiffValue = Math.max(...this.cy.edges().map((edge) => edge.data("value")));
+    const relevantEdges = this.cy.edges().filter((edge) => edge.data("relevant"));
+    let minDiffValue = Math.min(...relevantEdges.map((edge) => edge.data("value")));
+    let maxDiffValue = Math.max(...relevantEdges.map((edge) => edge.data("value")));
     if (minDiffValue === maxDiffValue) {
       minDiffValue = 0;
       maxDiffValue = 1;
@@ -136,7 +137,7 @@ export default class View {
     }
     this.cy
       .style()
-      .selector("edge[value > 0]")
+      .selector("edge[value > 0][relevant]")
       .style({
         "line-color": `data(color)`,
         "target-arrow-color": "data(color)",

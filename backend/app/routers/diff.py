@@ -38,10 +38,16 @@ def calculate_diff(graph_name: str, other_graph_name: str, max_iterations: int):
     driver.execute_query(
         "UNWIND $data AS row "
         "MATCH (:Method {id: row.source_id, graph: $graph})-[r]->(:Method {id: row.target_id, graph: $graph}) "
-        "SET r.value = row.value",
+        "SET r.value = row.value, r.relevant = row.relevant",
         graph=graph_name,
         data=[
-            {"source_id": k[0], "target_id": k[1], "value": v} for k, v in edges.items()
+            {
+                "source_id": k[0],
+                "target_id": k[1],
+                "value": v["value"],
+                "relevant": v["relevant"],
+            }
+            for k, v in edges.items()
         ],
     )
     driver.execute_query(
@@ -80,13 +86,13 @@ async def diff_websocket(websocket: WebSocket):
 
 
 @router.get("/edges")
-def get_top_edges(graph_name: str, n: int):
-    records = driver.execute_query(
-        "MATCH (source {graph: $graph})-[r]->(target) WHERE r.value IS NOT NULL "
-        "ORDER BY r.value DESC RETURN source, r, target LIMIT $n",
-        graph=graph_name,
-        n=n,
-    ).records
+def get_top_edges(graph_name: str, n: int, only_relevant: bool = True):
+    query = "MATCH (source {graph: $graph})-[r]->(target) WHERE r.value IS NOT NULL "
+    if only_relevant:
+        query += "AND r.relevant "
+    query += "ORDER BY r.value DESC RETURN source, r, target LIMIT $n"
+
+    records = driver.execute_query(query, graph=graph_name, n=n).records
 
     cy_nodes: dict[str, list[CytoscapeNode]] = {}
     cy_edges: dict[str, CytoscapeEdge] = {}
@@ -97,6 +103,7 @@ def get_top_edges(graph_name: str, n: int):
             "source": source["id"],
             "target": target["id"],
             "value": r["value"],
+            "relevant": r["relevant"],
         }
         cy_nodes |= node_to_cy(source) | node_to_cy(target)
         cy_edges |= edge_to_cy(edge)

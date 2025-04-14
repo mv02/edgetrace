@@ -1,21 +1,27 @@
 import ctypes
 import os
 
+type EdgeDiff = dict[str, float | bool]
+
 
 class Method(ctypes.Structure):
-    _fields_ = [
-        ("id", ctypes.c_int),
-        ("name", ctypes.c_char_p),
-        ("declared_type", ctypes.c_char_p),
-        ("params", ctypes.c_char_p),
-        ("return_type", ctypes.c_char_p),
-        ("qualified_name", ctypes.c_char_p),
-        ("display", ctypes.c_char_p),
-        ("flags", ctypes.c_char_p),
-        ("is_entrypoint", ctypes.c_bool),
-        ("reachability", ctypes.c_int),
-        ("value", ctypes.c_char_p),
-    ]
+    pass
+
+
+Method._fields_ = [
+    ("id", ctypes.c_int),
+    ("name", ctypes.c_char_p),
+    ("declared_type", ctypes.c_char_p),
+    ("params", ctypes.c_char_p),
+    ("return_type", ctypes.c_char_p),
+    ("qualified_name", ctypes.c_char_p),
+    ("display", ctypes.c_char_p),
+    ("flags", ctypes.c_char_p),
+    ("is_entrypoint", ctypes.c_bool),
+    ("reachability", ctypes.c_int),
+    ("value", ctypes.c_char_p),
+    ("equivalent", ctypes.POINTER(Method)),
+]
 
 
 class Invoke(ctypes.Structure):
@@ -77,8 +83,8 @@ def diff(
     max_iterations: int,
     iteration_count: ctypes.c_int,
     cancel_flag: ctypes.c_bool,
-) -> dict[tuple[str, str], float]:
-    result: dict[tuple[str, str], float] = {}
+) -> dict[tuple[str, str], EdgeDiff]:
+    result: dict[tuple[str, str], EdgeDiff] = {}
 
     sup = diff_lib.diff_from_dirs(
         supergraph_directory.encode(),
@@ -92,7 +98,10 @@ def diff(
     while edge:
         source = edge.contents.source
         target = edge.contents.target
-        result[(str(source.contents.id), str(target.contents.id))] = edge.contents.value
+        result[(str(source.contents.id), str(target.contents.id))] = {
+            "value": edge.contents.value,
+            "relevant": bool(edge.contents.source.contents.equivalent),
+        }
         edge = edge.contents.next
 
     diff_lib.call_graph_destroy(sup.contents.other_graph)
