@@ -41,19 +41,23 @@ class HashTable(ctypes.Structure):
 
 
 class CallGraph(ctypes.Structure):
-    _fields_ = [
-        ("name", ctypes.c_char_p),
-        ("method_count", ctypes.c_int),
-        ("unreachable_count", ctypes.c_int),
-        ("spuriously_reachable_count", ctypes.c_int),
-        ("truly_reachable_count", ctypes.c_int),
-        ("edge_count", ctypes.c_int),
-        ("spurious_count", ctypes.c_int),
-        ("nonspurious_count", ctypes.c_int),
-        ("methods", ctypes.POINTER(HashTable)),
-        ("invokes", ctypes.POINTER(Invoke)),
-        ("edges", ctypes.POINTER(Edge)),
-    ]
+    pass
+
+
+CallGraph._fields_ = [
+    ("name", ctypes.c_char_p),
+    ("method_count", ctypes.c_int),
+    ("unreachable_count", ctypes.c_int),
+    ("spuriously_reachable_count", ctypes.c_int),
+    ("truly_reachable_count", ctypes.c_int),
+    ("edge_count", ctypes.c_int),
+    ("spurious_count", ctypes.c_int),
+    ("nonspurious_count", ctypes.c_int),
+    ("methods", ctypes.POINTER(HashTable)),
+    ("invokes", ctypes.POINTER(Invoke)),
+    ("edges", ctypes.POINTER(Edge)),
+    ("other_graph", ctypes.POINTER(CallGraph)),
+]
 
 
 diff_lib = ctypes.CDLL(os.path.join(os.path.dirname(__file__), "../build/libdiff.so"))
@@ -91,5 +95,6 @@ def diff(
         result[(str(source.contents.id), str(target.contents.id))] = edge.contents.value
         edge = edge.contents.next
 
+    diff_lib.call_graph_destroy(sup.contents.other_graph)
     diff_lib.call_graph_destroy(sup)
     return result

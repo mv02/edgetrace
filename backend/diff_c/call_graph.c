@@ -131,6 +131,7 @@ call_graph_t* call_graph_create(char* dirname, char* name)
     cg->name = malloc(strlen(name) + 1);
     strcpy(cg->name, name);
     cg->methods = ht_create(method_destroy);
+    cg->other_graph = NULL;
 
     method_map_t* methods_by_id = method_map_create();
     invoke_map_t* invokes_by_id = invoke_map_create();

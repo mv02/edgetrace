@@ -24,6 +24,7 @@ typedef struct call_graph {
     invoke_t* invokes;
     /// Linked list of edges
     edge_t* edges;
+    struct call_graph* other_graph;
 } call_graph_t;
 
 call_graph_t* call_graph_create(char* dirname, char* name);

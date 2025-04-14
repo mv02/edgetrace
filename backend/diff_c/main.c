@@ -65,11 +65,12 @@ call_graph_t* diff_from_dirs(char* supergraph_directory, char* subgraph_director
 {
     call_graph_t* sup = call_graph_create(supergraph_directory, "Supergraph");
     call_graph_t* sub = call_graph_create(subgraph_directory, "Subgraph");
+    sup->other_graph = sub;
+    sub->other_graph = sup;
 
     diff(sup, sub, max_iterations, i, cancel_flag);
 
-    call_graph_destroy(sub);
-    // Caller should destroy the supergraph, return a pointer to it
+    // Caller should destroy the graphs, return a pointer to one of them
     return sup;
 }
 
@@ -94,5 +95,6 @@ int main(int argc, char* argv[])
 
     printf("\nTop %d edges:\n", top_n);
     print_top_edges(sup, top_n);
+    call_graph_destroy(sup->other_graph);
     call_graph_destroy(sup);
 }
