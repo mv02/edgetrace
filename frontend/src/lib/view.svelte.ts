@@ -124,7 +124,9 @@ export default class View {
   };
 
   updateDiffColoring = () => {
-    const relevantEdges = this.cy.edges().filter((edge) => edge.data("relevant"));
+    const relevantEdges = this.cy
+      .edges()
+      .filter((edge) => edge.data("relevant") && edge.data("value") > 0);
     let minDiffValue = Math.min(...relevantEdges.map((edge) => edge.data("value")));
     let maxDiffValue = Math.max(...relevantEdges.map((edge) => edge.data("value")));
     if (minDiffValue === maxDiffValue) {
