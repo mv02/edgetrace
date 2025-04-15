@@ -61,6 +61,7 @@ def fetch_method(
                     "source": rel.start_node["id"],
                     "target": rel.end_node["id"],
                     "value": rel["value"],
+                    "relevant": rel["relevant"],
                 }
                 path_edges |= edge_to_cy(edge)
 
@@ -134,6 +135,7 @@ def fetch_method_neighbors(
             "source": neighbor["id"] if neighbor_type == "callers" else method_id,
             "target": method_id if neighbor_type == "callers" else neighbor["id"],
             "value": r["value"],
+            "relevant": r["relevant"],
         }
         cy_nodes |= node_to_cy(neighbor)
         cy_edges |= edge_to_cy(edge)

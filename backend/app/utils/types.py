@@ -58,6 +58,7 @@ class CytoscapeEdgeRequiredData(CytoscapeElementData):
 
 class CytoscapeEdgeOptionalData(TypedDict, total=False):
     value: float
+    relevant: bool
 
 
 class CytoscapeEdgeData(CytoscapeEdgeRequiredData, CytoscapeEdgeOptionalData):
