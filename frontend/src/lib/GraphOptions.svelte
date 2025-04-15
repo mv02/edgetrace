@@ -81,7 +81,7 @@
       currentGraph.closeView(currentGraph.viewIndex);
       return;
     }
-    const data = await currentGraph.fetchTopEdges(n);
+    const data = await currentGraph.getOrFetchTopEdges(n);
     if (newView) {
       currentGraph.createView(`${currentGraph.name} − ${currentGraph.diffOtherGraph}`);
     }
