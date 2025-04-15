@@ -24,7 +24,7 @@
   let DeleteMessageIcon = $derived(deleteOk ? CheckCircleSolid : ExclamationCircleSolid);
   let deleteMessage: string | undefined = $state();
 
-  let graphName: string | undefined = $state();
+  let graphName: string = $state("");
   let files: FileList | undefined = $state();
   let importLoading: boolean = $state(false);
   let importOk: boolean = $state(false);
@@ -144,7 +144,14 @@
         <div class="flex flex-col gap-2">
           <Label for="name">Call graph name</Label>
           <Input id="name" placeholder="graph-1" bind:value={graphName} disabled={importLoading} />
+          {#if Object.keys(data.graphs).includes(graphName)}
+            <Helper class="flex gap-2" color="red">
+              <ExclamationCircleSolid />
+              <p>This will overwrite an existing graph with the same name.</p>
+            </Helper>
+          {/if}
         </div>
+
         <div class="flex flex-col gap-2">
           <Label for="files">Reports directory</Label>
           <div class="flex gap-2">
