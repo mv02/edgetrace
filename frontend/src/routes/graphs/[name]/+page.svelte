@@ -6,6 +6,7 @@
   import { CloseOutline } from "flowbite-svelte-icons";
   import EdgeDetails from "$lib/EdgeDetails.svelte";
   import Graph from "$lib/graph.svelte";
+  import GraphDetails from "$lib/GraphDetails.svelte";
   import GraphOptions from "$lib/GraphOptions.svelte";
   import MethodDetails from "$lib/MethodDetails.svelte";
   import TreeView from "$lib/TreeView.svelte";
@@ -99,19 +100,20 @@
       </div>
     {/if}
 
-    {#if currentView?.selectedNode || currentView?.selectedEdge}
-      <Hr />
+    <Hr />
 
-      <div class="flex flex-col gap-4 overflow-y-auto">
-        {#if currentView.selectedNode}
-          <h3>Method Details</h3>
-          <MethodDetails graph={currentGraph} />
-        {:else}
-          <h3>Edge Details</h3>
-          <EdgeDetails edge={currentView.selectedEdge} />
-        {/if}
-      </div>
-    {/if}
+    <div class="flex flex-col gap-4 overflow-y-auto">
+      {#if currentView?.selectedNode}
+        <h3>Method Details</h3>
+        <MethodDetails graph={currentGraph} />
+      {:else if currentView?.selectedEdge}
+        <h3>Edge Details</h3>
+        <EdgeDetails edge={currentView.selectedEdge} />
+      {:else}
+        <h3>Graph Details</h3>
+        <GraphDetails graph={currentGraph} />
+      {/if}
+    </div>
   </aside>
 </main>
 
