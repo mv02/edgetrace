@@ -20,8 +20,10 @@ def fetch_method(
     UNWIND nodes(p) AS path_node
 
     OPTIONAL MATCH (pn_caller)-->(path_node)
+    ORDER BY pn_caller.name
     WITH m, callers, callees, p, path_node, collect(DISTINCT pn_caller) AS pn_callers
     OPTIONAL MATCH (path_node)-->(pn_callee)
+    ORDER BY pn_callee.name
     WITH m, callers, callees, p, path_node, pn_callers, collect(DISTINCT pn_callee) AS pn_callees
 
     RETURN m, callers, callees, p AS path,
@@ -109,7 +111,7 @@ def fetch_method_neighbors(
     OPTIONAL MATCH {match_pattern}
     OPTIONAL MATCH (neighbor_caller)-->(neighbor)
     OPTIONAL MATCH (neighbor)-->(neighbor_callee)
-    ORDER BY neighbor_caller.name, neighbor_callee.name
+    ORDER BY neighbor.name, neighbor_caller.name, neighbor_callee.name
     RETURN neighbor, r,
            collect(DISTINCT neighbor_caller) AS neighbor_callers,
            collect(DISTINCT neighbor_callee) AS neighbor_callees
