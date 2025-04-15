@@ -131,13 +131,13 @@ export default class View {
       minDiffValue = 0;
       maxDiffValue = 1;
     }
-    for (const edge of this.cy.edges()) {
+    for (const edge of relevantEdges) {
       const weight = (edge.data("value") - minDiffValue) / (maxDiffValue - minDiffValue);
       edge.data("color", COLOR_SCALE(weight).hex());
     }
     this.cy
       .style()
-      .selector("edge[value > 0][relevant]")
+      .selector("edge[value > 0]")
       .style({
         "line-color": `data(color)`,
         "target-arrow-color": "data(color)",
