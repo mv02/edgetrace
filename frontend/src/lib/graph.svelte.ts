@@ -33,7 +33,7 @@ export default class Graph {
   entrypointPathEdges: Map<string, EdgeDefinition[]> = new Map();
 
   /** Definitions of top diff edges and their connected nodes. */
-  diffDefinitions: BackendResponseData = { nodes: [], edges: [] };
+  diffDefinitions: BackendResponseData[] = [];
 
   constructor(info: GraphInfo, darkMode: boolean = false) {
     this.name = info.name;
@@ -239,13 +239,13 @@ export default class Graph {
   }
 
   getOrFetchTopEdges = async (n: number) => {
-    if (n <= this.diffDefinitions.edges.length) return this.diffDefinitions;
+    if (n <= this.diffDefinitions.length) return this.diffDefinitions.slice(0, n);
     return this.fetchTopEdges(n);
   };
 
   fetchTopEdges = async (n: number) => {
     const resp = await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/diff/edges?n=${n}`);
-    const data: BackendResponseData = await resp.json();
+    const data: BackendResponseData[] = await resp.json();
     this.diffDefinitions = data;
     return data;
   };

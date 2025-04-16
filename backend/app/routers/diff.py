@@ -7,7 +7,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from ..driver import driver
 from ..utils.conversions import edge_to_cy, node_to_cy
-from ..utils.types import CytoscapeEdge, CytoscapeNode, Edge
+from ..utils.types import Edge
 from .csv_import import CSV_DIR
 
 router = APIRouter(prefix="/{graph_name}/diff")
@@ -94,8 +94,7 @@ def get_top_edges(graph_name: str, n: int, only_relevant: bool = True):
 
     records = driver.execute_query(query, graph=graph_name, n=n).records
 
-    cy_nodes: dict[str, list[CytoscapeNode]] = {}
-    cy_edges: dict[str, CytoscapeEdge] = {}
+    result: list[dict] = []
 
     for record in records:
         source, r, target = record
@@ -105,7 +104,11 @@ def get_top_edges(graph_name: str, n: int, only_relevant: bool = True):
             "value": r["value"],
             "relevant": r["relevant"],
         }
-        cy_nodes |= node_to_cy(source) | node_to_cy(target)
-        cy_edges |= edge_to_cy(edge)
+        result.append(
+            {
+                "nodes": list((node_to_cy(source) | node_to_cy(target)).values()),
+                "edges": list(edge_to_cy(edge).values()),
+            }
+        )
 
-    return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
+    return result

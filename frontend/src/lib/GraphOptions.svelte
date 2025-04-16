@@ -81,12 +81,15 @@
       currentGraph.closeView(currentGraph.viewIndex);
       return;
     }
-    const data = await currentGraph.getOrFetchTopEdges(n);
+    const definitions = await currentGraph.getOrFetchTopEdges(n);
     if (newView) {
       currentGraph.createView(`${currentGraph.name} − ${currentGraph.diffOtherGraph}`);
     }
     currentView.removeAll(); // TODO: do not remove all
-    currentView.add(deduplicate([...data.nodes.flat(), ...data.edges]));
+    currentView.add([
+      ...deduplicate(definitions.flatMap((def) => def.nodes.flat())),
+      ...deduplicate(definitions.flatMap((def) => def.edges)),
+    ]);
     currentView.topEdgesShown = n;
     if (newView) {
       currentView.cy.one("render", () =>
