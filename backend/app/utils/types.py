@@ -15,7 +15,7 @@ class Method(TypedDict):
 class Invoke(TypedDict):
     id: str
     method_id: str
-    bci: int
+    bci: str
     target_id: str
     is_direct: bool
 

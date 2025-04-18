@@ -51,7 +51,7 @@ def invoke_from_csv(row: dict[str, str]) -> Invoke:
     return {
         "id": row["Id"],
         "method_id": row["MethodId"],
-        "bci": int(row["BytecodeIndexes"]),
+        "bci": row["BytecodeIndexes"],
         "target_id": row["TargetId"],
         "is_direct": row["IsDirect"] == "true",
     }
