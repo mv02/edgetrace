@@ -66,6 +66,7 @@
       const resp = await fetch(`${PUBLIC_API_URL}/import`, { method: "POST", body: formData });
       importOk = resp.ok;
       importMessage = (await resp.json()).message;
+      graphName = "";
       invalidate(`${PUBLIC_API_URL}/graphs`);
     } catch {
       importOk = false;
