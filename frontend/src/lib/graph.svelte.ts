@@ -256,6 +256,9 @@ export default class Graph {
 
   setColors = (darkMode: boolean) => {
     this.darkMode = darkMode;
-    for (const view of this.views) view.updateColors();
+    for (const view of this.views) {
+      view.updateColors();
+      view.updateDiffColoring();
+    }
   };
 }
