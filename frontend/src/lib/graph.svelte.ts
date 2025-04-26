@@ -70,7 +70,7 @@ export default class Graph {
     }
   };
 
-  getOrFetchMethod = async (id: string, withEntrypoint: boolean = true) => {
+  getOrFetchMethod = async (id: string, withEntrypoint: boolean = false) => {
     if (this.nodeDefinitions.has(id)) {
       // Node definition is present, use it
       const nodeWithParents = this.nodeDefinitions.get(id) as NodeDefinition[];
@@ -89,10 +89,8 @@ export default class Graph {
     return await this.fetchMethod(id, withEntrypoint);
   };
 
-  fetchMethod = async (id: string, withEntrypoint: boolean = true) => {
-    const url =
-      `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}` +
-      (withEntrypoint ? "?entrypoint=1" : "");
+  fetchMethod = async (id: string, withEntrypoint: boolean = false) => {
+    const url = `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}`;
     const resp = await fetch(url);
     const data: BackendResponseData = await resp.json();
 

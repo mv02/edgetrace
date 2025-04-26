@@ -6,62 +6,22 @@ from .types import CytoscapeEdge, CytoscapeNode, Edge, NeighborType
 def fetch_method(
     id: str,
     graph_name: str,
-    with_entrypoint: bool = False,
 ):
     query = """
     MATCH (m {id: $id, graph: $graph})
     OPTIONAL MATCH (caller)-->(m)
     OPTIONAL MATCH (m)-->(callee)
-    OPTIONAL MATCH p = ALL SHORTEST (e {graph: $graph})-->+(m)
-    WHERE e.is_entrypoint
     ORDER BY callee.name, caller.name
-
-    WITH m, collect(DISTINCT caller) AS callers, collect(DISTINCT callee) AS callees, p
-    UNWIND nodes(p) AS path_node
-
-    OPTIONAL MATCH (pn_caller)-->(path_node)
-    WITH m, callers, callees, p, path_node, collect(DISTINCT pn_caller) AS pn_callers
-    OPTIONAL MATCH (path_node)-->(pn_callee)
-    WITH m, callers, callees, p, path_node, pn_callers, collect(DISTINCT pn_callee) AS pn_callees
-
-    RETURN m, callers, callees, p AS path,
-           collect({ callers: pn_callers, callees: pn_callees }) AS path_node_neighbors
+    RETURN m, collect(DISTINCT caller) AS callers, collect(DISTINCT callee) AS callees
     """
-
-    print(query)
 
     records = driver.execute_query(query, id=id, graph=graph_name).records
 
     cy_nodes: dict[str, list[CytoscapeNode]] = {}
     cy_edges: dict[str, CytoscapeEdge] = {}
 
-    path_nodes: dict[str, list[CytoscapeNode]] = {}
-    path_edges: dict[str, CytoscapeEdge] = {}
-
     for record in records:
-        m, callers, callees, path, path_node_neighbors = record
-
-        if with_entrypoint and path is not None:
-            # Include path edges and path nodes with neighbors
-            for i, node in enumerate(path.nodes[:-1]):
-                path_nodes |= node_to_cy(node)
-                method_node = path_nodes[node["id"]][0]
-                method_node["data"]["callers"] = [
-                    list(node_to_cy(caller).values())[0]
-                    for caller in path_node_neighbors[i]["callers"]
-                ]
-                method_node["data"]["callees"] = [
-                    list(node_to_cy(callee).values())[0]
-                    for callee in path_node_neighbors[i]["callees"]
-                ]
-            for rel in path.relationships:
-                edge: Edge = {
-                    "source": rel.start_node["id"],
-                    "target": rel.end_node["id"],
-                    "value": rel["value"],
-                    "relevant": rel["relevant"],
-                }
-                path_edges |= edge_to_cy(edge)
+        m, callers, callees = record
 
         cy_nodes |= node_to_cy(m)
 
@@ -79,10 +39,6 @@ def fetch_method(
     return {
         "nodes": list(cy_nodes.values()),
         "edges": list(cy_edges.values()),
-        "path": {
-            "nodes": list(path_nodes.values()),
-            "edges": list(path_edges.values()),
-        },
     }
 
 

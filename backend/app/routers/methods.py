@@ -6,8 +6,8 @@ router = APIRouter(prefix="/{graph_name}/method")
 
 
 @router.get("/{id}")
-def get_method_by_id(graph_name: str, id: str, entrypoint: bool = False):
-    return fetch_method(id, graph_name, entrypoint)
+def get_method_by_id(graph_name: str, id: str):
+    return fetch_method(id, graph_name)
 
 
 @router.get("/{id}/callers")
