@@ -325,14 +325,29 @@ export default class View {
 
   add = (elements?: ElementDefinition[]) => {
     if (!elements) return;
-    const added = this.cy.add(clone(elements));
+    let copy = clone(elements);
 
-    for (const node of added.nodes()) {
+    // Add nodes
+    const addedNodes = this.cy.add(copy.filter((ele) => ele.group === "nodes"));
+
+    for (const node of addedNodes) {
       // Save parent IDs of all added nodes
       this.nodes.set(node.id(), node);
       this.parentIds.set(node.id(), node.parent().first().id());
     }
-    for (const edge of added.edges()) {
+
+    // Add edges whose connected nodes are shown
+    const addedEdges = this.cy.add(
+      copy
+        .filter((ele) => ele.group === "edges")
+        .filter(
+          (edge) =>
+            this.nodes.get(edge.data.source)?.inside() &&
+            this.nodes.get(edge.data.target)?.inside(),
+        ),
+    );
+
+    for (const edge of addedEdges) {
       // Save all added edges as node incomers and outgoers
       const sourceId = edge.source().id();
       const targetId = edge.target().id();
@@ -343,7 +358,7 @@ export default class View {
     if (!this.graph.compoundNodesShown) this.hideCompoundNodes();
     this.updateDiffColoring();
     this.nodes = new Map(this.nodes);
-    return added;
+    return addedNodes.union(addedEdges);
   };
 
   parentsToHide = (node: NodeSingular | NodeCollection): NodeCollection => {

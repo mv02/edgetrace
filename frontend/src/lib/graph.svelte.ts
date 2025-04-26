@@ -75,7 +75,12 @@ export default class Graph {
       // Node definition is present, use it
       const nodeWithParents = this.nodeDefinitions.get(id) as NodeDefinition[];
 
-      if (!withEntrypoint) return { nodes: [nodeWithParents], edges: [] };
+      // Get definitions of all connected edges
+      const edges = this.edgeDefinitions
+        .values()
+        .filter((edge) => edge.data.source === id || edge.data.target === id);
+
+      if (!withEntrypoint) return { nodes: [nodeWithParents], edges: edges };
 
       if (this.entrypointPathNodes.has(id) && this.entrypointPathEdges.has(id)) {
         // Entrypoint path definition is required and present, use it
@@ -124,74 +129,70 @@ export default class Graph {
       };
     }
 
-    return { nodes: data.nodes, edges: data.edges };
+    return data;
   };
 
   getOrFetchMethodNeighbor = async (
     methodId: string,
     type: "callers" | "callees",
     neighborId: string,
-    withEdges: boolean = true,
   ) => {
-    if (this.nodeDefinitions.has(methodId)) {
-      // Node definition is present, use it
-      const nodeWithParents = this.nodeDefinitions.get(methodId) as NodeDefinition[];
+    if (this.nodeDefinitions.has(neighborId)) {
+      // Neighbor definition is present, use it
+      const neighborWithParents = this.nodeDefinitions.get(neighborId) as NodeDefinition[];
 
-      let neighbor: NodeDefinition[] | undefined;
+      const edgeId =
+        type === "callers" ? `${neighborId}->${methodId}` : `${methodId}->${neighborId}`;
 
-      // Try to get neighbor definitions list from inside node definition
-      const neighbors: NodeDefinition[][] | undefined = nodeWithParents[0].data[type];
-      if (neighbors) {
-        // Neighbor definitions list present inside the node definition
-        neighbor = neighbors.filter((neighbor) => neighbor[0].data.id === neighborId)[0];
-      }
-
-      if (neighbor) {
-        // Neighbor definition has been found
-        if (!withEdges) {
-          // Edge definition is not required
-          return { nodes: [neighbor], edges: [] };
-        }
-
-        const edgeId =
-          type === "callers" ? `${neighborId}->${methodId}` : `${methodId}->${neighborId}`;
-
-        if (withEdges && this.edgeDefinitions.has(edgeId)) {
-          // Edge definition is required and present, use it
-          return {
-            nodes: [neighbor],
-            edges: [this.edgeDefinitions.get(edgeId) as EdgeDefinition],
-          };
-        }
+      if (this.edgeDefinitions.has(edgeId)) {
+        // Edge definition is present, use it
+        return {
+          nodes: [neighborWithParents],
+          edges: [this.edgeDefinitions.get(edgeId) as EdgeDefinition],
+        };
       }
     }
 
     // Neighbor definition or edge definition is missing, fetch it
-    const data = await this.fetchMethodNeighbors(methodId, type, neighborId);
-    return { nodes: data.nodes, edges: withEdges ? data.edges : [] };
+    return await this.fetchMethodNeighbors(methodId, type, neighborId);
   };
 
-  getOrFetchAllMethodNeighbors = async (
-    methodId: string,
-    type: "callers" | "callees",
-    withEdges: boolean = true,
-  ) => {
+  getOrFetchAllMethodNeighbors = async (methodId: string, type: "callers" | "callees") => {
     if (this.nodeDefinitions.has(methodId)) {
       // Node definition is present, use it
       const nodeWithParents = this.nodeDefinitions.get(methodId) as NodeDefinition[];
 
-      // Try to get neighbor definitions list from inside node definition
-      const neighbors: NodeDefinition[][] | undefined = nodeWithParents[0].data[type];
+      // Try to get list of neighbors from inside node definition
+      const neighborList: NodeDefinition[][] | undefined = nodeWithParents[0].data[type];
 
-      if (neighbors) {
-        if (!withEdges) return { nodes: neighbors, edges: [] };
-        // TODO: get existing edge definitions
+      if (neighborList) {
+        // List of neighbors found, try to find all neighbor and edge definitions
+        let allDefinitionsPresent = true;
+
+        const neighbors: NodeDefinition[][] = [];
+        const edges: EdgeDefinition[] = [];
+
+        for (const neighborWithParents of neighborList) {
+          const neighborId = neighborWithParents[0].data.id as string;
+          const edgeId =
+            type === "callers" ? `${neighborId}->${methodId}` : `${methodId}->${neighborId}`;
+
+          if (!this.nodeDefinitions.has(neighborId) || !this.edgeDefinitions.has(edgeId)) {
+            // Node definition or edge definition is missing
+            allDefinitionsPresent = false;
+            break;
+          }
+
+          neighbors.push(this.nodeDefinitions.get(neighborId) as NodeDefinition[]);
+          edges.push(this.edgeDefinitions.get(edgeId) as EdgeDefinition);
+        }
+
+        if (allDefinitionsPresent) return { nodes: neighbors, edges: edges };
       }
     }
 
     // Neighbor definition or edge definition is missing, fetch it
-    const data = await this.fetchMethodNeighbors(methodId, type);
-    return { nodes: data.nodes, edges: withEdges ? data.edges : [] };
+    return await this.fetchMethodNeighbors(methodId, type);
   };
 
   fetchMethodNeighbors = async (
@@ -216,7 +217,7 @@ export default class Graph {
       edgeId && this.edgeDefinitions.set(edgeId, edge);
     }
 
-    return { nodes: data.nodes, edges: data.edges };
+    return data;
   };
 
   calculateDiff = async () => {
