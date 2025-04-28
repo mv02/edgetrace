@@ -220,6 +220,11 @@ export default class Graph {
     return data;
   };
 
+  getOrFetchEdge = async (edgeId: string) => {
+    // TODO: fetch
+    return { edges: [this.edgeDefinitions.get(edgeId) as EdgeDefinition] };
+  };
+
   calculateDiff = async () => {
     return await fetch(
       `${PUBLIC_API_URL}/graphs/${this.name}/diff/start/${this.diffOtherGraph}?max_iterations=${this.diffMaxIterations}`,

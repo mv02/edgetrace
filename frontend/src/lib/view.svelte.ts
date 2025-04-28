@@ -41,6 +41,8 @@ export default class View {
 
   /** Mapping of node ID to corresponding node. */
   nodes: Map<string, NodeSingular> = $state(new Map());
+  /** Mapping of edge ID to corresponding edge. */
+  edges: Map<string, EdgeSingular> = $state(new Map());
   /** Mapping of node ID to parent node ID. */
   parentIds: Map<string, string> = new Map();
   /** Mapping of node ID to incoming edges. */
@@ -210,14 +212,18 @@ export default class View {
       // Restore the node and connected edges
       node.restore();
       // Only edges whose other node is shown
-      this.incomers
-        .get(id)
-        ?.filter((edge) => edge.source().inside())
-        .restore();
-      this.outgoers
-        .get(id)
-        ?.filter((edge) => edge.target().inside())
-        .restore();
+      for (const callerWithParents of node.data("callers") ?? []) {
+        const caller: NodeDefinition = callerWithParents[0];
+        if (this.nodes.get(caller.data.id as string)?.inside()) {
+          this.showEdge(`${caller.data.id}->${id}`);
+        }
+      }
+      for (const calleeWithParents of node.data("callees") ?? []) {
+        const callee: NodeDefinition = calleeWithParents[0];
+        if (this.nodes.get(callee.data.id as string)?.inside()) {
+          this.showEdge(`${id}->${callee.data.id}`);
+        }
+      }
     }
 
     if (parent && node.inside()) {
@@ -239,6 +245,20 @@ export default class View {
       // New method, get related element definitions and add it
       const data = await this.graph.getOrFetchMethod(id);
       this.add(deduplicate([...data.nodes.flat(), ...data.edges]));
+      this.resetLayout();
+    }
+  };
+
+  showEdge = async (edgeId: string) => {
+    const edge = this.edges.get(edgeId);
+
+    if (edge) {
+      // Edge already exists
+      edge.restore();
+    } else {
+      // New edge, get related definition and add it
+      const data = await this.graph.getOrFetchEdge(edgeId);
+      this.add([...data.edges]);
     }
   };
 
@@ -353,6 +373,7 @@ export default class View {
       const targetId = edge.target().id();
       this.incomers.set(targetId, edge.union(this.incomers.get(targetId) ?? edge));
       this.outgoers.set(sourceId, edge.union(this.outgoers.get(sourceId) ?? edge));
+      this.edges.set(edge.id(), edge);
     }
 
     if (!this.graph.compoundNodesShown) this.hideCompoundNodes();

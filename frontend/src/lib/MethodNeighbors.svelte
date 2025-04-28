@@ -28,7 +28,7 @@
 
   const showNeighbor = (neighborId: string) => {
     if (!node) return;
-    graph.currentView.showMethodNeighbor(node.id(), type, neighborId);
+    graph.currentView.showMethod(neighborId);
   };
 
   const showAllNeighbors = () => {
