@@ -45,10 +45,6 @@ export default class View {
   edges: Map<string, EdgeSingular> = $state(new Map());
   /** Mapping of node ID to parent node ID. */
   parentIds: Map<string, string> = new Map();
-  /** Mapping of node ID to incoming edges. */
-  incomers: Map<string, EdgeCollection> = new Map();
-  /** Mapping of node ID to outgoing edges. */
-  outgoers: Map<string, EdgeCollection> = new Map();
 
   /** Edges between collapsed compound nodes. */
   metaEdges?: EdgeCollection;
@@ -262,39 +258,6 @@ export default class View {
     }
   };
 
-  showMethodNeighbor = async (
-    methodId: string,
-    type: "callers" | "callees",
-    neighborId: string,
-  ) => {
-    const neighbor = this.nodes.get(neighborId);
-
-    // The edge can go from the neighbor node itself or from its parent
-    const possibleIds = [neighborId];
-    let parentId = this.parentIds.get(neighborId);
-    while (parentId) {
-      possibleIds.push(parentId);
-      parentId = this.parentIds.get(parentId);
-    }
-
-    if (neighbor) {
-      const edge =
-        type === "callers"
-          ? this.incomers.get(methodId)?.filter((ele) => possibleIds.includes(ele.source().id()))
-          : this.outgoers.get(methodId)?.filter((ele) => possibleIds.includes(ele.target().id()));
-
-      // Neighbor node and edge are both present, show them
-      if (edge?.nonempty()) {
-        this.showNode(neighbor);
-        return;
-      }
-    }
-
-    const data = await this.graph.getOrFetchMethodNeighbor(methodId, type, neighborId);
-    this.add(deduplicate([...data.nodes.flat(), ...data.edges]));
-    this.resetLayout();
-  };
-
   showAllNodeNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
     const neighbors: NodeDefinition[][] = node?.data(type);
     let toShow: NodeCollection = this.cy.collection();
@@ -351,7 +314,7 @@ export default class View {
     const addedNodes = this.cy.add(copy.filter((ele) => ele.group === "nodes"));
 
     for (const node of addedNodes) {
-      // Save parent IDs of all added nodes
+      // Save all added nodes and their parent IDs
       this.nodes.set(node.id(), node);
       this.parentIds.set(node.id(), node.parent().first().id());
     }
@@ -368,11 +331,7 @@ export default class View {
     );
 
     for (const edge of addedEdges) {
-      // Save all added edges as node incomers and outgoers
-      const sourceId = edge.source().id();
-      const targetId = edge.target().id();
-      this.incomers.set(targetId, edge.union(this.incomers.get(targetId) ?? edge));
-      this.outgoers.set(sourceId, edge.union(this.outgoers.get(sourceId) ?? edge));
+      // Save all added edges
       this.edges.set(edge.id(), edge);
     }
 
