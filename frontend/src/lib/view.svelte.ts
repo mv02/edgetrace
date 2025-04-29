@@ -109,7 +109,6 @@ export default class View {
     boundingBoxScale = Math.max(Math.min(boundingBoxScale, 1), 0.5);
     let options: ColaLayoutOptions = { ...LAYOUT_OPTIONS, randomize, animate };
     if (randomize) {
-      console.log("Bounding box", boundingBoxScale);
       // Smaller bounding box to reduce node spread
       options.boundingBox = {
         x1: 0,
