@@ -77,6 +77,8 @@
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
+    currentGraph.compoundNodesShown = false;
+    currentGraph.updateCompoundNodes();
     if (n === 0) {
       currentGraph.closeView(currentGraph.viewIndex);
       return;
