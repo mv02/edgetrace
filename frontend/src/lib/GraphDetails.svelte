@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { ButtonGroup, Listgroup, ListgroupItem, RadioButton } from "flowbite-svelte";
+  import {
+    Button,
+    ButtonGroup,
+    Listgroup,
+    ListgroupItem,
+    RadioButton,
+    Spinner,
+  } from "flowbite-svelte";
   import {
     ArrowLeftToBracketOutline,
     ArrowRightToBracketOutline,
@@ -25,6 +32,8 @@
       return { source: sourceWithParents[0], target: targetWithParents[0], edge };
     }),
   );
+
+  let topEdgesLoading: boolean = $state(false);
 
   const showEdge = (edgeId: string) => {
     if (!currentView) {
@@ -68,7 +77,24 @@
   </div>
 {:else}
   <!-- Edges -->
-  <span class="text-sm">Top {graph.topEdges.length} edges</span>
+  <div class="flex items-center justify-between">
+    <span class="text-sm">Top {graph.topEdges.length} edges</span>
+    <Button
+      size="xs"
+      color="alternative"
+      onclick={async () => {
+        topEdgesLoading = true;
+        await graph.fetchTopEdges();
+        topEdgesLoading = false;
+      }}
+      disabled={topEdgesLoading}
+    >
+      {#if topEdgesLoading}
+        <Spinner class="me-3" size="4" color="white" />
+      {/if}
+      Fetch
+    </Button>
+  </div>
 
   <Listgroup defaultClass="overflow-y-auto">
     {#each edgesWithNodes as { source, target, edge }}
