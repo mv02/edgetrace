@@ -11,7 +11,6 @@ def fetch_method(
     MATCH (m {id: $id, graph: $graph})
     OPTIONAL MATCH (caller)-[caller_edge]->(m)
     OPTIONAL MATCH (m)-[callee_edge]->(callee)
-    ORDER BY callee.name, caller.name
     RETURN m, collect(DISTINCT caller) AS callers, collect(DISTINCT caller_edge) AS caller_edges,
            collect(DISTINCT callee) AS callees, collect(DISTINCT callee_edge) AS callee_edges
     """
@@ -83,7 +82,6 @@ def fetch_method_neighbors(
     OPTIONAL MATCH {match_pattern}
     OPTIONAL MATCH (neighbor_caller)-[neighbor_caller_edge]->(neighbor)
     OPTIONAL MATCH (neighbor)-[neighbor_callee_edge]->(neighbor_callee)
-    ORDER BY neighbor_caller.name, neighbor_callee.name
     RETURN neighbor, r,
            collect(DISTINCT neighbor_caller) AS n_callers,
            collect(DISTINCT neighbor_caller_edge) AS n_caller_edges,

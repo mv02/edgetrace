@@ -13,15 +13,20 @@
 
   let node = $derived(graph.currentView.selectedNode);
 
-  let neighbors: NodeDefinition[][] | undefined = $state(
-    graph.currentView.selectedNode?.data(type),
+  let neighbors: NodeDefinition[][] = $state(graph.currentView.selectedNode?.data(type));
+  let sortedNeighbors: NodeDefinition[][] = $derived(
+    [...neighbors].sort((a: NodeDefinition[], b: NodeDefinition[]) => {
+      if (a[0].data.name < b[0].data.name) return -1;
+      if (a[0].data.name > b[0].data.name) return 1;
+      return 0;
+    }),
   );
 
   $effect(() => (neighbors = graph.currentView.selectedNode?.data(type)));
 
   const getAllNeighbors = async () => {
     if (!node) return;
-    const definitions = await graph.getOrFetchAllMethodNeighbors(node.id(), type, false);
+    const definitions = await graph.getOrFetchAllMethodNeighbors(node.id(), type);
     node.data(type, definitions.nodes);
     neighbors = definitions.nodes;
   };
@@ -63,7 +68,7 @@
 </div>
 
 <Listgroup defaultClass="overflow-y-auto">
-  {#each neighbors ?? [] as neighbor}
+  {#each sortedNeighbors ?? [] as neighbor}
     <ListgroupItem normalClass="flex gap-2 justify-between items-center">
       <span class="overflow-x-hidden text-ellipsis">{neighbor[0].data.name}</span>
 
