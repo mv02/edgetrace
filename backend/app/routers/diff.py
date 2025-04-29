@@ -6,8 +6,7 @@ from diff_c.diff import diff
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from ..driver import driver
-from ..utils.conversions import edge_to_cy, node_to_cy
-from ..utils.types import Edge
+from ..utils.database import fetch_edges
 from .csv_import import CSV_DIR
 
 router = APIRouter(prefix="/{graph_name}/diff")
@@ -86,29 +85,5 @@ async def diff_websocket(websocket: WebSocket):
 
 
 @router.get("/edges")
-def get_top_edges(graph_name: str, n: int, only_relevant: bool = True):
-    query = "MATCH (source {graph: $graph})-[r]->(target) WHERE r.value IS NOT NULL "
-    if only_relevant:
-        query += "AND r.relevant "
-    query += "ORDER BY r.value DESC RETURN source, r, target LIMIT $n"
-
-    records = driver.execute_query(query, graph=graph_name, n=n).records
-
-    result: list[dict] = []
-
-    for record in records:
-        source, r, target = record
-        edge: Edge = {
-            "source": source["id"],
-            "target": target["id"],
-            "value": r["value"],
-            "relevant": r["relevant"],
-        }
-        result.append(
-            {
-                "nodes": list((node_to_cy(source) | node_to_cy(target)).values()),
-                "edges": list(edge_to_cy(edge).values()),
-            }
-        )
-
-    return result
+def get_top_edges(graph_name: str, n: int):
+    return fetch_edges(graph_name, limit=n, with_nodes=True)

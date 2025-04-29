@@ -140,30 +140,51 @@ def fetch_method_neighbors(
     return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
 
 
-def fetch_edge(edge_id: str, graph_name: str, with_nodes: bool = False):
-    source_id, target_id = edge_id.split("->")
+def fetch_edges(
+    graph_name: str,
+    edge_id: str | None = None,
+    limit: int = 1,
+    with_nodes: bool = False,
+):
+    source_id = None
+    target_id = None
+
+    if edge_id is not None:
+        source_id, target_id = edge_id.split("->")
+        match_pattern = (
+            "(source {id: $source_id, graph: $graph})-[r]->(target {id: $target_id})"
+        )
+        where = ""
+    else:
+        match_pattern = "(source {graph: $graph})-[r]->(target)"
+        where = "WHERE r.relevant"
+
+    query = f"""
+    MATCH {match_pattern}
+    WITH source, r, target
+    {where}
+    ORDER BY r.value DESC
+    LIMIT $limit
+
+    OPTIONAL MATCH (source_caller)-[source_caller_edge]->(source)
+    OPTIONAL MATCH (source)-[source_callee_edge]->(source_callee)
+    OPTIONAL MATCH (target_caller)-[target_caller_edge]->(target)
+    OPTIONAL MATCH (target)-[target_callee_edge]->(target_callee)
+
+    RETURN source, r, target,
+           collect(DISTINCT source_caller) AS s_callers, collect(DISTINCT source_callee) AS s_callees,
+           collect(DISTINCT source_caller_edge) AS s_caller_edges, collect(DISTINCT source_callee_edge) AS s_callee_edges,
+           collect(DISTINCT target_caller) AS t_callers, collect(DISTINCT target_callee) AS t_callees,
+           collect(DISTINCT target_caller_edge) AS t_caller_edges, collect(DISTINCT target_callee_edge) AS t_callee_edges
+    """
 
     records = driver.execute_query(
-        """
-        MATCH (source {id: $source_id, graph: $graph})-[r]->(target {id: $target_id})
-        OPTIONAL MATCH (source_caller)-[source_caller_edge]->(source)
-        OPTIONAL MATCH (source)-[source_callee_edge]->(source_callee)
-        OPTIONAL MATCH (target_caller)-[target_caller_edge]->(target)
-        OPTIONAL MATCH (target)-[target_callee_edge]->(target_callee)
-        ORDER BY source_caller.name, source_callee.name, target_caller.name, target_callee.name
-        RETURN source, r, target,
-               collect(DISTINCT source_caller) AS s_callers, collect(DISTINCT source_callee) AS s_callees,
-               collect(DISTINCT source_caller_edge) AS s_caller_edges, collect(DISTINCT source_callee_edge) AS s_callee_edges,
-               collect(DISTINCT target_caller) AS t_callers, collect(DISTINCT target_callee) AS t_callees,
-               collect(DISTINCT target_caller_edge) AS t_caller_edges, collect(DISTINCT target_callee_edge) AS t_callee_edges
-        """,
-        source_id=source_id,
-        target_id=target_id,
-        graph=graph_name,
+        query, source_id=source_id, target_id=target_id, graph=graph_name, limit=limit
     ).records
 
     cy_nodes: dict[str, list[CytoscapeNode]] = {}
     cy_edges: dict[str, CytoscapeEdge] = {}
+    cy_top_edges: dict[str, CytoscapeEdge] = {}
 
     for record in records:
         (
@@ -187,6 +208,7 @@ def fetch_edge(edge_id: str, graph_name: str, with_nodes: bool = False):
             "relevant": r["relevant"],
         }
         cy_edges |= edge_to_cy(edge)
+        cy_top_edges |= edge_to_cy(edge)
 
         if with_nodes:
             cy_nodes |= node_to_cy(source)
@@ -253,4 +275,8 @@ def fetch_edge(edge_id: str, graph_name: str, with_nodes: bool = False):
                 }
                 cy_edges |= edge_to_cy(edge)
 
-    return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
+    return {
+        "nodes": list(cy_nodes.values()),
+        "edges": list(cy_edges.values()),
+        "topEdges": list(cy_top_edges.values()),
+    }

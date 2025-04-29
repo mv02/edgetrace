@@ -28,8 +28,8 @@ export default class Graph {
   nodeDefinitions: Map<string, NodeDefinition[]> = new Map();
   /** Mapping of edge ID to corresponding element definition. */
   edgeDefinitions: Map<string, EdgeDefinition> = new Map();
-  /** Definitions of top diff edges and their connected nodes. */
-  diffDefinitions: BackendResponseData[] = $state([]);
+  /** IDs of edges ordered by their difference value. */
+  topEdges: string[] = $state([]);
 
   constructor(info: GraphInfo, darkMode: boolean = false) {
     this.name = info.name;
@@ -234,14 +234,30 @@ export default class Graph {
   }
 
   getOrFetchTopEdges = async (n: number) => {
-    if (n <= this.diffDefinitions.length) return this.diffDefinitions.slice(0, n);
+    if (n <= this.topEdges.length) {
+      const nodes: NodeDefinition[][] = [];
+      const edges: EdgeDefinition[] = [];
+
+      for (const edgeId of this.topEdges.slice(0, n)) {
+        const [sourceId, targetId] = edgeId.split("->");
+        nodes.push(this.nodeDefinitions.get(sourceId) as NodeDefinition[]);
+        nodes.push(this.nodeDefinitions.get(targetId) as NodeDefinition[]);
+        edges.push(this.edgeDefinitions.get(edgeId) as EdgeDefinition);
+      }
+
+      return { nodes, edges };
+    }
     return this.fetchTopEdges(n);
   };
 
   fetchTopEdges = async (n: number) => {
     const resp = await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/diff/edges?n=${n}`);
-    const data: BackendResponseData[] = await resp.json();
-    this.diffDefinitions = data;
+    const data: BackendResponseData = await resp.json();
+    this.setDefinitions(data);
+    for (const [i, edge] of (data.topEdges ?? []).entries()) {
+      this.edgeDefinitions.set(edge.data.id as string, edge);
+      this.topEdges[i] = edge.data.id as string;
+    }
     return data;
   };
 

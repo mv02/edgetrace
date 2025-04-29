@@ -86,10 +86,7 @@
       currentGraph.createView(`${currentGraph.name} − ${currentGraph.diffOtherGraph}`);
     }
     currentView.removeAll(); // TODO: do not remove all
-    currentView.add([
-      ...deduplicate(definitions.flatMap((def) => def.nodes.flat())),
-      ...deduplicate(definitions.flatMap((def) => def.edges)),
-    ]);
+    currentView.add([...deduplicate(definitions.nodes.flat()), ...deduplicate(definitions.edges)]);
     currentView.topEdgesShown = n;
     if (newView) {
       currentView.cy.one("render", () =>
