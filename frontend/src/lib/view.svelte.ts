@@ -324,11 +324,6 @@ export default class View {
     for (const node of toHide) this.hideNode(node);
   };
 
-  hideAllMethodNeighbors = (methodId: string, type: "callers" | "callees") => {
-    const node = this.nodes.get(methodId);
-    node && this.hideAllNodeNeighbors(node, type);
-  };
-
   add = (elements?: ElementDefinition[]) => {
     if (!elements) return;
     let copy = clone(elements);

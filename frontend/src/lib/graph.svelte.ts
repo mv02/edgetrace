@@ -28,11 +28,6 @@ export default class Graph {
   nodeDefinitions: Map<string, NodeDefinition[]> = new Map();
   /** Mapping of edge ID to corresponding element definition. */
   edgeDefinitions: Map<string, EdgeDefinition> = new Map();
-  /** Mapping of node ID to definitions of nodes and their parents on its path to entrypoint. */
-  entrypointPathNodes: Map<string, NodeDefinition[][]> = new Map();
-  /** Mapping of node ID to definitions of edges on its path to entrypoint. */
-  entrypointPathEdges: Map<string, EdgeDefinition[]> = new Map();
-
   /** Definitions of top diff edges and their connected nodes. */
   diffDefinitions: BackendResponseData[] = $state([]);
 
@@ -71,7 +66,7 @@ export default class Graph {
     }
   };
 
-  getOrFetchMethod = async (id: string, withEntrypoint: boolean = false) => {
+  getOrFetchMethod = async (id: string) => {
     if (this.nodeDefinitions.has(id)) {
       // Node definition is present, use it
       const nodeWithParents = this.nodeDefinitions.get(id) as NodeDefinition[];
@@ -81,46 +76,18 @@ export default class Graph {
         .values()
         .filter((edge) => edge.data.source === id || edge.data.target === id);
 
-      if (!withEntrypoint) return { nodes: [nodeWithParents], edges: edges };
-
-      if (this.entrypointPathNodes.has(id) && this.entrypointPathEdges.has(id)) {
-        // Entrypoint path definition is required and present, use it
-        const pathNodes = this.entrypointPathNodes.get(id) as NodeDefinition[][];
-        const pathEdges = this.entrypointPathEdges.get(id) as EdgeDefinition[];
-        return { nodes: [...pathNodes, nodeWithParents], edges: pathEdges };
-      }
+      return { nodes: [nodeWithParents], edges: edges };
     }
 
-    // Node definition or entrypoint path definition is missing, fetch it
-    return await this.fetchMethod(id, withEntrypoint);
+    // Node definition is missing, fetch it
+    return await this.fetchMethod(id);
   };
 
-  fetchMethod = async (id: string, withEntrypoint: boolean = false) => {
+  fetchMethod = async (id: string) => {
     const url = `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}`;
     const resp = await fetch(url);
     const data: BackendResponseData = await resp.json();
     this.setDefinitions(data);
-
-    if (withEntrypoint && data.path) {
-      // Save elements as the node's path to entrypoint
-      this.entrypointPathNodes.set(id, data.path.nodes);
-      this.entrypointPathEdges.set(id, data.path.edges);
-      // And their definitions as well
-      for (const nodeWithParents of data.path.nodes) {
-        const nodeId = nodeWithParents[0].data.id;
-        nodeId && this.nodeDefinitions.set(nodeId, nodeWithParents);
-      }
-      for (const edge of data.path.edges) {
-        const edgeId = edge.data.id;
-        edgeId && this.edgeDefinitions.set(edgeId, edge);
-      }
-
-      return {
-        nodes: [...data.path.nodes, ...data.nodes],
-        edges: [...data.path.edges, ...data.edges],
-      };
-    }
-
     return data;
   };
 
