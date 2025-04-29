@@ -87,7 +87,7 @@
     }
     currentView.removeAll(); // TODO: do not remove all
     currentView.add([...deduplicate(definitions.nodes.flat()), ...deduplicate(definitions.edges)]);
-    currentView.topEdgesShown = n;
+    currentView.topEdgesShown = Math.min(n, currentGraph.topEdges.length);
     if (newView) {
       currentView.cy.one("render", () =>
         currentView.resetLayout(true, n * BOUNDING_BOX_SCALING_FACTOR),
