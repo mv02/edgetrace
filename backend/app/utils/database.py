@@ -138,3 +138,119 @@ def fetch_method_neighbors(
             cy_edges |= edge_to_cy(edge)
 
     return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}
+
+
+def fetch_edge(edge_id: str, graph_name: str, with_nodes: bool = False):
+    source_id, target_id = edge_id.split("->")
+
+    records = driver.execute_query(
+        """
+        MATCH (source {id: $source_id, graph: $graph})-[r]->(target {id: $target_id})
+        OPTIONAL MATCH (source_caller)-[source_caller_edge]->(source)
+        OPTIONAL MATCH (source)-[source_callee_edge]->(source_callee)
+        OPTIONAL MATCH (target_caller)-[target_caller_edge]->(target)
+        OPTIONAL MATCH (target)-[target_callee_edge]->(target_callee)
+        ORDER BY source_caller.name, source_callee.name, target_caller.name, target_callee.name
+        RETURN source, r, target,
+               collect(DISTINCT source_caller) AS s_callers, collect(DISTINCT source_callee) AS s_callees,
+               collect(DISTINCT source_caller_edge) AS s_caller_edges, collect(DISTINCT source_callee_edge) AS s_callee_edges,
+               collect(DISTINCT target_caller) AS t_callers, collect(DISTINCT target_callee) AS t_callees,
+               collect(DISTINCT target_caller_edge) AS t_caller_edges, collect(DISTINCT target_callee_edge) AS t_callee_edges
+        """,
+        source_id=source_id,
+        target_id=target_id,
+        graph=graph_name,
+    ).records
+
+    cy_nodes: dict[str, list[CytoscapeNode]] = {}
+    cy_edges: dict[str, CytoscapeEdge] = {}
+
+    for record in records:
+        (
+            source,
+            r,
+            target,
+            s_callers,
+            s_callees,
+            s_caller_edges,
+            s_callee_edges,
+            t_callers,
+            t_callees,
+            t_caller_edges,
+            t_callee_edges,
+        ) = record
+
+        edge: Edge = {
+            "source": source["id"],
+            "target": target["id"],
+            "value": r["value"],
+            "relevant": r["relevant"],
+        }
+        cy_edges |= edge_to_cy(edge)
+
+        if with_nodes:
+            cy_nodes |= node_to_cy(source)
+            cy_nodes |= node_to_cy(target)
+
+            source_node = cy_nodes[source["id"]][0]
+            source_node["data"]["callers"] = []
+            source_node["data"]["callees"] = []
+            target_node = cy_nodes[target["id"]][0]
+            target_node["data"]["callers"] = []
+            target_node["data"]["callees"] = []
+
+            # Source node callers
+            for caller in s_callers:
+                definition = list(node_to_cy(caller).values())[0]
+                source_node["data"]["callers"].append(definition)
+            # Source node callees
+            for callee in s_callees:
+                definition = list(node_to_cy(callee).values())[0]
+                source_node["data"]["callees"].append(definition)
+            # Target node callers
+            for caller in t_callers:
+                definition = list(node_to_cy(caller).values())[0]
+                target_node["data"]["callers"].append(definition)
+            # Target node callees
+            for callee in t_callees:
+                definition = list(node_to_cy(callee).values())[0]
+                target_node["data"]["callees"].append(definition)
+
+            # Edges from source node caller to source node
+            for r in s_caller_edges:
+                edge: Edge = {
+                    "source": r.start_node["id"],
+                    "target": source["id"],
+                    "value": r["value"],
+                    "relevant": r["relevant"],
+                }
+                cy_edges |= edge_to_cy(edge)
+            # Edges from source node to source node callee
+            for r in s_callee_edges:
+                edge: Edge = {
+                    "source": source["id"],
+                    "target": r.end_node["id"],
+                    "value": r["value"],
+                    "relevant": r["relevant"],
+                }
+                cy_edges |= edge_to_cy(edge)
+            # Edges from target node caller to target node
+            for r in t_caller_edges:
+                edge: Edge = {
+                    "source": r.start_node["id"],
+                    "target": target["id"],
+                    "value": r["value"],
+                    "relevant": r["relevant"],
+                }
+                cy_edges |= edge_to_cy(edge)
+            # Edges from target node to target node callee
+            for r in t_callee_edges:
+                edge: Edge = {
+                    "source": target["id"],
+                    "target": r.end_node["id"],
+                    "value": r["value"],
+                    "relevant": r["relevant"],
+                }
+                cy_edges |= edge_to_cy(edge)
+
+    return {"nodes": list(cy_nodes.values()), "edges": list(cy_edges.values())}

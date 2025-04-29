@@ -20,6 +20,7 @@ export default class Graph {
   darkMode: boolean = $state(false);
   searchQuery: string = $state("");
   compoundNodesShown: boolean = $state(true);
+  graphDetailsTab: "properties" | "edges" = $state("properties");
   diffOtherGraph: string = $state("");
   diffMaxIterations: number = $state(1000);
 
@@ -33,7 +34,7 @@ export default class Graph {
   entrypointPathEdges: Map<string, EdgeDefinition[]> = new Map();
 
   /** Definitions of top diff edges and their connected nodes. */
-  diffDefinitions: BackendResponseData[] = [];
+  diffDefinitions: BackendResponseData[] = $state([]);
 
   constructor(info: GraphInfo, darkMode: boolean = false) {
     this.name = info.name;
@@ -98,16 +99,7 @@ export default class Graph {
     const url = `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}`;
     const resp = await fetch(url);
     const data: BackendResponseData = await resp.json();
-
-    for (const nodeWithParents of data.nodes) {
-      const nodeId = nodeWithParents[0].data.id;
-      nodeId && this.nodeDefinitions.set(nodeId, nodeWithParents);
-    }
-
-    for (const edge of data.edges) {
-      const edgeId = edge.data.id;
-      edgeId && this.edgeDefinitions.set(edgeId, edge);
-    }
+    this.setDefinitions(data);
 
     if (withEntrypoint && data.path) {
       // Save elements as the node's path to entrypoint
@@ -206,7 +198,46 @@ export default class Graph {
     }
     const resp = await fetch(url);
     const data: BackendResponseData = await resp.json();
+    this.setDefinitions(data);
+    return data;
+  };
 
+  getOrFetchEdge = async (edgeId: string, withNodes: boolean = false) => {
+    const [sourceId, targetId] = edgeId.split("->");
+
+    if (this.edgeDefinitions.has(edgeId)) {
+      // Edge definition is present, use it
+      if (!withNodes) {
+        // Connected node definitions are not required
+        return { nodes: [], edges: [this.edgeDefinitions.get(edgeId) as EdgeDefinition] };
+      }
+
+      if (this.nodeDefinitions.has(sourceId) && this.nodeDefinitions.has(targetId)) {
+        // Connected node definitions are required and present, use them
+        return {
+          nodes: [
+            this.nodeDefinitions.get(sourceId) as NodeDefinition[],
+            this.nodeDefinitions.get(targetId) as NodeDefinition[],
+          ],
+          edges: [this.edgeDefinitions.get(edgeId) as EdgeDefinition],
+        };
+      }
+    }
+
+    // Edge definition or connected node definition is missing, fetch it
+    return this.fetchEdge(edgeId, withNodes);
+  };
+
+  fetchEdge = async (edgeId: string, withNodes: boolean = false) => {
+    let url = `${PUBLIC_API_URL}/graphs/${this.name}/edge/${edgeId}`;
+    if (withNodes) url += "?with_nodes=1";
+    const resp = await fetch(url);
+    const data: BackendResponseData = await resp.json();
+    this.setDefinitions(data);
+    return data;
+  };
+
+  setDefinitions = (data: BackendResponseData) => {
     for (const nodeWithParents of data.nodes) {
       const nodeId = nodeWithParents[0].data.id;
       nodeId && this.nodeDefinitions.set(nodeId, nodeWithParents);
@@ -216,13 +247,6 @@ export default class Graph {
       const edgeId = edge.data.id;
       edgeId && this.edgeDefinitions.set(edgeId, edge);
     }
-
-    return data;
-  };
-
-  getOrFetchEdge = async (edgeId: string) => {
-    // TODO: fetch
-    return { edges: [this.edgeDefinitions.get(edgeId) as EdgeDefinition] };
   };
 
   calculateDiff = async () => {

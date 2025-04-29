@@ -245,17 +245,33 @@ export default class View {
     }
   };
 
-  showEdge = async (edgeId: string) => {
+  showEdge = async (edgeId: string, withNodes: boolean = false) => {
+    const [sourceId, targetId] = edgeId.split("->");
     const edge = this.edges.get(edgeId);
 
     if (edge) {
       // Edge already exists
-      edge.restore();
-    } else {
-      // New edge, get related definition and add it
-      const data = await this.graph.getOrFetchEdge(edgeId);
-      this.add([...data.edges]);
+      if (!withNodes) {
+        // Connected nodes are not required
+        edge.restore();
+        this.edges = new Map(this.edges);
+        return;
+      }
+
+      if (this.nodes.has(sourceId) && this.nodes.has(targetId)) {
+        // Connected nodes are required and already exist, show them
+        this.showNode(this.nodes.get(sourceId) as NodeSingular);
+        this.showNode(this.nodes.get(targetId) as NodeSingular);
+        this.edges = new Map(this.edges);
+        return;
+      }
     }
+
+    // New edge, get related element definitions and add it
+    const data = await this.graph.getOrFetchEdge(edgeId, withNodes);
+    this.add([...data.nodes.flat(), ...data.edges]);
+    this.resetLayout();
+    this.edges = new Map(this.edges);
   };
 
   showAllNodeNeighbors = async (node: NodeSingular, type: "callers" | "callees") => {
@@ -294,6 +310,13 @@ export default class View {
   hideMethod = (id: string) => {
     const node = this.cy.nodes().getElementById(id);
     this.hideNode(node);
+  };
+
+  hideEdge = (id: string) => {
+    const edge = this.cy.edges().getElementById(id);
+    this.hideNode(edge.source());
+    this.hideNode(edge.target());
+    this.edges = new Map(this.edges);
   };
 
   hideAllNodeNeighbors = (node: NodeSingular, type: "callers" | "callees") => {

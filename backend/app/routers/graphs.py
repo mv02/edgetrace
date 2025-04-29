@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from ..driver import driver
 from ..utils.conversions import methods_to_tree
-from . import diff, methods
+from . import diff, edges, methods
 
 logger = logging.getLogger("uvicorn")
 logger.propagate = False
@@ -12,6 +12,7 @@ logger.propagate = False
 router = APIRouter(prefix="/graphs")
 
 router.include_router(methods.router)
+router.include_router(edges.router)
 router.include_router(diff.router)
 
 
