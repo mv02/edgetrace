@@ -18,8 +18,8 @@ Method._fields_ = [
     ("display", ctypes.c_char_p),
     ("flags", ctypes.c_char_p),
     ("is_entrypoint", ctypes.c_bool),
-    ("reachability", ctypes.c_int),
-    ("value", ctypes.c_char_p),
+    ("is_reachable", ctypes.c_bool),
+    ("value", ctypes.c_double),
     ("equivalent", ctypes.POINTER(Method)),
 ]
 
@@ -36,7 +36,6 @@ Edge._fields_ = [
     ("id", ctypes.c_int),
     ("source", ctypes.POINTER(Method)),
     ("target", ctypes.POINTER(Method)),
-    ("is_spurious", ctypes.c_bool),
     ("value", ctypes.c_double),
     ("next", ctypes.POINTER(Edge)),
 ]
@@ -53,12 +52,8 @@ class CallGraph(ctypes.Structure):
 CallGraph._fields_ = [
     ("name", ctypes.c_char_p),
     ("method_count", ctypes.c_int),
-    ("unreachable_count", ctypes.c_int),
-    ("spuriously_reachable_count", ctypes.c_int),
-    ("truly_reachable_count", ctypes.c_int),
+    ("reachable_count", ctypes.c_int),
     ("edge_count", ctypes.c_int),
-    ("spurious_count", ctypes.c_int),
-    ("nonspurious_count", ctypes.c_int),
     ("methods", ctypes.POINTER(HashTable)),
     ("invokes", ctypes.POINTER(Invoke)),
     ("edges", ctypes.POINTER(Edge)),
@@ -100,7 +95,7 @@ def diff(
         target = edge.contents.target
         result[(str(source.contents.id), str(target.contents.id))] = {
             "value": edge.contents.value,
-            "relevant": bool(edge.contents.source.contents.equivalent),
+            "relevant": bool(source.contents.equivalent),
         }
         edge = edge.contents.next
 
