@@ -3,8 +3,6 @@
 
 #include <stdbool.h>
 
-enum method_reachability { UNREACHABLE, SPURIOUSLY_REACHABLE, TRULY_REACHABLE };
-
 typedef struct method {
     int id;
     char* name;
@@ -15,7 +13,7 @@ typedef struct method {
     char* display;
     char* flags;
     bool is_entrypoint;
-    enum method_reachability reachability;
+    bool is_reachable;
     double value;
     struct method* equivalent;
 } method_t;

@@ -9,7 +9,7 @@
 
 double level(method_t* m)
 {
-    if (m->equivalent != NULL && m->equivalent->reachability != UNREACHABLE) {
+    if (m->equivalent != NULL && m->equivalent->is_reachable) {
         // The method is reachable in subgraph
         return 0;
     }
@@ -28,6 +28,10 @@ void diff(call_graph_t* sup, call_graph_t* sub, int max_iterations, int* i, bool
     call_graph_print(sup);
     call_graph_print(sub);
     link_equivalents(sup, sub);
+    printf("Purging common edges\n");
+    purge_common_edges(sup);
+    call_graph_print(sup);
+    call_graph_print(sub);
 
     printf("Starting difference algorithm\n");
     while (max > EPSILON && *i < max_iterations && !*cancel_flag) {

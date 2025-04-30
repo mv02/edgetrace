@@ -4,7 +4,7 @@
 #include "edge.h"
 #include "method.h"
 
-edge_t* edge_create(method_t* source, method_t* target, bool is_spurious, int id)
+edge_t* edge_create(method_t* source, method_t* target, int id)
 {
     edge_t* edge = malloc(sizeof(edge_t));
     if (edge == NULL) {
@@ -14,7 +14,6 @@ edge_t* edge_create(method_t* source, method_t* target, bool is_spurious, int id
     edge->id = id;
     edge->source = source;
     edge->target = target;
-    edge->is_spurious = is_spurious;
     edge->value = 0;
     edge->next = NULL;
 

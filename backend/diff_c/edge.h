@@ -7,12 +7,11 @@ typedef struct edge {
     int id;
     method_t* source;
     method_t* target;
-    bool is_spurious;
     double value;
     struct edge* next;
 } edge_t;
 
-edge_t* edge_create(method_t* source, method_t* target, bool is_spurious, int id);
+edge_t* edge_create(method_t* source, method_t* target, int id);
 void edge_destroy(edge_t* edge);
 char* edge_key(int source_id, int target_id);
 void edge_print(edge_t* edge);

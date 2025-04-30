@@ -10,18 +10,6 @@
 #include "map.h"
 #include "method.h"
 
-void devirtualize(call_graph_t* cg)
-{
-    int count = 0;
-
-    for (invoke_t* invoke = cg->invokes; invoke != NULL; invoke = invoke->next) {
-        if (!invoke->is_direct && invoke->target_count == 1) {
-            invoke->is_direct = true;
-            count++;
-        }
-    }
-}
-
 void create_edges(call_graph_t* cg)
 {
     ht* edges_ht = ht_create(NULL);
@@ -42,7 +30,7 @@ void create_edges(call_graph_t* cg)
                 continue;
             }
 
-            edge_t* edge = edge_create(source, target, !invoke->is_direct, id++);
+            edge_t* edge = edge_create(source, target, id++);
             ht_insert(edges_ht, key, edge);
             free(key);
             cg->edge_count++;
@@ -61,64 +49,32 @@ void create_edges(call_graph_t* cg)
 
 void compute_reachability(call_graph_t* cg)
 {
-    int changed;
+    // Set all entrypoints to reachable
+    ht_iter it = ht_iterator(cg->methods);
+    while (ht_next(&it)) {
+        method_t* m = it.value;
+        if (m->is_entrypoint) {
+            m->is_reachable = true;
+            cg->reachable_count++;
+        }
+    }
 
+    int changed;
     do {
         changed = 0;
-
         for (edge_t* e = cg->edges; e != NULL; e = e->next) {
-            enum method_reachability new = 0;
-
-            if (e->source->reachability == TRULY_REACHABLE) {
-                // Edge from a truly reachable method
-                new = e->is_spurious ? SPURIOUSLY_REACHABLE : TRULY_REACHABLE;
-            } else if (e->source->reachability == SPURIOUSLY_REACHABLE) {
-                // Edge from a spuriously reachable method
-                new = SPURIOUSLY_REACHABLE;
+            if (!e->source->is_reachable) {
+                continue;
             }
 
-            if (new > e->target->reachability) {
-                e->target->reachability = new;
+            if (!e->target->is_reachable) {
+                e->target->is_reachable = true;
                 e->target->value = 1;
+                cg->reachable_count++;
                 changed++;
             }
         }
     } while (changed > 0);
-}
-
-void count_methods_and_edges(call_graph_t* cg)
-{
-    cg->method_count = 0;
-    cg->unreachable_count = 0;
-    cg->spuriously_reachable_count = 0;
-    cg->truly_reachable_count = 0;
-    cg->edge_count = 0;
-    cg->spurious_count = 0;
-    cg->nonspurious_count = 0;
-
-    // Count methods
-    ht_iter it = ht_iterator(cg->methods);
-    while (ht_next(&it)) {
-        method_t* m = it.value;
-        cg->method_count++;
-        if (m->reachability == TRULY_REACHABLE) {
-            cg->truly_reachable_count++;
-        } else if (m->reachability == SPURIOUSLY_REACHABLE) {
-            cg->spuriously_reachable_count++;
-        } else {
-            cg->unreachable_count++;
-        }
-    }
-
-    // Count edges
-    for (edge_t* e = cg->edges; e != NULL; e = e->next) {
-        cg->edge_count++;
-        if (e->is_spurious) {
-            cg->spurious_count++;
-        } else {
-            cg->nonspurious_count++;
-        }
-    }
 }
 
 call_graph_t* call_graph_create(char* dirname, char* name)
@@ -141,11 +97,10 @@ call_graph_t* call_graph_create(char* dirname, char* name)
     method_map_destroy(methods_by_id);
     invoke_map_destroy(invokes_by_id);
 
-    devirtualize(cg);
+    cg->method_count = cg->methods->size;
+    cg->edge_count = 0;
     create_edges(cg);
-
     compute_reachability(cg);
-    count_methods_and_edges(cg);
 
     return cg;
 }
@@ -166,7 +121,7 @@ void call_graph_destroy(call_graph_t* cg)
 void call_graph_print(call_graph_t* cg)
 {
     printf("%s: %d methods (%d reachable), %d edges\n", cg->name, cg->method_count,
-           cg->spuriously_reachable_count + cg->truly_reachable_count, cg->edge_count);
+           cg->reachable_count, cg->edge_count);
 }
 
 void purge_unreachable_edges(call_graph_t* cg)
@@ -175,17 +130,32 @@ void purge_unreachable_edges(call_graph_t* cg)
     edge_t* next;
     for (edge_t* e = cg->edges; e != NULL; e = next) {
         next = e->next;
-        if (e->source->reachability != UNREACHABLE) {
+        if (e->source->is_reachable) {
             prev = e;
             continue;
         }
         prev->next = next;
         cg->edge_count--;
-        if (e->is_spurious) {
-            cg->spurious_count--;
-        } else {
-            cg->nonspurious_count--;
+        edge_destroy(e);
+    }
+}
+
+void purge_common_edges(call_graph_t* cg)
+{
+    edge_t* prev = NULL;
+    edge_t* next;
+    for (edge_t* e = cg->edges; e != NULL; e = next) {
+        next = e->next;
+        if (e->target->equivalent == NULL || !e->target->equivalent->is_reachable) {
+            prev = e;
+            continue;
         }
+        if (prev != NULL) {
+            prev->next = next;
+        } else {
+            cg->edges = next;
+        }
+        cg->edge_count--;
         edge_destroy(e);
     }
 }

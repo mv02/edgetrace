@@ -43,7 +43,7 @@ method_t* method_create(int id, char* name, char* declared_type, char* params, c
     method->display = strdup(display);
     method->flags = strdup(flags);
     method->is_entrypoint = is_entrypoint;
-    method->reachability = is_entrypoint ? TRULY_REACHABLE : UNREACHABLE;
+    method->is_reachable = false;
     method->value = 0;
     method->equivalent = NULL;
 
