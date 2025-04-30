@@ -9,7 +9,7 @@
 <Navbar fluid color="gray">
   <NavBrand href="/">
     <span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
-      Diff Tool
+      EdgeTrace
     </span>
   </NavBrand>
   <NavUl activeUrl={page.url.pathname}>
