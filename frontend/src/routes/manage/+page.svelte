@@ -179,5 +179,5 @@
 </main>
 
 <svelte:head>
-  <title>Graphs | Diff Tool</title>
+  <title>Graphs – EdgeTrace</title>
 </svelte:head>

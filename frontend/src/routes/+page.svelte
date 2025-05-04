@@ -15,3 +15,7 @@
     </Card>
   {/each}
 </main>
+
+<svelte:head>
+  <title>EdgeTrace</title>
+</svelte:head>
