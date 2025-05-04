@@ -54,10 +54,9 @@ def import_csv(
 
     # Delete all nodes and edges, create uniqueness constraints and indexes
     logger.info("Purging database")
-    driver.execute_query("MATCH ({graph: $graph})-[r]-() DELETE r", graph=graph)
-    driver.execute_query("MATCH (n {graph: $graph}) DELETE n", graph=graph)
+    driver.execute_query("MATCH (m {graph: $graph}) DETACH DELETE m", graph=graph)
     driver.execute_query(
-        "OPTIONAL MATCH (meta:Meta {graph_name: $graph}) DELETE meta", graph=graph
+        "MATCH (meta:Meta {graph_name: $graph}) DELETE meta", graph=graph
     )
     driver.execute_query(
         "CREATE CONSTRAINT unique_method_id IF NOT EXISTS "
