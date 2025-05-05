@@ -22,7 +22,7 @@ const COLORS_DARK = ["#374151", "#1e40af", "#047857", "#a16207", "#b91c1c", "#7c
 const COLOR_SCALE = chroma.scale("Viridis");
 const LAYOUT_OPTIONS: ColaLayoutOptions = { name: "cola", maxSimulationTime: 1000 };
 
-const LEAF_NODES = "node[!level]";
+const METHOD_NODES = "node[!level]";
 const COMPOUND_NODES = "node[level > 0]";
 const COLLAPSED_NODES = "node.cy-expand-collapse-collapsed-node";
 
@@ -81,7 +81,7 @@ export default class View {
       this.selectedNode = undefined;
       this.selectedEdge = undefined;
     });
-    this.cy.on("cxttap", LEAF_NODES, (e) => {
+    this.cy.on("cxttap", METHOD_NODES, (e) => {
       const target: NodeSingular = e.target;
 
       for (const type of ["callers", "callees"]) {
@@ -197,7 +197,7 @@ export default class View {
 
     if (parent) {
       // If showing a method node, expand all ancestors
-      this.showNode(parent, expand || node.is(LEAF_NODES));
+      this.showNode(parent, expand || node.is(METHOD_NODES));
     }
 
     if (expand) this.expandCollapse?.expand(node);
@@ -360,8 +360,8 @@ export default class View {
 
   parentsToHide = (node: NodeSingular | NodeCollection): NodeCollection => {
     const parent = node.parent();
-    if (node.is(LEAF_NODES)) {
-      // Leaf node
+    if (node.is(METHOD_NODES)) {
+      // Method node
       return parent
         .map((ele) => this.parentsToHide(ele))
         .reduce((col, cur) => col.union(cur), this.cy.collection());
@@ -375,7 +375,7 @@ export default class View {
   showCompoundNodes = () => {
     for (const node of this.nodes.values()) {
       // Skip method nodes that are hidden
-      if (node.removed() && node.is(LEAF_NODES)) continue;
+      if (node.removed() && node.is(METHOD_NODES)) continue;
       // Skip compound nodes that are not collapsed (i.e. not the lowest level)
       if (this.expandCollapse?.isCollapsible(node)) continue;
       this.showNode(node);
@@ -425,31 +425,31 @@ export default class View {
         {
           id: "hide",
           content: "Hide node",
-          selector: LEAF_NODES,
+          selector: METHOD_NODES,
           onClickFunction: (e) => this.hideNode(e.target),
         },
         {
           id: "show-callers",
           content: "Show callers",
-          selector: LEAF_NODES,
+          selector: METHOD_NODES,
           onClickFunction: (e) => this.showAllNodeNeighbors(e.target, "callers"),
         },
         {
           id: "hide-callers",
           content: "Hide callers",
-          selector: LEAF_NODES,
+          selector: METHOD_NODES,
           onClickFunction: (e) => this.hideAllNodeNeighbors(e.target, "callers"),
         },
         {
           id: "show-callees",
           content: "Show callees",
-          selector: LEAF_NODES,
+          selector: METHOD_NODES,
           onClickFunction: (e) => this.showAllNodeNeighbors(e.target, "callees"),
         },
         {
           id: "hide-callees",
           content: "Hide callees",
-          selector: LEAF_NODES,
+          selector: METHOD_NODES,
           onClickFunction: (e) => this.hideAllNodeNeighbors(e.target, "callees"),
         },
       ],
