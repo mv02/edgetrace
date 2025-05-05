@@ -75,6 +75,14 @@ void compute_reachability(call_graph_t* cg)
             }
         }
     } while (changed > 0);
+
+    // Abstract methods
+    for (invoke_t* i = cg->invokes; i != NULL; i = i->next) {
+        if (i->method->is_reachable && !i->target->is_reachable) {
+            i->target->is_reachable = true;
+            cg->reachable_count++;
+        }
+    }
 }
 
 call_graph_t* call_graph_create(char* dirname, char* name)
