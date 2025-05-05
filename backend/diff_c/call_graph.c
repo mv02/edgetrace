@@ -132,22 +132,6 @@ void call_graph_print(call_graph_t* cg)
            cg->reachable_count, cg->edge_count);
 }
 
-void purge_unreachable_edges(call_graph_t* cg)
-{
-    edge_t* prev = NULL;
-    edge_t* next;
-    for (edge_t* e = cg->edges; e != NULL; e = next) {
-        next = e->next;
-        if (e->source->is_reachable) {
-            prev = e;
-            continue;
-        }
-        prev->next = next;
-        cg->edge_count--;
-        edge_destroy(e);
-    }
-}
-
 void purge_common_edges(call_graph_t* cg)
 {
     edge_t* prev = NULL;

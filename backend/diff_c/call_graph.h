@@ -27,7 +27,6 @@ call_graph_t* call_graph_create(char* dirname, char* name);
 void call_graph_destroy(call_graph_t* cg);
 void call_graph_print(call_graph_t* cg);
 
-void purge_unreachable_edges(call_graph_t* cg);
 void purge_common_edges(call_graph_t* cg);
 void link_equivalents(call_graph_t* cg1, call_graph_t* cg2);
 void print_top_edges(call_graph_t* cg, int n);
