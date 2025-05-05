@@ -62,7 +62,7 @@
       graph.createView(name);
       graph.viewIndex = 0;
     }
-    graph.currentView.showMethod(id).then(() => graph.currentView.resetLayout());
+    graph.currentView.showMethod(id, true).then(() => graph.currentView.resetLayout());
   };
 </script>
 

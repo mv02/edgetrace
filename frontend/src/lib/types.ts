@@ -4,7 +4,6 @@ export type BackendResponseData = {
   nodes: NodeDefinition[][];
   edges: EdgeDefinition[];
   topEdges?: EdgeDefinition[];
-  path?: { nodes: NodeDefinition[][]; edges: EdgeDefinition[] };
 };
 
 export type EdgeWithNodesDefinition = {

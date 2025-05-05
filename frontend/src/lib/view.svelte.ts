@@ -230,15 +230,15 @@ export default class View {
     this.nodes = new Map(this.nodes);
   };
 
-  showMethod = async (id: string) => {
+  showMethod = async (id: string, withEntrypoint: boolean = false) => {
     const node = this.nodes.get(id);
 
-    if (node) {
+    if (node && !withEntrypoint) {
       // Method node already exists
       this.showNode(node);
     } else {
       // New method, get related element definitions and add it
-      const data = await this.graph.getOrFetchMethod(id);
+      const data = await this.graph.getOrFetchMethod(id, withEntrypoint);
       this.add(deduplicate([...data.nodes.flat(), ...data.edges]));
       this.resetLayout();
     }

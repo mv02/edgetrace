@@ -58,6 +58,78 @@ def fetch_method(
     }
 
 
+def fetch_method_with_entrypoint(id: str, graph_name: str):
+    query = """
+    MATCH p = SHORTEST 1 (e {graph: $graph})-->*({id: $id, graph: $graph})
+    WHERE e.is_entrypoint
+    LIMIT 1
+
+    UNWIND nodes(p) AS pn
+    OPTIONAL MATCH (caller)-[caller_edge]->(pn)
+    WITH p, pn, collect(DISTINCT { node: caller, edge: caller_edge }) AS callers
+    OPTIONAL MATCH (pn)-[callee_edge]->(callee)
+    WITH p, pn, callers, collect(DISTINCT { node: callee, edge: callee_edge }) AS callees
+
+    RETURN p AS path, collect({ callers: callers, callees: callees }) AS path_neighbors
+    """
+
+    records = driver.execute_query(query, id=id, graph=graph_name).records
+
+    cy_nodes: dict[str, list[CytoscapeNode]] = {}
+    cy_edges: dict[str, CytoscapeEdge] = {}
+
+    path, path_neighbors = records[0]
+
+    # Every node on the path from entrypoint
+    for i, pn in enumerate(path.nodes):
+        cy_nodes |= node_to_cy(pn)
+        pn_id = pn["id"]
+
+        pn_method_node = cy_nodes[pn_id][0]
+        pn_method_node["data"]["callers"] = []
+        pn_method_node["data"]["callees"] = []
+
+        neighbors = path_neighbors[i]
+
+        # Callers and edges from them
+        for caller in neighbors["callers"]:
+            if caller["node"] is None:
+                break
+            definition = list(node_to_cy(caller["node"]).values())[0]
+            pn_method_node["data"]["callers"].append(definition)
+
+            edge: Edge = {
+                "source": caller["node"]["id"],
+                "target": pn_id,
+                "value": caller["edge"]["value"],
+                "relevant": caller["edge"]["relevant"],
+            }
+            cy_edges |= edge_to_cy(edge)
+
+        # Callees and edges to them
+        for callee in neighbors["callees"]:
+            if callee["node"] is None:
+                break
+            definition = list(node_to_cy(callee["node"]).values())[0]
+            pn_method_node["data"]["callees"].append(definition)
+
+            edge: Edge = {
+                "source": pn_id,
+                "target": callee["node"]["id"],
+                "value": callee["edge"]["value"],
+                "relevant": callee["edge"]["relevant"],
+            }
+            cy_edges |= edge_to_cy(edge)
+
+    # Save entrypoint path to the fetched node data
+    cy_nodes[id][0]["data"]["path"] = [n[0]["data"]["id"] for n in cy_nodes.values()]
+
+    return {
+        "nodes": list(cy_nodes.values()),
+        "edges": list(cy_edges.values()),
+    }
+
+
 def fetch_method_neighbors(
     graph_name: str,
     method_id: str,
