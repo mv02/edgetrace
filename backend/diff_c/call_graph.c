@@ -116,12 +116,19 @@ call_graph_t* call_graph_create(char* dirname, char* name)
 void call_graph_destroy(call_graph_t* cg)
 {
     ht_destroy(cg->methods);
-    invoke_destroy(cg->invokes);
-    edge_t* next;
-    for (edge_t* e = cg->edges; e != NULL; e = next) {
-        next = e->next;
+
+    invoke_t* next_i;
+    for (invoke_t* i = cg->invokes; i != NULL; i = next_i) {
+        next_i = i->next;
+        invoke_destroy(i);
+    }
+
+    edge_t* next_e;
+    for (edge_t* e = cg->edges; e != NULL; e = next_e) {
+        next_e = e->next;
         edge_destroy(e);
     }
+
     free(cg->name);
     free(cg);
 }

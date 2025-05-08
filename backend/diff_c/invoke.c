@@ -22,13 +22,7 @@ invoke_t* invoke_create(int id, method_t* method, method_t* target, char* bci, b
     return invoke;
 }
 
-void invoke_destroy(invoke_t* invoke)
-{
-    if (invoke->next != NULL) {
-        invoke_destroy(invoke->next);
-    }
-    free(invoke);
-}
+void invoke_destroy(invoke_t* invoke) { free(invoke); }
 
 void invoke_print(invoke_t* invoke)
 {
