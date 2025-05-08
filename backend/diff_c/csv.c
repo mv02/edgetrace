@@ -8,7 +8,7 @@
 #include "map.h"
 #include "method.h"
 
-#define MAX_LINE_LEN 1000
+#define MAX_LINE_LEN 2048
 
 char* get_file_path(char* dirname, char* filename)
 {

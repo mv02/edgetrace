@@ -5,15 +5,14 @@
 
 #include "method.h"
 
-#define MAX_CALL_TARGETS 1000
-
 typedef struct invoke {
     int id;
     method_t* method;
     method_t* target;
     char* bci;
     bool is_direct;
-    method_t* targets[MAX_CALL_TARGETS];
+    method_t** targets;
+    int targets_capacity;
     int target_count;
     struct invoke* next;
 } invoke_t;
