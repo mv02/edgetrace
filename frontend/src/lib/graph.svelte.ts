@@ -161,19 +161,11 @@ export default class Graph {
     }
 
     // Neighbor definition or edge definition is missing, fetch it
-    return await this.fetchMethodNeighbors(methodId, type);
+    return await this.fetchAllMethodNeighbors(methodId, type);
   };
 
-  fetchMethodNeighbors = async (
-    methodId: string,
-    type: "callers" | "callees",
-    neighborId?: string,
-  ) => {
-    let url = `${PUBLIC_API_URL}/graphs/${this.name}/method/${methodId}/${type}`;
-    if (neighborId) {
-      url += `/${neighborId}`;
-    }
-    const resp = await fetch(url);
+  fetchAllMethodNeighbors = async (methodId: string, type: "callers" | "callees") => {
+    const resp = await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/method/${methodId}/${type}`);
     const data: BackendResponseData = await resp.json();
     this.setDefinitions(data);
     return data;
