@@ -11,7 +11,11 @@ export default class Graph {
   readonly edgeCount: number;
   otherGraph: string | null = $state(null);
   iterations: number | null = $state(null);
+
+  diffStatus: undefined | "calculating" | "saving" | "cancelling" = $state();
   currentIterations: number = $state(0);
+  diffOk: boolean = $state(false);
+  diffMessage: string | undefined = $state();
 
   views: View[] = $state([]);
   viewIndex: number = $state(0);
@@ -247,11 +251,35 @@ export default class Graph {
     }
   };
 
-  get diffWebsocket() {
+  startDiff = () => {
     const ws = new WebSocket(`${PUBLIC_API_URL}/graphs/${this.name}/diff`);
-    ws.addEventListener("message", (e) => (this.currentIterations = parseInt(e.data)));
+
+    ws.onopen = () => {
+      ws.send(`${this.name},${this.diffOtherGraph},${this.diffMaxIterations}`);
+      this.diffStatus = "calculating";
+    };
+
+    ws.onmessage = (e) => {
+      if (e.data === "saving") {
+        this.diffStatus = "saving";
+        return;
+      }
+
+      const data = JSON.parse(e.data);
+      if (typeof data === "number") {
+        this.currentIterations = data;
+      } else {
+        this.diffStatus = undefined;
+        this.currentIterations = 0;
+        this.diffOk = true;
+        this.diffMessage = data.message;
+        this.iterations = data.iterations;
+        this.otherGraph = this.diffOtherGraph;
+      }
+    };
+
     return ws;
-  }
+  };
 
   getOrFetchTopEdges = async (n: number) => {
     if (n <= this.topEdges.length) {

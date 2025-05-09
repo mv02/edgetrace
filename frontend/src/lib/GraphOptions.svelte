@@ -37,53 +37,21 @@
   let currentView = $derived(views[currentGraph.viewIndex]);
 
   let diffSectionOpen: boolean = $state(false);
-  let loading: boolean = $state(false);
-  let status: "calculating" | "saving" | "cancelling" = $state("calculating");
-  let ok: boolean = $state(false);
-  let Icon = $derived(ok ? CheckCircleSolid : ExclamationCircleSolid);
-  let message: string | undefined = $state();
+  let Icon = $derived(currentGraph.diffOk ? CheckCircleSolid : ExclamationCircleSolid);
 
   let ws: WebSocket;
 
   const startDiff = () => {
-    message = undefined;
-    loading = true;
-    status = "calculating";
-    currentGraph.currentIterations = 0;
-
-    try {
-      ws = currentGraph.diffWebsocket;
-
-      ws.onopen = () => {
-        ws.send(
-          `${currentGraph.name},${currentGraph.diffOtherGraph},${currentGraph.diffMaxIterations}`,
-        );
-      };
-
-      ws.onmessage = (e) => {
-        if (e.data === "saving") {
-          status = "saving";
-        } else {
-          const data = JSON.parse(e.data);
-          if (typeof data === "number") return;
-          ok = true;
-          message = data.message;
-          currentGraph.iterations = data.iterations;
-          currentGraph.otherGraph = currentGraph.diffOtherGraph;
-          showTopEdges(10, true);
-          diffSectionOpen = false;
-          loading = false;
-        }
-      };
-    } catch {
-      ok = false;
-      message = "Difference calculation failed";
-    }
+    ws = currentGraph.startDiff();
+    ws.onclose = () => {
+      showTopEdges(10, true);
+      diffSectionOpen = false;
+    };
   };
 
   const cancelDiff = () => {
     ws.send("cancel");
-    status = "cancelling";
+    currentGraph.diffStatus = "cancelling";
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
@@ -109,7 +77,7 @@
     }
   };
 
-  beforeNavigate(() => (message = undefined));
+  beforeNavigate(() => (currentGraph.diffMessage = undefined));
 </script>
 
 <Checkbox
@@ -162,7 +130,7 @@
 {/if}
 
 <!-- Diff calculation section -->
-<Accordion flush onclick={() => (message = undefined)}>
+<Accordion flush onclick={() => (currentGraph.diffMessage = undefined)}>
   <AccordionItem tag="h4" borderBottomClass="" paddingFlush="" bind:open={diffSectionOpen}>
     <span slot="header">Diff Calculation</span>
 
@@ -209,13 +177,13 @@
           color="primary"
           class="flex-grow"
           onclick={startDiff}
-          disabled={loading || !currentGraph.diffOtherGraph}
+          disabled={currentGraph.diffStatus || !currentGraph.diffOtherGraph}
         >
-          {#if loading}
+          {#if currentGraph.diffStatus}
             <Spinner class="me-3" size="4" color="white" />
-            {#if status === "cancelling"}
+            {#if currentGraph.diffStatus === "cancelling"}
               Cancelling
-            {:else if status === "saving"}
+            {:else if currentGraph.diffStatus === "saving"}
               Saving
             {:else}
               {currentGraph.currentIterations} iterations
@@ -225,8 +193,12 @@
           {/if}
         </Button>
 
-        {#if loading}
-          <Button color="red" onclick={cancelDiff} disabled={status !== "calculating"}>
+        {#if currentGraph.diffStatus}
+          <Button
+            color="red"
+            onclick={cancelDiff}
+            disabled={currentGraph.diffStatus !== "calculating"}
+          >
             <CloseOutline />
           </Button>
         {/if}
@@ -235,9 +207,9 @@
   </AccordionItem>
 </Accordion>
 
-{#if message}
-  <Alert color={ok ? "green" : "red"}>
+{#if currentGraph.diffMessage}
+  <Alert color={currentGraph.diffOk ? "green" : "red"}>
     <Icon slot="icon" />
-    {message}
+    {currentGraph.diffMessage}
   </Alert>
 {/if}
