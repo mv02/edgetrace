@@ -177,7 +177,7 @@
           color="primary"
           class="flex-grow"
           onclick={startDiff}
-          disabled={currentGraph.diffStatus || !currentGraph.selectedOtherGraph}
+          disabled={currentGraph.diffStatus !== undefined || !currentGraph.selectedOtherGraph}
         >
           {#if currentGraph.diffStatus}
             <Spinner class="me-3" size="4" color="white" />
