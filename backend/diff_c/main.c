@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -23,6 +24,9 @@ double level(method_t* m)
 
 void diff(call_graph_t* sup, call_graph_t* sub, int max_iterations, int* i, bool* cancel_flag)
 {
+    if (max_iterations <= 0) {
+        max_iterations = INT_MAX;
+    }
     double max = 1;
 
     call_graph_print(sup);
