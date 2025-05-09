@@ -63,7 +63,7 @@
     }
     const definitions = await currentGraph.getOrFetchTopEdges(n);
     if (newView) {
-      currentGraph.createView(`${currentGraph.name} − ${currentGraph.diffOtherGraph}`);
+      currentGraph.createView(`${currentGraph.name} − ${currentGraph.selectedOtherGraph}`);
     }
     currentView.removeAll(); // TODO: do not remove all
     currentView.add([...deduplicate(definitions.nodes.flat()), ...deduplicate(definitions.edges)]);
@@ -139,13 +139,13 @@
       <Label>
         Calculate difference
 
-        <Select class="mt-2" bind:value={currentGraph.diffOtherGraph}>
+        <Select class="mt-2" bind:value={currentGraph.selectedOtherGraph}>
           {#each Object.values(graphs).filter((graph) => graph !== currentGraph) as graph}
             <option value={graph.name}>{currentGraph.name} − {graph.name}</option>
           {/each}
         </Select>
 
-        {#if currentGraph.otherGraph && currentGraph.otherGraph !== currentGraph.diffOtherGraph}
+        {#if currentGraph.otherGraph && currentGraph.otherGraph !== currentGraph.selectedOtherGraph}
           <Helper class="mt-2 flex items-center gap-2" color="red">
             <ExclamationCircleSolid />
             <p>
@@ -166,10 +166,10 @@
             min="200"
             max="10000"
             step="200"
-            bind:value={currentGraph.diffMaxIterations}
+            bind:value={currentGraph.selectedMaxIterations}
           />
         </Label>
-        <span class="min-w-16 text-center">{currentGraph.diffMaxIterations}</span>
+        <span class="min-w-16 text-center">{currentGraph.selectedMaxIterations}</span>
       </div>
 
       <ButtonGroup>
@@ -177,7 +177,7 @@
           color="primary"
           class="flex-grow"
           onclick={startDiff}
-          disabled={currentGraph.diffStatus || !currentGraph.diffOtherGraph}
+          disabled={currentGraph.diffStatus || !currentGraph.selectedOtherGraph}
         >
           {#if currentGraph.diffStatus}
             <Spinner class="me-3" size="4" color="white" />
@@ -189,7 +189,9 @@
               {currentGraph.currentIterations} iterations
             {/if}
           {:else}
-            {currentGraph.otherGraph === currentGraph.diffOtherGraph ? "Recalculate" : "Calculate"}
+            {currentGraph.otherGraph === currentGraph.selectedOtherGraph
+              ? "Recalculate"
+              : "Calculate"}
           {/if}
         </Button>
 

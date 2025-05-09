@@ -25,8 +25,8 @@ export default class Graph {
   searchQuery: string = $state("");
   compoundNodesShown: boolean = $state(true);
   graphDetailsTab: "properties" | "edges" = $state("properties");
-  diffOtherGraph: string = $state("");
-  diffMaxIterations: number = $state(1000);
+  selectedOtherGraph: string = $state("");
+  selectedMaxIterations: number = $state(1000);
 
   /** Mapping of node ID to definition of corresponding node and its parents. */
   nodeDefinitions: Map<string, NodeDefinition[]> = new Map();
@@ -42,7 +42,7 @@ export default class Graph {
     this.otherGraph = info.otherGraph;
     this.iterations = info.iterations;
     if (info.otherGraph) {
-      this.diffOtherGraph = info.otherGraph;
+      this.selectedOtherGraph = info.otherGraph;
     }
     this.darkMode = darkMode;
   }
@@ -255,7 +255,7 @@ export default class Graph {
     const ws = new WebSocket(`${PUBLIC_API_URL}/graphs/${this.name}/diff`);
 
     ws.onopen = () => {
-      ws.send(`${this.name},${this.diffOtherGraph},${this.diffMaxIterations}`);
+      ws.send(`${this.name},${this.selectedOtherGraph},${this.selectedMaxIterations}`);
       this.diffStatus = "calculating";
     };
 
@@ -274,7 +274,7 @@ export default class Graph {
         this.diffOk = true;
         this.diffMessage = data.message;
         this.iterations = data.iterations;
-        this.otherGraph = this.diffOtherGraph;
+        this.otherGraph = this.selectedOtherGraph;
       }
     };
 
