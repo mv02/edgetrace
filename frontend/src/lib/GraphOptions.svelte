@@ -94,7 +94,7 @@
   <Alert color="blue" class="flex flex-col gap-2">
     <p>
       Compared with <span class="font-bold">{currentGraph.otherGraph}</span>
-      ({currentGraph.iterations} iter.)
+      ({currentGraph.iterations}&nbsp;iter.)
     </p>
 
     {#if currentView?.topEdgesShown > 0}
