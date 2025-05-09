@@ -45,7 +45,7 @@
 
   let ws: WebSocket;
 
-  const calculateDiff = async () => {
+  const startDiff = () => {
     message = undefined;
     loading = true;
     status = "calculating";
@@ -53,27 +53,37 @@
 
     try {
       ws = currentGraph.diffWebsocket;
-      ws.addEventListener("message", (e) => e.data === "saving" && (status = "saving"));
 
-      const resp = await currentGraph.calculateDiff();
-      ok = resp.ok;
-      const data = await resp.json();
-      message = data.message;
-      showTopEdges(10, true);
-      currentGraph.otherGraph = currentGraph.diffOtherGraph;
-      currentGraph.iterations = data.iterations;
-      diffSectionOpen = false;
+      ws.onopen = () => {
+        ws.send(
+          `${currentGraph.name},${currentGraph.diffOtherGraph},${currentGraph.diffMaxIterations}`,
+        );
+      };
+
+      ws.onmessage = (e) => {
+        if (e.data === "saving") {
+          status = "saving";
+        } else {
+          const data = JSON.parse(e.data);
+          if (typeof data === "number") return;
+          ok = true;
+          message = data.message;
+          currentGraph.iterations = data.iterations;
+          currentGraph.otherGraph = currentGraph.diffOtherGraph;
+          showTopEdges(10, true);
+          diffSectionOpen = false;
+          loading = false;
+        }
+      };
     } catch {
       ok = false;
       message = "Difference calculation failed";
     }
-    loading = false;
   };
 
-  const cancelDiff = async () => {
+  const cancelDiff = () => {
+    ws.send("cancel");
     status = "cancelling";
-    await currentGraph.cancelDiff();
-    status = "saving";
   };
 
   const showTopEdges = async (n: number, newView: boolean = false) => {
@@ -198,7 +208,7 @@
         <Button
           color="primary"
           class="flex-grow"
-          onclick={calculateDiff}
+          onclick={startDiff}
           disabled={loading || !currentGraph.diffOtherGraph}
         >
           {#if loading}

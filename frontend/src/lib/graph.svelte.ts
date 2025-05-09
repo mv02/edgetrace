@@ -247,19 +247,8 @@ export default class Graph {
     }
   };
 
-  calculateDiff = async () => {
-    return await fetch(
-      `${PUBLIC_API_URL}/graphs/${this.name}/diff/start/${this.diffOtherGraph}?max_iterations=${this.diffMaxIterations}`,
-      { method: "POST" },
-    );
-  };
-
-  cancelDiff = async () => {
-    return await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/diff/cancel`, { method: "POST" });
-  };
-
   get diffWebsocket() {
-    const ws = new WebSocket(`${PUBLIC_API_URL}/graphs/${this.name}/diff/ws`);
+    const ws = new WebSocket(`${PUBLIC_API_URL}/graphs/${this.name}/diff`);
     ws.addEventListener("message", (e) => (this.currentIterations = parseInt(e.data)));
     return ws;
   }
@@ -286,7 +275,7 @@ export default class Graph {
       n = this.topEdges.length + 10;
     }
 
-    const resp = await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/diff/edges?n=${n}`);
+    const resp = await fetch(`${PUBLIC_API_URL}/graphs/${this.name}/topedges?n=${n}`);
     const data: BackendResponseData = await resp.json();
     this.setDefinitions(data);
     for (const [i, edge] of (data.topEdges ?? []).entries()) {
