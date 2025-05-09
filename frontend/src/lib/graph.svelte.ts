@@ -26,7 +26,7 @@ export default class Graph {
   compoundNodesShown: boolean = $state(true);
   graphDetailsTab: "properties" | "edges" = $state("properties");
   selectedOtherGraph: string = $state("");
-  selectedMaxIterations: number = $state(1000);
+  selectedMaxIterations: number = $state(10000);
 
   /** Mapping of node ID to definition of corresponding node and its parents. */
   nodeDefinitions: Map<string, NodeDefinition[]> = new Map();

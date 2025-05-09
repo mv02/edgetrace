@@ -9,6 +9,7 @@
     ButtonGroup,
     Checkbox,
     Helper,
+    Input,
     Label,
     Range,
     Select,
@@ -163,9 +164,9 @@
           Maximum iterations
           <Range
             class="mt-2"
-            min="200"
-            max="10000"
-            step="200"
+            min="2000"
+            max="100000"
+            step="2000"
             bind:value={currentGraph.selectedMaxIterations}
           />
         </Label>
