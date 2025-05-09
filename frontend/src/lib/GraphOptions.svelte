@@ -164,13 +164,15 @@
           Maximum iterations
           <Range
             class="mt-2"
-            min="2000"
+            min="0"
             max="100000"
             step="2000"
             bind:value={currentGraph.selectedMaxIterations}
           />
         </Label>
-        <span class="min-w-16 text-center">{currentGraph.selectedMaxIterations}</span>
+        <span class="min-w-16 text-center">
+          {currentGraph.selectedMaxIterations > 0 ? currentGraph.selectedMaxIterations : "Inf."}
+        </span>
       </div>
 
       <ButtonGroup>
