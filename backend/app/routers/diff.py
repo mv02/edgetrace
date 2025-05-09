@@ -17,9 +17,6 @@ edges: dict[tuple[str, str], EdgeDiff]
 
 
 def start_diff(graph_name: str, other_graph_name: str, max_iterations: int):
-    iteration_count.value = 0
-    cancel_flag.value = False
-
     driver.execute_query(
         "MATCH ({graph: $graph})-[r]->() SET r.value = 0", graph=graph_name
     )
@@ -78,6 +75,9 @@ def save_progress(graph_name: str, other_graph_name: str) -> str:
 
 @router.websocket("/diff")
 async def diff_websocket(websocket: WebSocket):
+    iteration_count.value = 0
+    cancel_flag.value = False
+
     await websocket.accept()
     try:
         text = await websocket.receive_text()
