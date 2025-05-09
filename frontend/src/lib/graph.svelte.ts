@@ -126,31 +126,6 @@ export default class Graph {
     return data;
   };
 
-  getOrFetchMethodNeighbor = async (
-    methodId: string,
-    type: "callers" | "callees",
-    neighborId: string,
-  ) => {
-    if (this.nodeDefinitions.has(neighborId)) {
-      // Neighbor definition is present, use it
-      const neighborWithParents = this.nodeDefinitions.get(neighborId) as NodeDefinition[];
-
-      const edgeId =
-        type === "callers" ? `${neighborId}->${methodId}` : `${methodId}->${neighborId}`;
-
-      if (this.edgeDefinitions.has(edgeId)) {
-        // Edge definition is present, use it
-        return {
-          nodes: [neighborWithParents],
-          edges: [this.edgeDefinitions.get(edgeId) as EdgeDefinition],
-        };
-      }
-    }
-
-    // Neighbor definition or edge definition is missing, fetch it
-    return await this.fetchMethodNeighbors(methodId, type, neighborId);
-  };
-
   getOrFetchAllMethodNeighbors = async (methodId: string, type: "callers" | "callees") => {
     if (this.nodeDefinitions.has(methodId)) {
       // Node definition is present, use it

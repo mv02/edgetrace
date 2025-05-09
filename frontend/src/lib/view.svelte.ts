@@ -410,11 +410,6 @@ export default class View {
     this.cy.elements().remove();
   };
 
-  unselectAll = () => {
-    this.cy.elements().unselect();
-    this.selectedNode = undefined;
-  };
-
   destroy = () => {
     this.cy.destroy();
   };
