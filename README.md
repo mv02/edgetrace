@@ -1,4 +1,6 @@
-# GraalVM Native Image Diff Tool
+# EdgeTrace
+
+**Automated Call Graph Comparison for GraalVM Native Image**
 
 Web tool for comparing and querying call graphs from [GraalVM Native Image](https://www.graalvm.org/latest/reference-manual/native-image/) compilations.
 
@@ -10,23 +12,19 @@ Bachelor's thesis, Faculty of Information Technology, Brno University of Technol
 
 2. Clone the repository.
 
-3. Populate environment variables:
-
+3. Copy the example environment file and populate the environment variables:
    ```sh
    cp .env.example .env
    nano .env
    ```
 
 4. Build and run the project:
-
    ```sh
    docker compose -f compose.yaml -f compose.override.yaml up
    ```
 
-5. The app is now running at http://localhost:3000.
-
+5. The app is now running and available at http://localhost:3000.
    - Backend: http://localhost:3001
-
    - Neo4j Browser: http://localhost:7474
 
 > [!TIP]
