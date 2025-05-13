@@ -1,3 +1,9 @@
+"""
+File: backend/app/diff_c/diff.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Declares C bindings and implements a wrapper function for the difference algorithm.
+"""
+
 import ctypes
 import os
 
