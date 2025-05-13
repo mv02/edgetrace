@@ -1,5 +1,5 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -fPIC
+CC = clang
+CFLAGS = -Wall -Wextra -fPIC -O3
 LDFLAGS = -shared
 SRCS = main.c call_graph.c csv.c edge.c hashtable.c invoke.c map.c method.c
 OBJS = $(SRCS:.c=.o)
