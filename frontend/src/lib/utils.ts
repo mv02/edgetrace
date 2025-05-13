@@ -1,4 +1,4 @@
-import type { ElementDefinition, ElementsDefinition } from "cytoscape";
+import type { ElementDefinition } from "cytoscape";
 
 export const deduplicate = (elements: ElementDefinition[]) => {
   const seen = new Set<string>();

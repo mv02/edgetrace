@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { PUBLIC_API_URL } from "$env/static/public";
   import { Accordion, AccordionItem } from "flowbite-svelte";
   import { ChevronDownOutline, ChevronUpOutline } from "flowbite-svelte-icons";
   import TreeView from "$lib/TreeView.svelte";
