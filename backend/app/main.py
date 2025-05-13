@@ -1,3 +1,9 @@
+"""
+File: backend/app/main.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Entry point of the FastAPI backend.
+"""
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

@@ -1,3 +1,9 @@
+/**
+ * File: frontend/src/lib/types/cytoscape-expand-collapse.d.ts
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Type declarations for the cytoscape-expand-collapse extension.
+ */
+
 declare module "cytoscape-expand-collapse" {
   import cytoscape from "cytoscape";
 

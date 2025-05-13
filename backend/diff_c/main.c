@@ -1,3 +1,9 @@
+/**
+ * File: backend/app/diff_c/main.c
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Entry point and logic of the call graph difference algorithm.
+ */
+
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>

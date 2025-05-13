@@ -1,3 +1,9 @@
+/**
+ * File: backend/app/diff_c/csv.h
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Declares functions for loading methods, invokes, and call targets from CSV reports.
+ */
+
 #ifndef CSV_H
 #define CSV_H
 

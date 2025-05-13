@@ -1,3 +1,10 @@
+/**
+ * File: backend/app/diff_c/edge.h
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Declares a structure representing call graph edges,
+ *              and functions for creating, destroying, and printing them.
+ */
+
 #ifndef EDGE_H
 #define EDGE_H
 

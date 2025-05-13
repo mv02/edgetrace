@@ -1,3 +1,9 @@
+/**
+ * File: backend/app/diff_c/map.c
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Implements functions for manipulating maps of methods and method invokes.
+ */
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>

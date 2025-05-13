@@ -1,3 +1,10 @@
+/**
+ * File: frontend/src/lib/view.svelte.ts
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Defines the class for call graph views, with Cytoscape.js
+ *              instances and an interface for manipulating the visualization.
+ */
+
 import { browser } from "$app/environment";
 import chroma from "chroma-js";
 import cytoscape from "cytoscape";

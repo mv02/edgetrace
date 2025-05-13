@@ -1,3 +1,9 @@
+/**
+ * File: frontend/src/lib/types.ts
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Type declarations used by the SvelteKit frontend.
+ */
+
 import type { EdgeDefinition, NodeDefinition } from "cytoscape";
 
 export type BackendResponseData = {

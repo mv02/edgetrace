@@ -1,3 +1,9 @@
+"""
+File: backend/app/utils/database.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Utility functions for fetching elements from Neo4j.
+"""
+
 from ..driver import driver
 from ..utils.conversions import edge_to_cy, node_to_cy
 from .types import CytoscapeEdge, CytoscapeNode, Edge, NeighborType

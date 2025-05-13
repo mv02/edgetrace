@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/lib/MethodNeighbors.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: The method neighbor list component for showing callers or callees.
+-->
+
 <script lang="ts">
   import { Button, Listgroup, ListgroupItem } from "flowbite-svelte";
   import { EyeOutline, EyeSlashOutline } from "flowbite-svelte-icons";

@@ -1,3 +1,9 @@
+"""
+File: backend/app/routers/methods.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Defines API endpoints for retrieving method and neighbor definitions.
+"""
+
 from fastapi import APIRouter
 
 from ..utils.database import (

@@ -1,3 +1,9 @@
+"""
+File: backend/app/utils/types.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Type declarations used by the FastAPI backend.
+"""
+
 from typing import Literal, TypedDict
 
 

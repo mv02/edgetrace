@@ -1,3 +1,10 @@
+/**
+ * File: backend/app/diff_c/map.h
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Declares maps of IDs to methods and method invokes,
+ *              and functions for manipulating them.
+ */
+
 #ifndef LIST_H
 #define LIST_H
 

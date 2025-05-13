@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/routes/+layout.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: Layout for all pages, with the navigation bar.
+-->
+
 <script lang="ts">
   import "../app.css";
   import { page } from "$app/state";

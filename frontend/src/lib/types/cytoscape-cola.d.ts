@@ -1,3 +1,9 @@
+/**
+ * File: frontend/src/lib/types/cytoscape-cola.d.ts
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Type declarations for the cytoscape-cola extension.
+ */
+
 declare module "cytoscape-cola" {
   const cola: cytoscape.Ext;
   export default cola;

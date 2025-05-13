@@ -1,3 +1,7 @@
+# File: frontend/Dockerfile
+# Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+# Description: Dockerfile for building the frontend container image.
+
 FROM node:23 AS build
 WORKDIR /code
 COPY ./package.json ./pnpm-lock.yaml ./

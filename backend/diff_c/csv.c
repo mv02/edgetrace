@@ -1,3 +1,10 @@
+/**
+ * File: backend/app/diff_c/csv.c
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Implements functions for loading methods, invokes,
+ *              and call targets from CSV reports.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

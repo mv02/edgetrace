@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/routes/manage/+page.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: Page for managing and importing call graphs.
+-->
+
 <script lang="ts">
   import { invalidate } from "$app/navigation";
   import { PUBLIC_API_URL } from "$env/static/public";

@@ -1,3 +1,9 @@
+/**
+ * File: backend/app/diff_c/method.c
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Implements functions for creating, destroying, and printing methods.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

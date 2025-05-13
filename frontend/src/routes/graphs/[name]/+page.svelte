@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/routes/graphs/[name]/+page.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: Page for viewing the given call graph.
+-->
+
 <script lang="ts">
   import { onMount } from "svelte";
   import { beforeNavigate } from "$app/navigation";

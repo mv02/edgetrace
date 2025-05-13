@@ -1,3 +1,10 @@
+/**
+ * File: backend/app/diff_c/method.h
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Declares a structure representing call graph methods,
+ *              and functions for creating, destroying, and printing them.
+ */
+
 #ifndef METHOD_H
 #define METHOD_H
 

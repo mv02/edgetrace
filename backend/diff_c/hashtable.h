@@ -1,3 +1,10 @@
+/**
+ * File: backend/app/diff_c/hashtable.h
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Declares a hash table data structure.
+ *              Inspired by: https://benhoyt.com/writings/hash-table-in-c
+ */
+
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 

@@ -1,3 +1,9 @@
+"""
+File: backend/app/utils/conversions.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Utility functions for converting between CSV records, dictionaries, and Cytoscape.js definitions.
+"""
+
 from .types import (
     CytoscapeEdge,
     CytoscapeNode,

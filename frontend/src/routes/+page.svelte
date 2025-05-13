@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/routes/+page.ts
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: Front page displaying the dashboard.
+-->
+
 <script lang="ts">
   import { Card } from "flowbite-svelte";
 

@@ -1,3 +1,10 @@
+/**
+ * File: backend/app/diff_c/invoke.h
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Declares a structure representing method invokes,
+ *              and functions for creating, destroying, and manipulating them.
+ */
+
 #ifndef INVOKE_H
 #define INVOKE_H
 

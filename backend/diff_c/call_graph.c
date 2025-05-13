@@ -1,3 +1,12 @@
+/**
+ * File: backend/app/diff_c/call_graph.c
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Implements functions for manipulating call graphs.
+ *              Includes functions for creating, destroying, and printing call graphs,
+ *              purging common edges and linking equivalent methods of two graphs,
+ *              and printing the highest-ranked edges.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,3 +1,9 @@
+"""
+File: backend/app/routers/diff.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Defines API endpoints for controlling the difference algorithm and retrieving results.
+"""
+
 import asyncio
 import ctypes
 import os

@@ -1,3 +1,9 @@
+/**
+ * File: frontend/src/lib/utils.ts
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Utility functions for manipulating element definitions.
+ */
+
 import type { ElementDefinition } from "cytoscape";
 
 export const deduplicate = (elements: ElementDefinition[]) => {

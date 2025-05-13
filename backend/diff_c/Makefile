@@ -1,3 +1,7 @@
+# File: backend/diff_c/Makefile
+# Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+# Description: Makefile for compiling the difference algorithm.
+
 CC = clang
 CFLAGS = -Wall -Wextra -fPIC -O3
 LDFLAGS = -shared

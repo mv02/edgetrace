@@ -1,3 +1,10 @@
+/**
+ * File: frontend/src/lib/graph.svelte.ts
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Defines the class for call graphs, with open views
+ *              and an interface for retrieving elements of the graph.
+ */
+
 import { PUBLIC_API_URL } from "$env/static/public";
 import View from "./view.svelte";
 import type { EdgeDefinition, NodeDefinition } from "cytoscape";

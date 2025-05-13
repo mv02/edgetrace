@@ -1,3 +1,12 @@
+/**
+ * File: backend/app/diff_c/call_graph.h
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Declares a structure representing call graphs, and functions for manipulating them.
+ *              Includes functions for creating, destroying, and printing call graphs,
+ *              purging common edges and linking equivalent methods of two graphs,
+ *              and printing the highest-ranked edges.
+ */
+
 #ifndef CALL_GRAPH_H
 #define CALL_GRAPH_H
 

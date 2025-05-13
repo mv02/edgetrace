@@ -1,3 +1,9 @@
+/**
+ * File: backend/app/diff_c/edge.c
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Implements functions for creating, destroying, and printing call graph edges.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 

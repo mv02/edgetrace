@@ -1,3 +1,9 @@
+/*
+ * File: frontend/src/routes/+layout.ts
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Loads graph metadata for all pages and the navigation bar.
+ */
+
 import { PUBLIC_API_URL } from "$env/static/public";
 import type { GraphInfo, LayoutLoad } from "./$types";
 

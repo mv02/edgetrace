@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/lib/EdgeDetails.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: The edge details panel component for showing edge properties.
+-->
+
 <script lang="ts">
   import { Badge } from "flowbite-svelte";
   import DataField from "./DataField.svelte";

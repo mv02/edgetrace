@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/lib/DataField.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: Component for displaying values of element properties.
+-->
+
 <script lang="ts">
   import type { Snippet } from "svelte";
 

@@ -1,3 +1,7 @@
+# File: backend/Dockerfile
+# Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+# Description: Dockerfile for building the backend container image.
+
 FROM python:3.13 AS build
 WORKDIR /code
 COPY ./requirements.txt .

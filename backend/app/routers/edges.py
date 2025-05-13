@@ -1,3 +1,9 @@
+"""
+File: backend/app/routers/edges.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Defines API endpoints for retrieving edge definitions.
+"""
+
 from fastapi import APIRouter
 
 from ..utils.database import fetch_edges

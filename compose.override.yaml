@@ -1,3 +1,7 @@
+# File: compose.override.yaml
+# Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+# Description: Development overrides for the containerized environment.
+
 services:
   frontend:
     build:

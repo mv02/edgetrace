@@ -1,3 +1,9 @@
+"""
+File: backend/app/routers/graphs.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Defines API endpoints for retrieving graph metadata and deleting graphs.
+"""
+
 import logging
 
 from fastapi import APIRouter

@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/lib/MethodDetails.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: The method details panel component, with tabs for viewing properties, callers, and callees.
+-->
+
 <script lang="ts">
   import { Badge, ButtonGroup, RadioButton } from "flowbite-svelte";
   import DataField from "./DataField.svelte";

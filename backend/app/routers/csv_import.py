@@ -1,3 +1,9 @@
+"""
+File: backend/app/routers/csv_import.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Defines an API endpoint for importing call graphs from CSV reports.
+"""
+
 import csv
 import io
 import logging

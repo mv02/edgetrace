@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/lib/TreeView.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: The hierarchical method tree component.
+-->
+
 <script lang="ts">
   import { Accordion, AccordionItem } from "flowbite-svelte";
   import { ChevronDownOutline, ChevronUpOutline } from "flowbite-svelte-icons";

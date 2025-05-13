@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/lib/GraphDetails.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: The graph details panel component, with tabs for viewing properties and top edges.
+-->
+
 <script lang="ts">
   import {
     Button,

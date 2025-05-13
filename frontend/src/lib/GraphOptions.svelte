@@ -1,3 +1,9 @@
+<!--
+  File: frontend/src/lib/GraphOptions.svelte
+  Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+  Description: The graph options panel component with the difference calculation interface.
+-->
+
 <script lang="ts">
   import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";

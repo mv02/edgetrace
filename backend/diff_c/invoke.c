@@ -1,3 +1,9 @@
+/**
+ * File: backend/app/diff_c/invoke.c
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Implements functions for creating, destroying, and manipulating method invokes.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 

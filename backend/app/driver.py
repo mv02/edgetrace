@@ -1,3 +1,9 @@
+"""
+File: backend/app/driver.py
+Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+Description: Configures the Neo4j driver and initiates connection to the graph database.
+"""
+
 import os
 
 from neo4j import GraphDatabase

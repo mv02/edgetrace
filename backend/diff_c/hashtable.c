@@ -1,3 +1,10 @@
+/**
+ * File: backend/app/diff_c/hashtable.c
+ * Author: Milan Vodák <xvodak07@stud.fit.vut.cz>
+ * Description: Implements a hash table data structure.
+ *              Inspired by: https://benhoyt.com/writings/hash-table-in-c
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
