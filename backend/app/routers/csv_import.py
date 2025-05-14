@@ -60,6 +60,10 @@ def import_csv(
 
     # Delete all nodes and edges, create uniqueness constraints and indexes
     logger.info("Purging database")
+    driver.session().run(
+        "MATCH (m {graph: $graph}) CALL (m) { DETACH DELETE m } IN TRANSACTIONS OF 10000 ROWS",
+        graph=graph,
+    )
     driver.execute_query("MATCH (m {graph: $graph}) DETACH DELETE m", graph=graph)
     driver.execute_query(
         "MATCH (meta:Meta {graph_name: $graph}) DELETE meta", graph=graph

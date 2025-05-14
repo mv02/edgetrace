@@ -38,8 +38,13 @@ def get_graphs():
 
 @router.delete("/{graph_name}")
 def delete_graph(graph_name: str):
-    _, summary, _ = driver.execute_query(
-        "MATCH (m {graph: $graph}) DETACH DELETE m", graph=graph_name
+    _, summary, _ = (
+        driver.session()
+        .run(
+            "MATCH (m {graph: $graph}) CALL (m) { DETACH DELETE m } IN TRANSACTIONS OF 10000 ROWS",
+            graph=graph_name,
+        )
+        .to_eager_result()
     )
 
     node_count = summary.counters.nodes_deleted
