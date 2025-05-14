@@ -84,6 +84,7 @@ def import_csv(
     # Create method nodes
     logger.info("Creating method nodes")
     methods_csv = io.TextIOWrapper(newest["methods"][0].file)
+
     reader = csv.DictReader(methods_csv)
     summary = driver.execute_query(
         "UNWIND $data AS row CREATE (m:Method {graph: $graph}) SET m += row",
@@ -126,6 +127,10 @@ def import_csv(
             "target_element_id": element_ids[row["TargetId"]],
         }
         edges.append(edge)
+
+    chunks: list[list[dict[str, str]]] = []
+    for i in range(0, len(edges), 1000):
+        chunks.append(edges[i : i + 1000])
 
     summary = driver.execute_query(
         "UNWIND $data AS row "
