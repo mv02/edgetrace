@@ -58,11 +58,11 @@ void create_edges(call_graph_t* cg)
 
 void compute_reachability(call_graph_t* cg)
 {
-    // Set all entrypoints to reachable
+    // Set all entry points to reachable
     ht_iter it = ht_iterator(cg->methods);
     while (ht_next(&it)) {
         method_t* m = it.value;
-        if (m->is_entrypoint) {
+        if (m->is_entry_point) {
             m->is_reachable = true;
             cg->reachable_count++;
         }

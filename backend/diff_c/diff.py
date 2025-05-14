@@ -23,7 +23,7 @@ Method._fields_ = [
     ("qualified_name", ctypes.c_char_p),
     ("display", ctypes.c_char_p),
     ("flags", ctypes.c_char_p),
-    ("is_entrypoint", ctypes.c_bool),
+    ("is_entry_point", ctypes.c_bool),
     ("is_reachable", ctypes.c_bool),
     ("value", ctypes.c_double),
     ("equivalent", ctypes.POINTER(Method)),

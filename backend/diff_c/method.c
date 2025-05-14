@@ -33,7 +33,7 @@ char* get_qualified_name(char* declared_type, char* name, char* params, char* fl
 }
 
 method_t* method_create(int id, char* name, char* declared_type, char* params, char* return_type,
-                        char* display, char* flags, bool is_entrypoint)
+                        char* display, char* flags, bool is_entry_point)
 {
     method_t* method = malloc(sizeof(method_t));
     if (method == NULL) {
@@ -48,7 +48,7 @@ method_t* method_create(int id, char* name, char* declared_type, char* params, c
     method->qualified_name = get_qualified_name(declared_type, name, params, flags, return_type);
     method->display = strdup(display);
     method->flags = strdup(flags);
-    method->is_entrypoint = is_entrypoint;
+    method->is_entry_point = is_entry_point;
     method->is_reachable = false;
     method->value = 0;
     method->equivalent = NULL;

@@ -20,8 +20,8 @@ double level(method_t* m)
         // The method is reachable in subgraph
         return 0;
     }
-    if (m->equivalent == NULL && m->is_entrypoint) {
-        // The method is absent from subgraph, but is an entrypoint
+    if (m->equivalent == NULL && m->is_entry_point) {
+        // The method is absent from subgraph, but is an entry point
         return 0;
     }
     // The method is absent from subgraph

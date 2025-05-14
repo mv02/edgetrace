@@ -9,16 +9,16 @@ from fastapi import APIRouter
 from ..utils.database import (
     fetch_method,
     fetch_method_neighbors,
-    fetch_method_with_entrypoint,
+    fetch_method_with_entry_point,
 )
 
 router = APIRouter(prefix="/{graph_name}/method")
 
 
 @router.get("/{id}")
-def get_method_by_id(graph_name: str, id: str, with_entrypoint: bool = False):
-    if with_entrypoint:
-        return fetch_method_with_entrypoint(id, graph_name)
+def get_method_by_id(graph_name: str, id: str, with_entry_point: bool = False):
+    if with_entry_point:
+        return fetch_method_with_entry_point(id, graph_name)
     return fetch_method(id, graph_name)
 
 

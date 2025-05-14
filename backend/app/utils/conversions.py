@@ -48,7 +48,7 @@ def method_from_csv(row: dict[str, str]) -> Method:
         "return_type": row["Return"],
         "display": row["Display"],
         "flags": row["Flags"],
-        "is_entrypoint": row["IsEntryPoint"] == "true",
+        "is_entry_point": row["IsEntryPoint"] == "true",
     }
 
 

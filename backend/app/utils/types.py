@@ -15,7 +15,7 @@ class Method(TypedDict):
     return_type: str
     display: str
     flags: str
-    is_entrypoint: bool
+    is_entry_point: bool
 
 
 class Invoke(TypedDict):

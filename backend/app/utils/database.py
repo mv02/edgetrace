@@ -64,10 +64,10 @@ def fetch_method(
     }
 
 
-def fetch_method_with_entrypoint(id: str, graph_name: str):
+def fetch_method_with_entry_point(id: str, graph_name: str):
     query = """
     MATCH p = SHORTEST 1 (e {graph: $graph})-->*({id: $id, graph: $graph})
-    WHERE e.is_entrypoint
+    WHERE e.is_entry_point
     LIMIT 1
 
     UNWIND nodes(p) AS pn
@@ -86,7 +86,7 @@ def fetch_method_with_entrypoint(id: str, graph_name: str):
 
     path, path_neighbors = records[0]
 
-    # Every node on the path from entrypoint
+    # Every node on the path from entry point
     for i, pn in enumerate(path.nodes):
         cy_nodes |= node_to_cy(pn)
         pn_id = pn["id"]
@@ -127,7 +127,7 @@ def fetch_method_with_entrypoint(id: str, graph_name: str):
             }
             cy_edges |= edge_to_cy(edge)
 
-    # Save entrypoint path to the fetched node data
+    # Save entry point path to the fetched node data
     cy_nodes[id][0]["data"]["path"] = [n[0]["data"]["id"] for n in cy_nodes.values()]
 
     return {

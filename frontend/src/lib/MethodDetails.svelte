@@ -21,7 +21,7 @@
 
 {#if node}
   <div class="flex gap-2">
-    {#if node.data("is_entrypoint")}
+    {#if node.data("is_entry_point")}
       <Badge color="green">Entrypoint</Badge>
     {/if}
     <Badge>Method {node.data("id")}</Badge>

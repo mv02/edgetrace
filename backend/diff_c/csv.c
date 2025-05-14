@@ -142,7 +142,7 @@ void csv_save_methods(char* dirname, ht* methods)
     while (ht_next(&it)) {
         method_t* m = it.value;
         fprintf(f, "%d,%s,%s,%s,%s,%s,%s,%s,%s\n", m->id, m->name, m->declared_type, m->params,
-                m->return_type, m->display, m->flags, m->is_entrypoint ? "true" : "false",
+                m->return_type, m->display, m->flags, m->is_entry_point ? "true" : "false",
                 m->equivalent != NULL ? "true" : "false");
     }
 

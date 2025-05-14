@@ -77,7 +77,7 @@ export default class Graph {
     }
   };
 
-  getOrFetchMethod = async (id: string, withEntrypoint: boolean = false) => {
+  getOrFetchMethod = async (id: string, withEntryPoint: boolean = false) => {
     if (this.nodeDefinitions.has(id)) {
       // Node definition is present, use it
       const nodeWithParents = this.nodeDefinitions.get(id) as NodeDefinition[];
@@ -87,15 +87,15 @@ export default class Graph {
         .values()
         .filter((edge) => edge.data.source === id || edge.data.target === id);
 
-      if (!withEntrypoint) {
-        // Entrypoint path definition is not required
+      if (!withEntryPoint) {
+        // Entry point path definition is not required
         return { nodes: [nodeWithParents], edges: edges };
       }
 
-      // Entrypoint path definition is required
+      // Entry point path definition is required
       const path: string[] = nodeWithParents[0].data.path;
       if (path) {
-        // List of entrypoint path node IDs found, try to find all path node and edge definitions
+        // List of entry point path node IDs found, try to find all path node and edge definitions
         let allDefinitionsPresent = true;
 
         const pathNodes: NodeDefinition[][] = [];
@@ -120,13 +120,13 @@ export default class Graph {
       }
     }
 
-    // Node definition or entrypoint path definition is missing, fetch it
-    return await this.fetchMethod(id, withEntrypoint);
+    // Node definition or entry point path definition is missing, fetch it
+    return await this.fetchMethod(id, withEntryPoint);
   };
 
-  fetchMethod = async (id: string, withEntrypoint: boolean = false) => {
+  fetchMethod = async (id: string, withEntryPoint: boolean = false) => {
     let url = `${PUBLIC_API_URL}/graphs/${this.name}/method/${id}`;
-    if (withEntrypoint) url += "?with_entrypoint=1";
+    if (withEntryPoint) url += "?with_entry_point=1";
     const resp = await fetch(url);
     const data: BackendResponseData = await resp.json();
     this.setDefinitions(data);
