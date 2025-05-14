@@ -90,11 +90,21 @@ def import_csv(
     methods_csv = io.TextIOWrapper(newest["methods"][0].file)
 
     reader = csv.DictReader(methods_csv)
-    summary = driver.execute_query(
-        "UNWIND $data AS row CREATE (m:Method {graph: $graph}) SET m += row",
-        data=[method_from_csv(row) for row in reader],
-        graph=graph,
-    ).summary
+    summary = (
+        driver.session()
+        .run(
+            """
+            UNWIND $data AS row
+            CALL (row) {
+              CREATE (m:Method {graph: $graph}) SET m += row
+            } IN TRANSACTIONS OF 10000 ROWS
+            """,
+            data=[method_from_csv(row) for row in reader],
+            graph=graph,
+        )
+        .to_eager_result()
+        .summary
+    )
     node_count = summary.counters.nodes_created
 
     # Map method IDs to element IDs
@@ -132,18 +142,23 @@ def import_csv(
         }
         edges.append(edge)
 
-    chunks: list[list[dict[str, str]]] = []
-    for i in range(0, len(edges), 1000):
-        chunks.append(edges[i : i + 1000])
-
-    summary = driver.execute_query(
-        "UNWIND $data AS row "
-        "MATCH (s:Method) WHERE elementId(s) = row.source_element_id "
-        "MATCH (t:Method) WHERE elementId(t) = row.target_element_id "
-        "MERGE (s)-[r:CALLS]->(t)",
-        data=edges,
-        graph=graph,
-    ).summary
+    summary = (
+        driver.session()
+        .run(
+            """
+            UNWIND $data AS row
+            CALL (row) {
+              MATCH (s:Method) WHERE elementId(s) = row.source_element_id
+              MATCH (t:Method) WHERE elementId(t) = row.target_element_id
+              MERGE (s)-[r:CALLS]->(t)
+            } IN TRANSACTIONS OF 10000 ROWS
+            """,
+            data=edges,
+            graph=graph,
+        )
+        .to_eager_result()
+        .summary
+    )
     edge_count = summary.counters.relationships_created
 
     message = f"Imported {node_count} nodes and {edge_count} edges"
