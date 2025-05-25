@@ -22,11 +22,19 @@
 
   let neighbors: NodeDefinition[][] = $state(graph.currentView.selectedNode?.data(type));
   let sortedNeighbors: NodeDefinition[][] = $derived(
-    [...neighbors].sort((a: NodeDefinition[], b: NodeDefinition[]) => {
-      if (a[0].data.name < b[0].data.name) return -1;
-      if (a[0].data.name > b[0].data.name) return 1;
-      return 0;
-    }),
+    [...neighbors]
+      .sort((a: NodeDefinition[], b: NodeDefinition[]) => {
+        const keyA = a[0].data.display.split(".").reverse()[1];
+        const keyB = b[0].data.display.split(".").reverse()[1];
+        if (keyA < keyB) return -1;
+        if (keyA > keyB) return 1;
+        return 0;
+      })
+      .sort((a: NodeDefinition[], b: NodeDefinition[]) => {
+        if (a[0].data.name < b[0].data.name) return -1;
+        if (a[0].data.name > b[0].data.name) return 1;
+        return 0;
+      }),
   );
 
   $effect(() => (neighbors = graph.currentView.selectedNode?.data(type)));
@@ -101,7 +109,9 @@
 <Listgroup defaultClass="overflow-y-auto">
   {#each sortedNeighbors ?? [] as neighbor}
     <ListgroupItem normalClass="flex gap-2 justify-between items-center">
-      <span class="overflow-x-hidden text-ellipsis">{neighbor[0].data.name}</span>
+      <span class="overflow-x-hidden text-ellipsis">
+        {neighbor[0].data.display.split(".").reverse()[1]}.<b>{neighbor[0].data.name}</b>
+      </span>
 
       {#if graph.currentView.nodes.get(neighbor[0].data.id as string)?.inside()}
         <EyeOutline
