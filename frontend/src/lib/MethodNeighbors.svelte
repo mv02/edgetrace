@@ -5,7 +5,7 @@
 -->
 
 <script lang="ts">
-  import { Button, Listgroup, ListgroupItem } from "flowbite-svelte";
+  import { Button, Listgroup, ListgroupItem, Modal } from "flowbite-svelte";
   import { EyeOutline, EyeSlashOutline } from "flowbite-svelte-icons";
   import type Graph from "./graph.svelte";
   import type { NodeDefinition } from "cytoscape";
@@ -18,6 +18,7 @@
   let { graph, type }: Props = $props();
 
   let node = $derived(graph.currentView.selectedNode);
+  let modalOpen: boolean = $state(false);
 
   let neighbors: NodeDefinition[][] = $state(graph.currentView.selectedNode?.data(type));
   let sortedNeighbors: NodeDefinition[][] = $derived(
@@ -44,7 +45,11 @@
 
   const showAllNeighbors = () => {
     if (!node) return;
-    graph.currentView.showAllNodeNeighbors(node, type);
+    if (neighbors.length > 50) {
+      modalOpen = true;
+    } else {
+      graph.currentView.showAllNodeNeighbors(node, type);
+    }
   };
 
   const hideAllNeighbors = () => {
@@ -54,6 +59,26 @@
 </script>
 
 <div class="flex items-center justify-between">
+  <Modal
+    title="Warning"
+    bind:open={modalOpen}
+    autoclose
+    outsideclose
+    size="xs"
+    placement="center-right"
+  >
+    <p>
+      Showing {neighbors?.length} nodes might slow down the application. Consider selecting specific
+      neighbors instead.
+    </p>
+    <div class="flex items-center justify-end gap-3">
+      <Button onclick={() => node && graph.currentView.showAllNodeNeighbors(node, type)}>
+        Show anyway
+      </Button>
+      <Button color="alternative">Cancel</Button>
+    </div>
+  </Modal>
+
   <span class="text-sm">
     {neighbors?.length ?? "Unknown"}
     {type}
